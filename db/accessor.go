@@ -10,4 +10,16 @@ type Accessor interface {
 	CreateClubMember(clubMember *model.ClubMember) (resultMember *model.ClubMember, err error)
 	CreateRecruitment(recruit *model.ClubRecruitment) (resultRecruit *model.ClubRecruitment, err error)
 	CreateRecruitMember(recruitMember *model.RecruitMember) (resultMember *model.RecruitMember, err error)
+
+	GetClubWithClubUUID(clubUUID string) (*model.Club, error)
+	GetClubWithLeaderUUID(leaderUUID string) (*model.Club, error)
+	GetRecruitmentsWithClubUUID(clubUUID string) ([]*model.ClubRecruitment, error)
+	GetClubInformsSortByUpdateTime(offset, limit int, field, name string) ([]*model.ClubInform, error)
+	GetRecruitmentsSortByCreateTime(offset, limit int, field, name string) ([]*model.ClubRecruitment, error)
+	GetClubInformWithClubUUID(clubUUID string) (*model.ClubInform, error)
+	GetRecruitmentWithRecruitmentUUID(recruitUUID string) (*model.ClubRecruitment, error)
+	GetClubMembersWithClubUUID(clubUUID string) ([]*model.ClubMember, error)
+	GetRecruitMembersWithRecruitmentUUID(recruitUUID string) ([]*model.RecruitMember, error)
+	GetAllClubInforms() ([]*model.ClubInform, error)
+	GetAllRecruitments() ([]*model.ClubRecruitment, error)
 }
