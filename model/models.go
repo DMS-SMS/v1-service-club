@@ -34,8 +34,8 @@ type ClubRecruitment struct {
 	UUID           uuid           `gorm:"PRIMARY_KEY;Type:char(24);UNIQUE;INDEX" validate:"uuid=recruitment,len=24"`
 	ClubUUID       clubUUID       `gorm:"Type:char(17);NOT NULL;UNIQUE" validate:"uuid=club,len=17"`
 	RecruitConcept recruitConcept `gorm:"Type:varchar(40);NOT NULL" validate:"min=1,max=40"`
-	StartPeriod    startPeriod    `gorm:"Type:char(10)" validate:"len=10,time"`
-	EndPeriod      endPeriod      `gorm:"Type:char(10)" validate:"len=10,time"`
+	StartPeriod    startPeriod    `gorm:"Type:char(10)" validate:"time"`
+	EndPeriod      endPeriod      `gorm:"Type:char(10)" validate:"time"`
 	Canceled       clubUUID       `gorm:"Type:boolean;NOT NULL;DEFAULT:false"`
 }
 
