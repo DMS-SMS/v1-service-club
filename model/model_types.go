@@ -1,6 +1,19 @@
 package model
 
-import "database/sql/driver"
+import (
+	"club/tool/random"
+	"database/sql/driver"
+)
+
+var (
+	nullReplaceValueForStartPeriod string
+	nullReplaceValueForEndPeriod string
+)
+
+func init() {
+	nullReplaceValueForStartPeriod = random.StringConsistOfIntWithLength(10)
+	nullReplaceValueForEndPeriod = random.StringConsistOfIntWithLength(10)
+}
 
 // UUID 필드에서 사용할 사용자 정의 타입
 type uuid string
@@ -96,16 +109,26 @@ func (rc recruitConcept) KeyName() string { return "recruit_concept" }
 // StartPeriod 필드에서 사용할 사용자 정의 타입
 type startPeriod string
 func StartPeriod(s string) startPeriod { return startPeriod(s) }
-func (sp startPeriod) Value() (driver.Value, error) { return string(sp), nil }
+func (sp startPeriod) Value() (value driver.Value, err error) {
+	value = string(sp)
+	if value == "" { value = nil }
+	return
+}
 func (sp *startPeriod) Scan(src interface{}) (err error) { *sp = startPeriod(src.([]uint8)); return }
 func (sp startPeriod) KeyName() string { return "start_period" }
+func (sp startPeriod) NullReplaceValue() string { return nullReplaceValueForStartPeriod  }
 
 // EndPeriod 필드에서 사용할 사용자 정의 타입
 type endPeriod string
 func EndPeriod(s string) endPeriod { return endPeriod(s) }
-func (ep endPeriod) Value() (driver.Value, error) { return string(ep), nil }
+func (ep endPeriod) Value() (value driver.Value, err error) {
+	value = string(ep)
+	if value == "" { value = nil }
+	return
+}
 func (ep *endPeriod) Scan(src interface{}) (err error) { *ep = endPeriod(src.([]uint8)); return }
 func (ep endPeriod) KeyName() string { return "end_period" }
+func (ep endPeriod) NullReplaceValue() string { return nullReplaceValueForEndPeriod  }
 
 // Canceled 필드에서 사용할 사용자 정의 타입
 type canceled bool
