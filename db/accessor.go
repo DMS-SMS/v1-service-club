@@ -2,6 +2,7 @@ package db
 
 import (
 	"club/model"
+	"github.com/jinzhu/gorm"
 )
 
 type Accessor interface {
@@ -22,4 +23,18 @@ type Accessor interface {
 	GetRecruitMembersWithRecruitmentUUID(recruitUUID string) ([]*model.RecruitMember, error)
 	GetAllClubInforms() ([]*model.ClubInform, error)
 	GetAllRecruitments() ([]*model.ClubRecruitment, error)
+
+	ChangeClubLeader(clubUUID, newLeaderUUID string) error
+	ModifyClubInform(clubUUID string, revisionInform *model.ClubInform) error
+	ModifyRecruitment(recruitUUID string, revisionRecruit *model.ClubRecruitment) error
+
+	DeleteClub(clubUUID string) error
+	DeleteClubInform(clubUUID string) error
+	DeleteClubMember(clubUUID, studentUUID string) error
+	DeleteRecruitment(recruitUUID string) error
+	DeleteAllRecruitMember(recruitUUID string) error
+
+	BeginTx()
+	Commit() *gorm.DB
+	Rollback() *gorm.DB
 }
