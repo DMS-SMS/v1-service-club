@@ -130,12 +130,6 @@ func (ep *endPeriod) Scan(src interface{}) (err error) { *ep = endPeriod(src.([]
 func (ep endPeriod) KeyName() string { return "end_period" }
 func (ep endPeriod) NullReplaceValue() string { return nullReplaceValueForEndPeriod  }
 
-// Canceled 필드에서 사용할 사용자 정의 타입
-type canceled bool
-func Canceled(b bool) canceled { return canceled(b) }
-func (c canceled) Value() (driver.Value, error) { return bool(c), nil }
-func (c *canceled) Scan(src interface{}) (err error) { *c = canceled(src.(bool)); return }
-func (c canceled) KeyName() string { return "canceled" }
 
 // RecruitmentUUID 필드에서 사용할 사용자 정의 타입
 type recruitmentUUID string

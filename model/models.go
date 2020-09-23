@@ -36,7 +36,6 @@ type ClubRecruitment struct {
 	RecruitConcept recruitConcept `gorm:"Type:varchar(40);NOT NULL" validate:"min=1,max=40"`
 	StartPeriod    startPeriod    `gorm:"Type:char(10)" validate:"time"`
 	EndPeriod      endPeriod      `gorm:"Type:char(10)" validate:"time"`
-	Canceled       clubUUID       `gorm:"Type:boolean;NOT NULL;DEFAULT:false"`
 }
 
 type RecruitMember struct {
