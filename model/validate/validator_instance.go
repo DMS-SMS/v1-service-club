@@ -36,6 +36,15 @@ func isValidateUUID(fl validator.FieldLevel) bool {
 }
 
 func isTime(fl validator.FieldLevel) bool {
+	field := fl.Field().String()
+	if field == "" {
+		return true
+	}
+
+	if len(field) != 10 {
+		return false
+	}
+
 	return timeRegex.MatchString(fl.Field().String())
 }
 
