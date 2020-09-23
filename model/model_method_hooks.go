@@ -36,3 +36,35 @@ func (cr *ClubRecruitment) BeforeCreate() error {
 func (rm *RecruitMember) BeforeCreate() error {
 	return validate.DBValidator.Struct(rm)
 }
+
+func (c *Club) BeforeUpdate() error {
+	clubForValidate := c.DeepCopy()
+
+	if clubForValidate.UUID == emptyString       { clubForValidate.UUID = validClubUUID }
+	if clubForValidate.LeaderUUID == emptyString { clubForValidate.LeaderUUID = validLeaderUUID }
+
+	return validate.DBValidator.Struct(clubForValidate)
+}
+
+func (ci *ClubInform) BeforeUpdate() error {
+	clubInformForValidate := ci.DeepCopy()
+
+	if clubInformForValidate.ClubUUID == emptyString { clubInformForValidate.ClubUUID = validClubUUID }
+	if clubInformForValidate.Name == emptyString     { clubInformForValidate.Name = validName }
+	if clubInformForValidate.Field == emptyString    { clubInformForValidate.Field = validField }
+	if clubInformForValidate.Location == emptyString { clubInformForValidate.Location = validLocation }
+	if clubInformForValidate.Floor == emptyInt       { clubInformForValidate.Floor = validFloor }
+	if clubInformForValidate.LogoURI == emptyString  { clubInformForValidate.LogoURI = validLogoURI }
+
+	return validate.DBValidator.Struct(clubInformForValidate)
+}
+
+func (cr *ClubRecruitment) BeforeUpdate() error {
+	recruitmentForValidate := cr.DeepCopy()
+
+	if recruitmentForValidate.UUID == emptyString           { recruitmentForValidate.UUID = validRecruitmentUUID }
+	if recruitmentForValidate.ClubUUID == emptyString       { recruitmentForValidate.ClubUUID = validClubUUID }
+	if recruitmentForValidate.RecruitConcept == emptyString { recruitmentForValidate.RecruitConcept = validRecruitConcept }
+
+	return validate.DBValidator.Struct(recruitmentForValidate)
+}
