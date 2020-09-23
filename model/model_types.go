@@ -85,3 +85,31 @@ func StudentUUID(s string) studentUUID { return studentUUID(s) }
 func (su studentUUID) Value() (driver.Value, error) { return string(su), nil }
 func (su *studentUUID) Scan(src interface{}) (err error) { *su = studentUUID(src.([]uint8)); return }
 func (su studentUUID) KeyName() string { return "student_uuid" }
+
+// RecruitConcept 필드에서 사용할 사용자 정의 타입
+type recruitConcept string
+func RecruitConcept(s string) recruitConcept { return recruitConcept(s) }
+func (rc recruitConcept) Value() (driver.Value, error) { return string(rc), nil }
+func (rc *recruitConcept) Scan(src interface{}) (err error) { *rc = recruitConcept(src.([]uint8)); return }
+func (rc recruitConcept) KeyName() string { return "recruit_concept" }
+
+// StartPeriod 필드에서 사용할 사용자 정의 타입
+type startPeriod string
+func StartPeriod(s string) startPeriod { return startPeriod(s) }
+func (sp startPeriod) Value() (driver.Value, error) { return string(sp), nil }
+func (sp *startPeriod) Scan(src interface{}) (err error) { *sp = startPeriod(src.([]uint8)); return }
+func (sp startPeriod) KeyName() string { return "start_period" }
+
+// EndPeriod 필드에서 사용할 사용자 정의 타입
+type endPeriod string
+func EndPeriod(s string) endPeriod { return endPeriod(s) }
+func (ep endPeriod) Value() (driver.Value, error) { return string(ep), nil }
+func (ep *endPeriod) Scan(src interface{}) (err error) { *ep = endPeriod(src.([]uint8)); return }
+func (ep endPeriod) KeyName() string { return "end_period" }
+
+// Canceled 필드에서 사용할 사용자 정의 타입
+type canceled bool
+func Canceled(b bool) canceled { return canceled(b) }
+func (c canceled) Value() (driver.Value, error) { return bool(c), nil }
+func (c *canceled) Scan(src interface{}) (err error) { *c = canceled(src.(bool)); return }
+func (c canceled) KeyName() string { return "canceled" }
