@@ -22,3 +22,8 @@ type ClubInform struct {
 	Link         link         `gorm:"Type:varchar(100)" validate:"max=1--"`
 	LogoURI      logoURI      `gorm:"Type:varchar(100);NOT NULL" validate:"min=1,max=100"`
 }
+
+type ClubMember struct {
+	ClubUUID    clubUUID    `gorm:"Type:char(17);NOT NULL;UNIQUE" validate:"uuid=club,len=17"`
+	StudentUUID studentUUID `gorm:"Type:char(20);NOT NULL;UNIQUE" validate:"uuid=student,len=20"`
+}

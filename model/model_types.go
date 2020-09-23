@@ -1,17 +1,6 @@
 package model
 
 import "database/sql/driver"
-/*
-ClubUUID
-Name
-ClubConcept
-Introduction
-Field
-Location
-Floor
-Link
-LogoURI
- */
 
 // UUID 필드에서 사용할 사용자 정의 타입
 type uuid string
@@ -89,3 +78,10 @@ func LogoURI(s string) logoURI { return logoURI(s) }
 func (lu logoURI) Value() (driver.Value, error) { return string(lu), nil }
 func (lu *logoURI) Scan(src interface{}) (err error) { *lu = logoURI(src.([]uint8)); return }
 func (lu logoURI) KeyName() string { return "logo_uri" }
+
+// StudentUUID 필드에서 사용할 사용자 정의 타입
+type studentUUID string
+func StudentUUID(s string) studentUUID { return studentUUID(s) }
+func (su studentUUID) Value() (driver.Value, error) { return string(su), nil }
+func (su *studentUUID) Scan(src interface{}) (err error) { *su = studentUUID(src.([]uint8)); return }
+func (su studentUUID) KeyName() string { return "student_uuid" }
