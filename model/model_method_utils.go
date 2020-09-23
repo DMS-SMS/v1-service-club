@@ -24,3 +24,17 @@ func exceptGormModel(model interface{}) (gormModelExceptTable interface{}) {
 	reflect.ValueOf(gormModelExceptTable).Elem().FieldByName("DeletedAt").Set(reflect.ValueOf((*time.Time)(nil)))
 	return
 }
+
+// DeepCopy 메서드 -> 리시버 변수에 대한 DeepCopy 본사본 생성 및 반환 메서드
+func (c *Club)             DeepCopy() *Club            { return deepCopyModel(c).(*Club) }
+func (ci *ClubInform)      DeepCopy() *ClubInform      { return deepCopyModel(ci).(*ClubInform) }
+func (cm *ClubMember)      DeepCopy() *ClubMember      { return deepCopyModel(cm).(*ClubMember) }
+func (cr *ClubRecruitment) DeepCopy() *ClubRecruitment { return deepCopyModel(cr).(*ClubRecruitment) }
+func (rm *RecruitMember)   DeepCopy() *RecruitMember   { return deepCopyModel(rm).(*RecruitMember) }
+
+// ExceptGormModel 메서드 -> 리시버 변수로부터 gorm.Model(임베딩 객체)에 포함되어있는 필드 값 초기화 후 반환 메서드
+func (c *Club)             ExceptGormModel() *Club            { return exceptGormModel(c).(*Club) }
+func (ci *ClubInform)      ExceptGormModel() *ClubInform      { return exceptGormModel(ci).(*ClubInform) }
+func (cm *ClubMember)      ExceptGormModel() *ClubMember      { return exceptGormModel(cm).(*ClubMember) }
+func (cr *ClubRecruitment) ExceptGormModel() *ClubRecruitment { return exceptGormModel(cr).(*ClubRecruitment) }
+func (rm *RecruitMember)   ExceptGormModel() *RecruitMember   { return exceptGormModel(rm).(*RecruitMember) }
