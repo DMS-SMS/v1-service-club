@@ -37,3 +37,11 @@ type ClubRecruitment struct {
 	EndPeriod      endPeriod      `gorm:"Type:char(10)" validate:"len=10,time"`
 	Canceled       clubUUID       `gorm:"Type:boolean;NOT NULL;DEFAULT:false"`
 }
+
+type RecruitMember struct {
+	gorm.Model
+	RecruitmentUUID recruitmentUUID `gorm:"Type:char(24);NOT NULL;INDEX" validate:"uuid=recruitment,len=24"`
+	Grade           grade           `gorm:"Type:tinyint(1);NOT NULL" validate:"range=1~3"`
+	Field           field           `gorm:"Type:varchar(20);NOT NULL" validate:"min=1,max=20"`
+	Number          number          `gorm:"Type:tinyint(1);NOT NULL" validate:"range=1~20"`
+}

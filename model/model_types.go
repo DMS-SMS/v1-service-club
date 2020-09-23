@@ -113,3 +113,24 @@ func Canceled(b bool) canceled { return canceled(b) }
 func (c canceled) Value() (driver.Value, error) { return bool(c), nil }
 func (c *canceled) Scan(src interface{}) (err error) { *c = canceled(src.(bool)); return }
 func (c canceled) KeyName() string { return "canceled" }
+
+// RecruitmentUUID 필드에서 사용할 사용자 정의 타입
+type recruitmentUUID string
+func RecruitmentUUID(s string) recruitmentUUID { return recruitmentUUID(s) }
+func (ru recruitmentUUID) Value() (driver.Value, error) { return string(ru), nil }
+func (ru *recruitmentUUID) Scan(src interface{}) (err error) { *ru = recruitmentUUID(src.([]uint8)); return }
+func (ru recruitmentUUID) KeyName() string { return "end_period" }
+
+// Grade 필드에서 사용할 사용자 정의 타입
+type grade int64
+func Grade(i int64) grade { return grade(i) }
+func (g grade) Value() (value driver.Value, err error) { return int64(g), nil }
+func (g *grade) Scan(src interface{}) (_ error) { *g = grade(src.(int64)); return }
+func (g grade) KeyName() string { return "grade" }
+
+// StudentNumber 필드에서 사용할 사용자 정의 타입
+type number int64
+func Number(i int64) number { return number(i) }
+func (n number) Value() (driver.Value, error) { return int64(n), nil }
+func (n *number) Scan(src interface{}) (err error) { *n = number(src.(int64)); return }
+func (n number) KeyName() string { return "number" }
