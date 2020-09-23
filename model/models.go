@@ -19,11 +19,12 @@ type ClubInform struct {
 	Field        field        `gorm:"Type:varchar(20);NOT NULL" validate:"min=1,max=20"`
 	Location     location     `gorm:"Type:varchar(20);NOT NULL;UNIQUE" validate:"min=1,max=20"`
 	Floor        floor        `gorm:"Type:tinyint(1);NOT NULL" validate:"range=1~5"`
-	Link         link         `gorm:"Type:varchar(100)" validate:"max=1--"`
+	Link         link         `gorm:"Type:varchar(100)" validate:"max=100"`
 	LogoURI      logoURI      `gorm:"Type:varchar(100);NOT NULL" validate:"min=1,max=100"`
 }
 
 type ClubMember struct {
+	gorm.Model
 	ClubUUID    clubUUID    `gorm:"Type:char(17);NOT NULL;UNIQUE" validate:"uuid=club,len=17"`
 	StudentUUID studentUUID `gorm:"Type:char(20);NOT NULL;UNIQUE" validate:"uuid=student,len=20"`
 }
