@@ -1,48 +1,38 @@
 package db
 
 import (
-	"auth/model"
+	"club/model"
 	"github.com/jinzhu/gorm"
 )
 
 func Migrate(db *gorm.DB) {
 	db.LogMode(false)
 
-	//db.DropTableIfExists(&model.AdminAuth{})
-	//db.DropTableIfExists(&model.StudentInform{})
-	//db.DropTableIfExists(&model.ParentInform{})
-	//db.DropTableIfExists(&model.TeacherInform{})
-	//db.DropTableIfExists(&model.StudentAuth{})
-	//db.DropTableIfExists(&model.ParentAuth{})
-	//db.DropTableIfExists(&model.TeacherAuth{})
+	db.DropTableIfExists(&model.Club{})
+	db.DropTableIfExists(&model.ClubInform{})
+	db.DropTableIfExists(&model.ClubMember{})
+	db.DropTableIfExists(&model.ClubRecruitment{})
+	db.DropTableIfExists(&model.RecruitMember{})
 
-	if !db.HasTable(&model.AdminAuth{}) {
-		db.CreateTable(&model.AdminAuth{})
+	if !db.HasTable(&model.Club{}) {
+		db.CreateTable(&model.Club{})
 	}
-	if !db.HasTable(&model.StudentAuth{}) {
-		db.CreateTable(&model.StudentAuth{})
+	if !db.HasTable(&model.ClubInform{}) {
+		db.CreateTable(&model.ClubInform{})
 	}
-	if !db.HasTable(&model.StudentInform{}) {
-		db.CreateTable(&model.StudentInform{})
+	if !db.HasTable(&model.ClubMember{}) {
+		db.CreateTable(&model.ClubMember{})
 	}
-	if !db.HasTable(&model.ParentAuth{}) {
-		db.CreateTable(&model.ParentAuth{})
+	if !db.HasTable(&model.ClubRecruitment{}) {
+		db.CreateTable(&model.ClubRecruitment{})
 	}
-	if !db.HasTable(&model.ParentInform{}) {
-		db.CreateTable(&model.ParentInform{})
-	}
-	if !db.HasTable(&model.TeacherAuth{}) {
-		db.CreateTable(&model.TeacherAuth{})
-	}
-	if !db.HasTable(&model.TeacherInform{}) {
-		db.CreateTable(&model.TeacherInform{})
+	if !db.HasTable(&model.RecruitMember{}) {
+		db.CreateTable(&model.RecruitMember{})
 	}
 
-	db.AutoMigrate(&model.AdminAuth{}, &model.StudentAuth{}, &model.StudentInform{}, &model.ParentAuth{}, &model.ParentInform{}, &model.TeacherAuth{}, &model.TeacherInform{})
-	db.Model(&model.StudentAuth{}).AddForeignKey("parent_uuid", "parent_auths(uuid)", "RESTRICT", "RESTRICT")
-	db.Model(&model.StudentInform{}).AddForeignKey("student_uuid", "student_auths(uuid)", "RESTRICT", "RESTRICT")
-	db.Model(&model.TeacherInform{}).AddForeignKey("teacher_uuid", "teacher_auths(uuid)", "RESTRICT", "RESTRICT")
-	db.Model(&model.ParentInform{}).AddForeignKey("parent_uuid", "parent_auths(uuid)", "RESTRICT", "RESTRICT")
-
-	// 데이터 무결성 제약조건 추가 필요
+	db.AutoMigrate(&model.Club{}, &model.ClubInform{}, &model.ClubMember{}, &model.ClubRecruitment{}, &model.RecruitMember{})
+	db.Model(&model.ClubInform{}).AddForeignKey("club_uuid", "clubs(uuid)", "RESTRICT", "RESTRICT")
+	db.Model(&model.ClubMember{}).AddForeignKey("club_uuid", "clubs(uuid)", "RESTRICT", "RESTRICT")
+	db.Model(&model.ClubRecruitment{}).AddForeignKey("club_uuid", "clubs(uuid)", "RESTRICT", "RESTRICT")
+	db.Model(&model.RecruitMember{}).AddForeignKey("recruitment_uuid", "club_recruitments(uuid)", "RESTRICT", "RESTRICT")
 }
