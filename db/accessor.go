@@ -24,15 +24,15 @@ type Accessor interface {
 	GetAllClubInforms() ([]*model.ClubInform, error)
 	GetAllRecruitments() ([]*model.ClubRecruitment, error)
 
-	ChangeClubLeader(clubUUID, newLeaderUUID string) error
-	ModifyClubInform(clubUUID string, revisionInform *model.ClubInform) error
-	ModifyRecruitment(recruitUUID string, revisionRecruit *model.ClubRecruitment) error
+	ChangeClubLeader(clubUUID, newLeaderUUID string) (err error, rowsAffected int64)
+	ModifyClubInform(clubUUID string, revisionInform *model.ClubInform) (err error, rowsAffected int64)
+	ModifyRecruitment(recruitUUID string, revisionRecruit *model.ClubRecruitment) (err error, rowsAffected int64)
 
-	DeleteClub(clubUUID string) error
-	DeleteClubInform(clubUUID string) error
-	DeleteClubMember(clubUUID, studentUUID string) error
-	DeleteRecruitment(recruitUUID string) error
-	DeleteAllRecruitMember(recruitUUID string) error
+	DeleteClub(clubUUID string) (err error, rowsAffected int64)
+	DeleteClubInform(clubUUID string) (err error, rowsAffected int64)
+	DeleteClubMember(clubUUID, studentUUID string) (err error, rowsAffected int64)
+	DeleteRecruitment(recruitUUID string) (err error, rowsAffected int64)
+	DeleteAllRecruitMember(recruitUUID string) (err error, rowsAffected int64)
 
 	BeginTx()
 	Commit() *gorm.DB
