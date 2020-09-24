@@ -8,11 +8,11 @@ import (
 func Migrate(db *gorm.DB) {
 	db.LogMode(false)
 
-	db.DropTableIfExists(&model.Club{})
-	db.DropTableIfExists(&model.ClubInform{})
 	db.DropTableIfExists(&model.ClubMember{})
-	db.DropTableIfExists(&model.ClubRecruitment{})
+	db.DropTableIfExists(&model.ClubInform{})
 	db.DropTableIfExists(&model.RecruitMember{})
+	db.DropTableIfExists(&model.ClubRecruitment{})
+	db.DropTableIfExists(&model.Club{})
 
 	if !db.HasTable(&model.Club{}) {
 		db.CreateTable(&model.Club{})
