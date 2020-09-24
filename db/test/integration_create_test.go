@@ -4,6 +4,7 @@ import (
 	"club/model"
 	"club/tool/mysqlerr"
 	"github.com/go-playground/validator/v10"
+	"github.com/go-sql-driver/mysql"
 	"github.com/stretchr/testify/assert"
 	"log"
 	"testing"
@@ -58,6 +59,131 @@ func Test_Accessor_CreateClub(t *testing.T) {
 			assert.Equalf(t, testCase.IsInvalid, isInvalid, "invalid state assertion error (test case: %v)", testCase)
 		} else {
 			assert.Equalf(t, testCase.ExpectedError, err, "error assertion error (test case: %v)", testCase)
+		}
+	}
+}
+
+func Test_Accessor_CreateClubInform(t *testing.T) {
+	access, err := manager.BeginTx()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		access.Rollback()
+		testGroup.Done()
+	}()
+
+	for _, club := range []*model.Club{
+		{
+			UUID:       "club-123412341234",
+			LeaderUUID: "student-123412341234",
+		}, {
+			UUID:       "club-432143214321",
+			LeaderUUID: "student-432143214321",
+		}, {
+			UUID:       "club-111111111111",
+			LeaderUUID: "student-111111111111",
+		},
+	} {
+		if _, err := access.CreateClub(club); err != nil {
+			log.Fatal(err, club)
+		}
+	}
+
+	tests := []struct {
+		ClubUUID, Name  string
+		ClubConcept     string
+		Introduction    string
+		Field, Location string
+		Floor           int64
+		Link, LogoURI   string
+		IsInvalid       bool
+		ExpectedError   error
+	} {
+		{ // success case 1
+			ClubUUID:      "club-123412341234",
+			Name:          "DMS",
+			ClubConcept:   "DMS, SMS 서비스 개발 및 운영",
+			Introduction:  "어서 오세용~ 박진홍이 서식중이에용~",
+			Field:         "SW 개발",
+			Location:      "2-1반 교실",
+			Floor:         3,
+			Link:          "link.com",
+			LogoURI:       "logo.com",
+			ExpectedError: nil,
+		}, { // success case 2
+			ClubUUID:      "club-432143214321",
+			Name:          "SMS",
+			Field:         "SW 개발",
+			Location:      "2-2반 교실",
+			Floor:         3,
+			LogoURI:       "logo.com",
+			ExpectedError: nil,
+		}, { // floor invalid
+			ClubUUID:  "club-111111111111",
+			Name:      "DSM",
+			Field:     "SW 개발",
+			Location:  "2-3반 교실",
+			Floor:     6, // invalid floor
+			LogoURI:   "logo.com",
+			IsInvalid: true,
+		}, { // club uuid duplicate error
+			ClubUUID:      "club-123412341234",
+			Name:          "DSM",
+			Field:         "SW 개발",
+			Location:      "2-3반 교실",
+			Floor:         3,
+			LogoURI:       "logo.com",
+			ExpectedError: mysqlerr.DuplicateEntry(model.ClubInformInstance.ClubUUID.KeyName(), "club-123412341234"),
+		}, { // name uuid duplicate error
+			ClubUUID:      "club-111111111111",
+			Name:          "DMS",
+			Field:         "SW 개발",
+			Location:      "2-3반 교실",
+			Floor:         3,
+			LogoURI:       "logo.com",
+			ExpectedError: mysqlerr.DuplicateEntry(model.ClubInformInstance.Name.KeyName(), "DMS"),
+		}, { // location uuid duplicate error
+			ClubUUID:      "club-111111111111",
+			Name:          "DSM",
+			Field:         "SW 개발",
+			Location:      "2-2반 교실",
+			Floor:         3,
+			LogoURI:       "logo.com",
+			ExpectedError: mysqlerr.DuplicateEntry(model.ClubInformInstance.Location.KeyName(), "2-2반 교실"),
+		}, { // not exist club uuid
+			ClubUUID:      "club-222222222222",
+			Name:          "DSM",
+			Field:         "SW 개발",
+			Location:      "2-3반 교실",
+			Floor:         3,
+			LogoURI:       "logo.com",
+			ExpectedError: clubInformClubUUIDFKConstraintFailError,
+		},
+	}
+
+	for _, test := range tests {
+		_, err := access.CreateClubInform(&model.ClubInform{
+			ClubUUID:     model.ClubUUID(test.ClubUUID),
+			Name:         model.Name(test.Name),
+			ClubConcept:  model.ClubConcept(test.ClubConcept),
+			Introduction: model.Introduction(test.Introduction),
+			Field:        model.Field(test.Field),
+			Location:     model.Location(test.Location),
+			Floor:        model.Floor(test.Floor),
+			Link:         model.Link(test.Link),
+			LogoURI:      model.LogoURI(test.LogoURI),
+		})
+
+		if mysqlErr, ok := err.(*mysql.MySQLError); ok {
+			err = mysqlerr.ExceptReferenceInformFrom(mysqlErr)
+		}
+
+		if test.IsInvalid {
+			_, isInvalid := err.(validator.ValidationErrors)
+			assert.Equalf(t, test.IsInvalid, isInvalid, "invalid state assertion error (test case: %v)", test)
+		} else {
+			assert.Equalf(t, test.ExpectedError, err, "error assertion error (test case: %v)", test)
 		}
 	}
 }
