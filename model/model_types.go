@@ -3,6 +3,8 @@ package model
 import (
 	"club/tool/random"
 	"database/sql/driver"
+	"fmt"
+	"time"
 )
 
 var (
@@ -107,35 +109,37 @@ func (rc *recruitConcept) Scan(src interface{}) (err error) { *rc = recruitConce
 func (rc recruitConcept) KeyName() string { return "recruit_concept" }
 
 // StartPeriod 필드에서 사용할 사용자 정의 타입
-type startPeriod string
-func StartPeriod(s string) startPeriod { return startPeriod(s) }
+type startPeriod time.Time
+func StartPeriod(t time.Time) startPeriod { return startPeriod(t) }
 func (sp startPeriod) Value() (value driver.Value, err error) {
-	value = string(sp)
-	if value == "" { value = nil }
+	start := time.Time(sp)
+	if (start == time.Time{}) {
+		value = nil
+	} else {
+		value = fmt.Sprintf("%04d-%02d-%02d", start.Year(), start.Month(), start.Day())
+	}
 	return
 }
-func (sp *startPeriod) Scan(src interface{}) (err error) { *sp = startPeriod(src.([]uint8)); return }
+func (sp *startPeriod) Scan(src interface{}) (err error) { *sp = startPeriod(src.(time.Time)); return }
 func (sp startPeriod) KeyName() string { return "start_period" }
 func (sp startPeriod) NullReplaceValue() string { return nullReplaceValueForStartPeriod  }
 
 // EndPeriod 필드에서 사용할 사용자 정의 타입
-type endPeriod string
-func EndPeriod(s string) endPeriod { return endPeriod(s) }
+type endPeriod time.Time
+func EndPeriod(t time.Time) endPeriod { return endPeriod(t) }
 func (ep endPeriod) Value() (value driver.Value, err error) {
-	value = string(ep)
-	if value == "" { value = nil }
+	end := time.Time(ep)
+	if (end == time.Time{}) {
+		value = nil
+	} else {
+		value = fmt.Sprintf("%04d-%02d-%02d", end.Year(), end.Month(), end.Day())
+	}
 	return
 }
-func (ep *endPeriod) Scan(src interface{}) (err error) { *ep = endPeriod(src.([]uint8)); return }
+func (ep *endPeriod) Scan(src interface{}) (err error) { *ep = endPeriod(src.(time.Time)); return }
 func (ep endPeriod) KeyName() string { return "end_period" }
 func (ep endPeriod) NullReplaceValue() string { return nullReplaceValueForEndPeriod  }
 
-// Canceled 필드에서 사용할 사용자 정의 타입
-type canceled bool
-func Canceled(b bool) canceled { return canceled(b) }
-func (c canceled) Value() (driver.Value, error) { return bool(c), nil }
-func (c *canceled) Scan(src interface{}) (err error) { *c = canceled(src.(bool)); return }
-func (c canceled) KeyName() string { return "canceled" }
 
 // RecruitmentUUID 필드에서 사용할 사용자 정의 타입
 type recruitmentUUID string
