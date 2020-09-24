@@ -94,36 +94,44 @@ func (m _mock) GetAllRecruitments() ([]*model.ClubRecruitment, error) {
 	return args.Get(0).([]*model.ClubRecruitment), args.Error(1)
 }
 
-func (m _mock) ChangeClubLeader(clubUUID, newLeaderUUID string) error {
-	return m.mock.Called(clubUUID, newLeaderUUID).Error(0)
+func (m _mock) ChangeClubLeader(clubUUID, newLeaderUUID string) (error, int64) {
+	args := m.mock.Called(clubUUID, newLeaderUUID)
+	return args.Error(0), int64(args.Int(1))
 }
 
-func (m _mock) ModifyClubInform(clubUUID string, revisionInform *model.ClubInform) error {
-	return m.mock.Called(clubUUID, revisionInform).Error(0)
+func (m _mock) ModifyClubInform(clubUUID string, revisionInform *model.ClubInform) (error, int64) {
+	args := m.mock.Called(clubUUID, revisionInform)
+	return args.Error(0), int64(args.Int(1))
 }
 
-func (m _mock) ModifyRecruitment(recruitUUID string, revisionRecruit *model.ClubRecruitment) error {
-	return m.mock.Called(recruitUUID, revisionRecruit).Error(0)
+func (m _mock) ModifyRecruitment(recruitUUID string, revisionRecruit *model.ClubRecruitment) (error, int64) {
+	args := m.mock.Called(recruitUUID, revisionRecruit)
+	return args.Error(0), int64(args.Int(1))
 }
 
-func (m _mock) DeleteClub(clubUUID string) error {
-	return m.mock.Called(clubUUID).Error(0)
+func (m _mock) DeleteClub(clubUUID string) (error, int64) {
+	args := m.mock.Called(clubUUID)
+	return args.Error(0), int64(args.Int(1))
 }
 
-func (m _mock) DeleteClubInform(clubUUID string) error {
-	return m.mock.Called(clubUUID).Error(0)
+func (m _mock) DeleteClubInform(clubUUID string) (error, int64) {
+	args := m.mock.Called(clubUUID)
+	return args.Error(0), int64(args.Int(1))
 }
 
-func (m _mock) DeleteClubMember(clubUUID, studentUUID string) error {
-	return m.mock.Called(clubUUID, studentUUID).Error(0)
+func (m _mock) DeleteClubMember(clubUUID, studentUUID string) (error, int64) {
+	args := m.mock.Called(clubUUID, studentUUID)
+	return args.Error(0), int64(args.Int(1))
 }
 
-func (m _mock) DeleteRecruitment(recruitUUID string) error {
-	return m.mock.Called(recruitUUID).Error(0)
+func (m _mock) DeleteRecruitment(recruitUUID string) (error, int64) {
+	args := m.mock.Called(recruitUUID)
+	return args.Error(0), int64(args.Int(1))
 }
 
-func (m _mock) DeleteAllRecruitMember(recruitUUID string) error {
-	return m.mock.Called(recruitUUID).Error(0)
+func (m _mock) DeleteAllRecruitMember(recruitUUID string) (error, int64) {
+	args := m.mock.Called(recruitUUID)
+	return args.Error(0), int64(args.Int(1))
 }
 
 func (m _mock) BeginTx() {
