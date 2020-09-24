@@ -6,12 +6,14 @@ import (
 	"time"
 )
 
-func (d *_default) ChangeClubLeader(clubUUID, newLeaderUUID string) (err error) {
-	err = d.tx.Model(model.Club{}).Where("uuid = ?", clubUUID).Update("leader_uuid", newLeaderUUID).Error
+func (d *_default) ChangeClubLeader(clubUUID, newLeaderUUID string) (err error, rowAffected int64) {
+	updateResult := d.tx.Model(model.Club{}).Where("uuid = ?", clubUUID).Update("leader_uuid", newLeaderUUID)
+	err = updateResult.Error
+	rowAffected = updateResult.RowsAffected
 	return
 }
 
-func (d *_default) ModifyClubInform(clubUUID string, revisionInform *model.ClubInform) (err error) {
+func (d *_default) ModifyClubInform(clubUUID string, revisionInform *model.ClubInform) (err error, rowAffected int64) {
 	contextForUpdate := make(map[string]interface{}, 8)
 
 	if revisionInform.ClubUUID != "" {
@@ -28,11 +30,13 @@ func (d *_default) ModifyClubInform(clubUUID string, revisionInform *model.ClubI
 	if revisionInform.Link != ""         { contextForUpdate[revisionInform.Link.KeyName()] = revisionInform.Link }
 	if revisionInform.LogoURI != ""      { contextForUpdate[revisionInform.LogoURI.KeyName()] = revisionInform.LogoURI }
 
-	err = d.tx.Model(&model.ClubInform{}).Where("club_uuid = ?", clubUUID).Updates(contextForUpdate).Error
+	updateResult := d.tx.Model(&model.ClubInform{}).Where("club_uuid = ?", clubUUID).Updates(contextForUpdate)
+	err = updateResult.Error
+	rowAffected = updateResult.RowsAffected
 	return
 }
 
-func (d *_default) ModifyRecruitment(recruitUUID string, revisionRecruit *model.ClubRecruitment) (err error) {
+func (d *_default) ModifyRecruitment(recruitUUID string, revisionRecruit *model.ClubRecruitment) (err error, rowAffected int64) {
 	contextForUpdate := make(map[string]interface{}, 8)
 
 	if revisionRecruit.UUID != "" {
@@ -63,6 +67,8 @@ func (d *_default) ModifyRecruitment(recruitUUID string, revisionRecruit *model.
 		}
 	}
 
-	err = d.tx.Model(&model.ClubRecruitment{}).Where("recruitment_uuid = ?", recruitUUID).Updates(contextForUpdate).Error
+	updateResult := d.tx.Model(&model.ClubRecruitment{}).Where("uuid = ?", recruitUUID).Updates(contextForUpdate)
+	err = updateResult.Error
+	rowAffected = updateResult.RowsAffected
 	return
 }
