@@ -27,3 +27,9 @@ func Int64WithLength(length int) int64 {
 	stringToInt, _ := strconv.Atoi(randomString)
 	return int64(stringToInt)
 }
+
+func IntWithLength(length int) int {
+	randomString := StringConsistOfIntWithLength(length)
+	stringToInt, _ := strconv.Atoi(randomString)
+	return stringToInt
+}
