@@ -1,8 +1,11 @@
 package access
 
-import "github.com/jinzhu/gorm"
+import (
+	"github.com/jinzhu/gorm"
+)
 
 type _default struct {
+	None
 	tx *gorm.DB
 }
 
