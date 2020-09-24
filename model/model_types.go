@@ -8,13 +8,13 @@ import (
 )
 
 var (
-	nullReplaceValueForStartPeriod string
-	nullReplaceValueForEndPeriod string
+	nullReplaceValueForStartPeriod time.Time
+	nullReplaceValueForEndPeriod time.Time
 )
 
 func init() {
-	nullReplaceValueForStartPeriod = random.StringConsistOfIntWithLength(10)
-	nullReplaceValueForEndPeriod = random.StringConsistOfIntWithLength(10)
+	nullReplaceValueForStartPeriod = time.Date(0, 0, 0, 0, random.IntWithLength(11), 0, 0, time.UTC)
+	nullReplaceValueForEndPeriod = time.Date(0, 0, 0, 0, random.IntWithLength(11), 0, 0, time.UTC)
 }
 
 // UUID 필드에서 사용할 사용자 정의 타입
@@ -122,7 +122,7 @@ func (sp startPeriod) Value() (value driver.Value, err error) {
 }
 func (sp *startPeriod) Scan(src interface{}) (err error) { *sp = startPeriod(src.(time.Time)); return }
 func (sp startPeriod) KeyName() string { return "start_period" }
-func (sp startPeriod) NullReplaceValue() string { return nullReplaceValueForStartPeriod  }
+func (sp startPeriod) NullReplaceValue() time.Time { return nullReplaceValueForStartPeriod  }
 
 // EndPeriod 필드에서 사용할 사용자 정의 타입
 type endPeriod time.Time
@@ -138,8 +138,7 @@ func (ep endPeriod) Value() (value driver.Value, err error) {
 }
 func (ep *endPeriod) Scan(src interface{}) (err error) { *ep = endPeriod(src.(time.Time)); return }
 func (ep endPeriod) KeyName() string { return "end_period" }
-func (ep endPeriod) NullReplaceValue() string { return nullReplaceValueForEndPeriod  }
-
+func (ep endPeriod) NullReplaceValue() time.Time { return nullReplaceValueForEndPeriod  }
 
 // RecruitmentUUID 필드에서 사용할 사용자 정의 타입
 type recruitmentUUID string
