@@ -39,6 +39,61 @@ func (m _mock) CreateRecruitMember(recruitMember *model.RecruitMember) (resultMe
 	return args.Get(0).(*model.RecruitMember), args.Error(1)
 }
 
+func (m _mock) GetClubWithClubUUID(clubUUID string) (*model.Club, error) {
+	args := m.mock.Called(clubUUID)
+	return args.Get(0).(*model.Club), args.Error(1)
+}
+
+func (m _mock) GetClubWithLeaderUUID(leaderUUID string) (*model.Club, error) {
+	args := m.mock.Called(leaderUUID)
+	return args.Get(0).(*model.Club), args.Error(1)
+}
+
+func (m _mock) GetRecruitmentsWithClubUUID(clubUUID string) ([]*model.ClubRecruitment, error) {
+	args := m.mock.Called(clubUUID)
+	return args.Get(0).([]*model.ClubRecruitment), args.Error(1)
+}
+
+func (m _mock) GetClubInformsSortByUpdateTime(offset, limit int, field, name string) ([]*model.ClubInform, error) {
+	args := m.mock.Called(offset, limit, field, name)
+	return args.Get(0).([]*model.ClubInform), args.Error(1)
+}
+
+func (m _mock) GetRecruitmentsSortByCreateTime(offset, limit int, field, name string) ([]*model.ClubRecruitment, error) {
+	args := m.mock.Called(offset, limit, field, name)
+	return args.Get(0).([]*model.ClubRecruitment), args.Error(1)
+}
+
+func (m _mock) GetClubInformWithClubUUID(clubUUID string) (*model.ClubInform, error) {
+	args := m.mock.Called(clubUUID)
+	return args.Get(0).(*model.ClubInform), args.Error(1)
+}
+
+func (m _mock) GetRecruitmentWithRecruitmentUUID(recruitUUID string) (*model.ClubRecruitment, error) {
+	args := m.mock.Called(recruitUUID)
+	return args.Get(0).(*model.ClubRecruitment), args.Error(1)
+}
+
+func (m _mock) GetClubMembersWithClubUUID(clubUUID string) ([]*model.ClubMember, error) {
+	args := m.mock.Called(clubUUID)
+	return args.Get(0).([]*model.ClubMember), args.Error(1)
+}
+
+func (m _mock) GetRecruitMembersWithRecruitmentUUID(recruitUUID string) ([]*model.RecruitMember, error) {
+	args := m.mock.Called(recruitUUID)
+	return args.Get(0).([]*model.RecruitMember), args.Error(1)
+}
+
+func (m _mock) GetAllClubInforms() ([]*model.ClubInform, error) {
+	args := m.mock.Called()
+	return args.Get(0).([]*model.ClubInform), args.Error(1)
+}
+
+func (m _mock) GetAllRecruitments() ([]*model.ClubRecruitment, error) {
+	args := m.mock.Called()
+	return args.Get(0).([]*model.ClubRecruitment), args.Error(1)
+}
+
 func (m _mock) ChangeClubLeader(clubUUID, newLeaderUUID string) error {
 	return m.mock.Called(clubUUID, newLeaderUUID).Error(0)
 }
