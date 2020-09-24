@@ -25,15 +25,15 @@ func (n None) GetRecruitMembersWithRecruitmentUUID(recruitUUID string) (_ []*mod
 func (n None) GetAllClubInforms() (_ []*model.ClubInform, _ error) { return }
 func (n None) GetAllRecruitments() (_ []*model.ClubRecruitment, _ error) { return }
 
-func (n None) ChangeClubLeader(clubUUID, newLeaderUUID string) (_ error) { return }
-func (n None) ModifyClubInform(clubUUID string, revisionInform *model.ClubInform) (_ error) { return }
-func (n None) ModifyRecruitment(recruitUUID string, revisionRecruit *model.ClubRecruitment) (_ error) { return }
+func (n None) ChangeClubLeader(clubUUID, newLeaderUUID string) (_ error, _ int64) { return }
+func (n None) ModifyClubInform(clubUUID string, revisionInform *model.ClubInform) (_ error, _ int64) { return }
+func (n None) ModifyRecruitment(recruitUUID string, revisionRecruit *model.ClubRecruitment) (_ error, _ int64) { return }
 
-func (n None) DeleteClub(clubUUID string) (_ error) { return }
-func (n None) DeleteClubInform(clubUUID string) (_ error) { return }
-func (n None) DeleteClubMember(clubUUID, studentUUID string) (_ error) { return }
-func (n None) DeleteRecruitment(recruitUUID string) (_ error) { return }
-func (n None) DeleteAllRecruitMember(recruitUUID string) (_ error) { return }
+func (n None) DeleteClub(clubUUID string) (_ error, _ int64) { return }
+func (n None) DeleteClubInform(clubUUID string) (_ error, _ int64) { return }
+func (n None) DeleteClubMember(clubUUID, studentUUID string) (_ error, _ int64) { return }
+func (n None) DeleteRecruitment(recruitUUID string) (_ error, _ int64) { return }
+func (n None) DeleteAllRecruitMember(recruitUUID string) (_ error, _ int64) { return }
 
 func (n None) BeginTx() { return }
 func (n None) Commit() (_ *gorm.DB) { return }
