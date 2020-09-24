@@ -14,7 +14,7 @@ type Accessor interface {
 
 	GetClubWithClubUUID(clubUUID string) (*model.Club, error)
 	GetClubWithLeaderUUID(leaderUUID string) (*model.Club, error)
-	GetRecruitmentsWithClubUUID(clubUUID string) ([]*model.ClubRecruitment, error)
+	GetRecruitmentWithClubUUID(clubUUID string) (*model.ClubRecruitment, error)
 	GetClubInformsSortByUpdateTime(offset, limit int, field, name string) ([]*model.ClubInform, error)
 	GetRecruitmentsSortByCreateTime(offset, limit int, field, name string) ([]*model.ClubRecruitment, error)
 	GetClubInformWithClubUUID(clubUUID string) (*model.ClubInform, error)
@@ -24,15 +24,15 @@ type Accessor interface {
 	GetAllClubInforms() ([]*model.ClubInform, error)
 	GetAllRecruitments() ([]*model.ClubRecruitment, error)
 
-	ChangeClubLeader(clubUUID, newLeaderUUID string) error
-	ModifyClubInform(clubUUID string, revisionInform *model.ClubInform) error
-	ModifyRecruitment(recruitUUID string, revisionRecruit *model.ClubRecruitment) error
+	ChangeClubLeader(clubUUID, newLeaderUUID string) (err error, rowsAffected int64)
+	ModifyClubInform(clubUUID string, revisionInform *model.ClubInform) (err error, rowsAffected int64)
+	ModifyRecruitment(recruitUUID string, revisionRecruit *model.ClubRecruitment) (err error, rowsAffected int64)
 
-	DeleteClub(clubUUID string) error
-	DeleteClubInform(clubUUID string) error
-	DeleteClubMember(clubUUID, studentUUID string) error
-	DeleteRecruitment(recruitUUID string) error
-	DeleteAllRecruitMember(recruitUUID string) error
+	DeleteClub(clubUUID string) (err error, rowsAffected int64)
+	DeleteClubInform(clubUUID string) (err error, rowsAffected int64)
+	DeleteClubMember(clubUUID, studentUUID string) (err error, rowsAffected int64)
+	DeleteRecruitment(recruitUUID string) (err error, rowsAffected int64)
+	DeleteAllRecruitMember(recruitUUID string) (err error, rowsAffected int64)
 
 	BeginTx()
 	Commit() *gorm.DB
