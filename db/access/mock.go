@@ -49,7 +49,7 @@ func (m _mock) GetClubWithLeaderUUID(leaderUUID string) (*model.Club, error) {
 	return args.Get(0).(*model.Club), args.Error(1)
 }
 
-func (m _mock) GetRecruitmentWithClubUUID(clubUUID string) (*model.ClubRecruitment, error) {
+func (m _mock) GetCurrentRecruitmentWithClubUUID(clubUUID string) (*model.ClubRecruitment, error) {
 	args := m.mock.Called(clubUUID)
 	return args.Get(0).(*model.ClubRecruitment), args.Error(1)
 }
@@ -59,7 +59,7 @@ func (m _mock) GetClubInformsSortByUpdateTime(offset, limit int, field, name str
 	return args.Get(0).([]*model.ClubInform), args.Error(1)
 }
 
-func (m _mock) GetRecruitmentsSortByCreateTime(offset, limit int, field, name string) ([]*model.ClubRecruitment, error) {
+func (m _mock) GetCurrentRecruitmentsSortByCreateTime(offset, limit int, field, name string) ([]*model.ClubRecruitment, error) {
 	args := m.mock.Called(offset, limit, field, name)
 	return args.Get(0).([]*model.ClubRecruitment), args.Error(1)
 }
