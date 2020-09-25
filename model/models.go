@@ -25,8 +25,8 @@ type ClubInform struct {
 
 type ClubMember struct {
 	gorm.Model
-	ClubUUID    clubUUID    `gorm:"Type:char(17);NOT NULL;UNIQUE" validate:"uuid=club,len=17"`
-	StudentUUID studentUUID `gorm:"Type:char(20);NOT NULL;UNIQUE" validate:"uuid=student,len=20"`
+	ClubUUID    clubUUID    `gorm:"Type:char(17);NOT NULL;INDEX" validate:"uuid=club,len=17"`
+	StudentUUID studentUUID `gorm:"Type:char(20);NOT NULL" validate:"uuid=student,len=20"`
 }
 
 type ClubRecruitment struct {
