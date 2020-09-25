@@ -96,7 +96,7 @@ func Test_Accessor_CreateClubInform(t *testing.T) {
 		ClubConcept     string
 		Introduction    string
 		Field, Location string
-		Floor           int64
+		Floor           string
 		Link, LogoURI   string
 		IsInvalid       bool
 		ExpectedError   error
@@ -108,7 +108,7 @@ func Test_Accessor_CreateClubInform(t *testing.T) {
 			Introduction:  "어서 오세용~ 박진홍이 서식중이에용~",
 			Field:         "SW 개발",
 			Location:      "2-1반 교실",
-			Floor:         3,
+			Floor:         "3",
 			Link:          "link.com",
 			LogoURI:       "logo.com",
 			ExpectedError: nil,
@@ -117,7 +117,7 @@ func Test_Accessor_CreateClubInform(t *testing.T) {
 			Name:          "SMS",
 			Field:         "SW 개발",
 			Location:      "2-2반 교실",
-			Floor:         3,
+			Floor:         "3",
 			LogoURI:       "logo.com",
 			ExpectedError: nil,
 		}, { // floor invalid
@@ -125,7 +125,7 @@ func Test_Accessor_CreateClubInform(t *testing.T) {
 			Name:      "DSM",
 			Field:     "SW 개발",
 			Location:  "2-3반 교실",
-			Floor:     6, // invalid floor
+			Floor:     "6", // invalid floor
 			LogoURI:   "logo.com",
 			IsInvalid: true,
 		}, { // club uuid duplicate error
@@ -133,7 +133,7 @@ func Test_Accessor_CreateClubInform(t *testing.T) {
 			Name:          "DSM",
 			Field:         "SW 개발",
 			Location:      "2-3반 교실",
-			Floor:         3,
+			Floor:         "3",
 			LogoURI:       "logo.com",
 			ExpectedError: mysqlerr.DuplicateEntry(model.ClubInformInstance.ClubUUID.KeyName(), "club-123412341234"),
 		}, { // name uuid duplicate error
@@ -141,7 +141,7 @@ func Test_Accessor_CreateClubInform(t *testing.T) {
 			Name:          "DMS",
 			Field:         "SW 개발",
 			Location:      "2-3반 교실",
-			Floor:         3,
+			Floor:         "3",
 			LogoURI:       "logo.com",
 			ExpectedError: mysqlerr.DuplicateEntry(model.ClubInformInstance.Name.KeyName(), "DMS"),
 		}, { // location uuid duplicate error
@@ -149,7 +149,7 @@ func Test_Accessor_CreateClubInform(t *testing.T) {
 			Name:          "DSM",
 			Field:         "SW 개발",
 			Location:      "2-2반 교실",
-			Floor:         3,
+			Floor:         "3",
 			LogoURI:       "logo.com",
 			ExpectedError: mysqlerr.DuplicateEntry(model.ClubInformInstance.Location.KeyName(), "2-2반 교실"),
 		}, { // not exist club uuid
@@ -157,7 +157,7 @@ func Test_Accessor_CreateClubInform(t *testing.T) {
 			Name:          "DSM",
 			Field:         "SW 개발",
 			Location:      "2-3반 교실",
-			Floor:         3,
+			Floor:         "3",
 			LogoURI:       "logo.com",
 			ExpectedError: clubInformClubUUIDFKConstraintFailError,
 		},

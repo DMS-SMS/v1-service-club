@@ -26,7 +26,7 @@ func (d *_default) ModifyClubInform(clubUUID string, revisionInform *model.ClubI
 	if revisionInform.Introduction != "" { contextForUpdate[revisionInform.Introduction.KeyName()] = revisionInform.Introduction }
 	if revisionInform.Field != ""        { contextForUpdate[revisionInform.Field.KeyName()] = revisionInform.Field }
 	if revisionInform.Location != ""     { contextForUpdate[revisionInform.Location.KeyName()] = revisionInform.Location }
-	if revisionInform.Floor != 0         { contextForUpdate[revisionInform.Floor.KeyName()] = revisionInform.Floor }
+	if revisionInform.Floor != ""        { contextForUpdate[revisionInform.Floor.KeyName()] = revisionInform.Floor }
 	if revisionInform.Link != ""         { contextForUpdate[revisionInform.Link.KeyName()] = revisionInform.Link }
 	if revisionInform.LogoURI != ""      { contextForUpdate[revisionInform.LogoURI.KeyName()] = revisionInform.LogoURI }
 
