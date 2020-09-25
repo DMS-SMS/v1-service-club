@@ -414,55 +414,48 @@ func Test_Accessor_CreateRecruitMember(t *testing.T) {
 		}
 	}
 
-	_ = model.RecruitMember{
-		RecruitmentUUID: "",
-		Grade:           0,
-		Field:           "",
-		Number:          0,
-	}
-
 	tests := []struct {
 		RecruitmentUUID string
-		Grade, Number   int64
+		Grade, Number   string
 		Field           string
 		IsInvalid       bool
 		ExpectedError   error
 	} {
 		{ // success case 1
 			RecruitmentUUID: "recruitment-123412341234",
-			Grade:           2,
+			Grade:           "2",
 			Field:           "서버개발자",
-			Number:          1,
+			Number:          "1",
 			ExpectedError:   nil,
 		}, { // success case 2
 			RecruitmentUUID: "recruitment-123412341234",
-			Grade:           2,
+			Grade:           "2",
 			Field:           "프론트개발자",
-			Number:          2,
+			Number:          "10",
 			ExpectedError:   nil,
 		}, { // validate error (recruit_uuid)
 			RecruitmentUUID: "recruitment1-123412341234",
-			Grade:           2,
+			Grade:           "2",
 			Field:           "모바일 앱 개발자",
-			Number:          1,
+			Number:          "1",
 			IsInvalid:       true,
 		}, { // validate error (grade)
 			RecruitmentUUID: "recruitment-123412341234",
-			Grade:           4,
+			Grade:           "4",
 			Field:           "모바일 앱 개발자",
-			Number:          1,
+			Number:          "1",
 			IsInvalid:       true,
 		}, { // validate error (number)
 			RecruitmentUUID: "recruitment-123412341234",
-			Grade:           2,
+			Grade:           "2",
 			Field:           "모바일 앱 개발자",
-			Number:          100,
+			Number:          "100",
 			IsInvalid:       true,
 		}, { // no exist recruitment uuid error
 			RecruitmentUUID: "recruitment-111111111111",
-			Grade:           2,
+			Grade:           "2",
 			Field:           "모바일 앱 개발자",
-			Number:          1,
+			Number:          "1",
 			ExpectedError:   recruitMemberRecruitmentUUIDFKConstraintFailError,
 		},
 	}
