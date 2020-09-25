@@ -17,7 +17,7 @@ const (
 	validName = "DMS"
 	validField = "SW 개발"
 	validLocation = "2-2반 교실"
-	validFloor = 3
+	validFloor = "3"
 	validLogoURI = "logos/club-111111111111"
 	validRecruitConcept = "디자인에 좋은 감각이 있는 새로운 1학년 부원을 모집합니다!"
 )
