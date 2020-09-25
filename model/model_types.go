@@ -145,7 +145,7 @@ type recruitmentUUID string
 func RecruitmentUUID(s string) recruitmentUUID { return recruitmentUUID(s) }
 func (ru recruitmentUUID) Value() (driver.Value, error) { return string(ru), nil }
 func (ru *recruitmentUUID) Scan(src interface{}) (err error) { *ru = recruitmentUUID(src.([]uint8)); return }
-func (ru recruitmentUUID) KeyName() string { return "end_period" }
+func (ru recruitmentUUID) KeyName() string { return "recruitment_uuid" }
 
 // Grade 필드에서 사용할 사용자 정의 타입
 type grade int64
