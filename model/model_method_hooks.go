@@ -1,6 +1,11 @@
 package model
 
-import "club/model/validate"
+import (
+	"club/model/validate"
+	"club/tool/mysqlerr"
+	"fmt"
+	"github.com/jinzhu/gorm"
+)
 
 const (
 	emptyString = ""
@@ -25,8 +30,16 @@ func (ci *ClubInform) BeforeCreate() error {
 	return validate.DBValidator.Struct(ci)
 }
 
-func (cm *ClubMember) BeforeCreate() error {
-	return validate.DBValidator.Struct(cm)
+func (cm *ClubMember) BeforeCreate(tx *gorm.DB) (err error) {
+	if err = validate.DBValidator.Struct(cm); err != nil {
+		return
+	}
+
+	selectResult := tx.Where("club_uuid = ? AND student_uuid = ?", cm.ClubUUID, cm.StudentUUID).Find(&ClubMember{})
+	if selectResult.RowsAffected != 0 {
+		err = mysqlerr.DuplicateEntry(ClubMemberInstance.StudentUUID.KeyName(), fmt.Sprintf("%s.%s", cm.ClubUUID, cm.StudentUUID))
+	}
+	return
 }
 
 func (cr *ClubRecruitment) BeforeCreate() error {

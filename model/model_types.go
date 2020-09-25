@@ -68,7 +68,7 @@ func (f field) KeyName() string { return "field" }
 
 // Introduction 필드에서 사용할 사용자 정의 타입
 type location string
-func Location(s string) field { return field(s) }
+func Location(s string) location { return location(s) }
 func (l location) Value() (driver.Value, error) { return string(l), nil }
 func (l *location) Scan(src interface{}) (err error) { *l = location(src.([]uint8)); return }
 func (l location) KeyName() string { return "location" }
