@@ -29,10 +29,10 @@ func (d *_default) GetCurrentRecruitmentWithClubUUID(clubUUID string) (recruit *
 func (d *_default) GetClubInformsSortByUpdateTime(offset, limit int, field, name string) (clubInforms []*model.ClubInform, err error) {
 	selectedTX := d.tx.New()
 	if field != "" {
-		selectedTX = selectedTX.Where("field = ?", field)
+		selectedTX = selectedTX.Where("field LIKE ?", "%"+field+"%")
 	}
 	if name != "" {
-		selectedTX = selectedTX.Where("name = ?", name)
+		selectedTX = selectedTX.Where("name LIKE ?", "%"+name+"%")
 	}
 
 	clubInforms = make([]*model.ClubInform, limit)
