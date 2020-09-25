@@ -32,7 +32,7 @@ type ClubMember struct {
 type ClubRecruitment struct {
 	gorm.Model
 	UUID           uuid           `gorm:"PRIMARY_KEY;Type:char(24);UNIQUE;INDEX" validate:"uuid=recruitment,len=24"`
-	ClubUUID       clubUUID       `gorm:"Type:char(17);NOT NULL;UNIQUE" validate:"uuid=club,len=17"`
+	ClubUUID       clubUUID       `gorm:"Type:char(17);NOT NULL" validate:"uuid=club,len=17"`
 	RecruitConcept recruitConcept `gorm:"Type:varchar(40);NOT NULL" validate:"min=1,max=40"`
 	StartPeriod    startPeriod    `gorm:"Type:datetime"`
 	EndPeriod      endPeriod      `gorm:"Type:datetime"`
