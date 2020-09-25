@@ -7,7 +7,7 @@ import (
 type Club struct {
 	gorm.Model
 	UUID       uuid       `gorm:"PRIMARY_KEY;Type:char(17);UNIQUE;INDEX" validate:"uuid=club,len=17"`
-	LeaderUUID leaderUUID `gorm:"Type:char(20);NOT NULL;UNIQUE;" validate:"uuid=student,len=20"`
+	LeaderUUID leaderUUID `gorm:"Type:char(20);NOT NULL;" validate:"uuid=student,len=20"`
 }
 
 type ClubInform struct {
