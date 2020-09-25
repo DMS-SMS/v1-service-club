@@ -18,9 +18,11 @@ func (d *_default) GetClubWithLeaderUUID(leaderUUID string) (club *model.Club, e
 	return
 }
 
-func (d *_default) GetRecruitmentWithClubUUID(clubUUID string) (recruit *model.ClubRecruitment, err error) {
+func (d *_default) GetCurrentRecruitmentWithClubUUID(clubUUID string) (recruit *model.ClubRecruitment, err error) {
 	recruit = new(model.ClubRecruitment)
-	err = d.tx.Where("club_uuid = ?", clubUUID).Find(recruit).Error
+	now := time.Now()
+	selectedTx := d.tx.Where("club_uuid = ? AND end_period >= ?", clubUUID, now).Or("club_uuid = ? AND end_period IS NULL", clubUUID)
+	err = selectedTx.Find(recruit).Error
 	return
 }
 
@@ -43,7 +45,7 @@ func (d *_default) GetClubInformsSortByUpdateTime(offset, limit int, field, name
 	return
 }
 
-func (d *_default) GetRecruitmentsSortByCreateTime(offset, limit int, field, name string) (recruits []*model.ClubRecruitment, err error) {
+func (d *_default) GetCurrentRecruitmentsSortByCreateTime(offset, limit int, field, name string) (recruits []*model.ClubRecruitment, err error) {
 	selectedTX := d.tx.New()
 	if field != "" {
 		selectedTX = selectedTX.Where("field = ?", field)
