@@ -13,7 +13,7 @@ var (
 	testGroup sync.WaitGroup
 )
 
-const numberOfTestFunc = 3
+const numberOfTestFunc = 4
 
 var (
 	clubInformClubUUIDFKConstraintFailError = mysqlerr.FKConstraintFailWithoutReferenceInform(mysqlerr.FKInform{
@@ -31,6 +31,16 @@ var (
 		TableName:      model.ClubMemberInstance.TableName(),
 		ConstraintName: model.ClubMemberInstance.ClubUUIDConstraintName(),
 		AttrName:       model.ClubMemberInstance.ClubUUID.KeyName(),
+	}, mysqlerr.RefInform{
+		TableName: model.ClubInstance.TableName(),
+		AttrName:  model.ClubInstance.UUID.KeyName(),
+	})
+
+	clubRecruitmentClubUUIDFKConstraintFailError = mysqlerr.FKConstraintFailWithoutReferenceInform(mysqlerr.FKInform{
+		DBName:         strings.ToLower("SMS_Club_Test_DB"),
+		TableName:      model.ClubRecruitmentInstance.TableName(),
+		ConstraintName: model.ClubRecruitmentInstance.ClubUUIDConstraintName(),
+		AttrName:       model.ClubRecruitmentInstance.ClubUUID.KeyName(),
 	}, mysqlerr.RefInform{
 		TableName: model.ClubInstance.TableName(),
 		AttrName:  model.ClubInstance.UUID.KeyName(),
