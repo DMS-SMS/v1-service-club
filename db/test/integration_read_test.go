@@ -55,3 +55,51 @@ func Test_Accessor_GetClubWithClubUUID(t *testing.T) {
 		assert.Equalf(t, test.ExpectResult, result.ExceptGormModel(), "result club assertion error (test case: %v)", test)
 	}
 }
+
+func Test_Accessor_GetClubWithLeaderUUID(t *testing.T) {
+	access, err := manager.BeginTx()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		access.Rollback()
+		testGroup.Done()
+	}()
+
+	for _, club := range []*model.Club{
+		{
+			UUID:       "club-111111111111",
+			LeaderUUID: "student-111111111111",
+		},
+	} {
+		if _, err := access.CreateClub(club); err != nil {
+			log.Fatal(err, club)
+		}
+	}
+
+	tests := []struct {
+		LeaderUUID   string
+		ExpectResult *model.Club
+		ExpectError  error
+	}{
+		{
+			LeaderUUID: "student-111111111111",
+			ExpectResult: &model.Club{
+				UUID:       "club-111111111111",
+				LeaderUUID: "student-111111111111",
+			},
+			ExpectError: nil,
+		}, {
+			LeaderUUID:   "student-222222222222",
+			ExpectResult: &model.Club{},
+			ExpectError:  gorm.ErrRecordNotFound,
+		},
+	}
+
+	for _, test := range tests {
+		result, err := access.GetClubWithLeaderUUID(test.LeaderUUID)
+
+		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
+		assert.Equalf(t, test.ExpectResult, result.ExceptGormModel(), "result club assertion error (test case: %v)", test)
+	}
+}
