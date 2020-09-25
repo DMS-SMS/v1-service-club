@@ -187,3 +187,83 @@ func Test_Accessor_CreateClubInform(t *testing.T) {
 		}
 	}
 }
+
+func Test_Accessor_CreateClubMember(t *testing.T) {
+	access, err := manager.BeginTx()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		access.Rollback()
+		testGroup.Done()
+	}()
+
+	for _, club := range []*model.Club{
+		{
+			UUID:       "club-123412341234",
+			LeaderUUID: "student-123412341234",
+		}, {
+			UUID:       "club-432143214321",
+			LeaderUUID: "student-432143214321",
+		},
+	} {
+		if _, err := access.CreateClub(club); err != nil {
+			log.Fatal(err, club)
+		}
+	}
+
+	tests := []struct {
+		ClubUUID      string
+		StudentUUID   string
+		IsInvalid     bool
+		ExpectedError error
+	} {
+		{ // success case
+			ClubUUID:      "club-123412341234",
+			StudentUUID:   "student-123412341234",
+			ExpectedError: nil,
+		}, { // success case
+			ClubUUID:      "club-123412341234",
+			StudentUUID:   "student-111111111111",
+			ExpectedError: nil,
+		}, { // student uuid duplicate -> error X
+			ClubUUID:      "club-432143214321",
+			StudentUUID:   "student-111111111111",
+			ExpectedError: nil,
+		}, { // club & student uuid duplicate error
+			ClubUUID:      "club-123412341234",
+			StudentUUID:   "student-111111111111",
+			ExpectedError: mysqlerr.DuplicateEntry(model.ClubMemberInstance.StudentUUID.KeyName(), "club-123412341234.student-111111111111"),
+		}, { // validate error
+			ClubUUID:    "club-12341234123",
+			StudentUUID: "student-111111111111",
+			IsInvalid:   true,
+		}, { // validate error
+			ClubUUID:    "club-123412341234",
+			StudentUUID: "student-11111111111",
+			IsInvalid:   true,
+		}, { // no exist club uuid error
+			ClubUUID:      "club-111111111111",
+			StudentUUID:   "student-111111111111",
+			ExpectedError: clubMemberClubUUIDFKConstraintFailError,
+		},
+	}
+
+	for _, test := range tests {
+		_, err := access.CreateClubMember(&model.ClubMember{
+			ClubUUID:    model.ClubUUID(test.ClubUUID),
+			StudentUUID: model.StudentUUID(test.StudentUUID),
+		})
+
+		if mysqlErr, ok := err.(*mysql.MySQLError); ok {
+			err = mysqlerr.ExceptReferenceInformFrom(mysqlErr)
+		}
+
+		if test.IsInvalid {
+			_, isInvalid := err.(validator.ValidationErrors)
+			assert.Equalf(t, test.IsInvalid, isInvalid, "invalid state assertion error (test case: %v)", test)
+		} else {
+			assert.Equalf(t, test.ExpectedError, err, "error assertion error (test case: %v)", test)
+		}
+	}
+}
