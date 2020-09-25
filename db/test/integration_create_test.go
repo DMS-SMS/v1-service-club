@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"log"
 	"testing"
+	"time"
 )
 
 func Test_Accessor_CreateClub(t *testing.T) {
@@ -253,6 +254,109 @@ func Test_Accessor_CreateClubMember(t *testing.T) {
 		_, err := access.CreateClubMember(&model.ClubMember{
 			ClubUUID:    model.ClubUUID(test.ClubUUID),
 			StudentUUID: model.StudentUUID(test.StudentUUID),
+		})
+
+		if mysqlErr, ok := err.(*mysql.MySQLError); ok {
+			err = mysqlerr.ExceptReferenceInformFrom(mysqlErr)
+		}
+
+		if test.IsInvalid {
+			_, isInvalid := err.(validator.ValidationErrors)
+			assert.Equalf(t, test.IsInvalid, isInvalid, "invalid state assertion error (test case: %v)", test)
+		} else {
+			assert.Equalf(t, test.ExpectedError, err, "error assertion error (test case: %v)", test)
+		}
+	}
+}
+
+func Test_Accessor_CreateRecruitment(t *testing.T) {
+	access, err := manager.BeginTx()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		access.Rollback()
+		testGroup.Done()
+	}()
+
+	for _, club := range []*model.Club{
+		{
+			UUID:       "club-123412341234",
+			LeaderUUID: "student-123412341234",
+		}, {
+			UUID:       "club-432143214321",
+			LeaderUUID: "student-432143214321",
+		}, {
+			UUID:       "club-111111111111",
+			LeaderUUID: "student-111111111111",
+		},
+	} {
+		if _, err := access.CreateClub(club); err != nil {
+			log.Fatal(err, club)
+		}
+	}
+
+	tests := []struct {
+		UUID, ClubUUID string
+		RecruitConcept string
+		StartPeriod    time.Time
+		EndPeriod      time.Time
+		IsInvalid      bool
+		ExpectedError  error
+	} {
+		{ // success case 1
+			UUID:           "recruitment-123412341234",
+			ClubUUID:       "club-123412341234",
+			RecruitConcept: "어서 오세요~(상시 모집 입니당)",
+			ExpectedError:  nil,
+		}, { // success case 2
+			UUID:           "recruitment-432143214321",
+			ClubUUID:       "club-432143214321",
+			RecruitConcept: "어서 오세요~",
+			StartPeriod:    time.Now(),
+			EndPeriod:      time.Now().Add(time.Hour * 1000),
+			ExpectedError:  nil,
+		},  { // success case 3 (club uuid duplicate -> error X)
+			UUID:           "recruitment-444444444444",
+			ClubUUID:       "club-432143214321",
+			RecruitConcept: "어서 오세요~",
+			StartPeriod:    time.Now(),
+			EndPeriod:      time.Now().Add(time.Hour * 1000),
+			ExpectedError:  nil,
+		}, { // validate error (recruit_concept)
+			UUID:      "recruitment-111111111111",
+			ClubUUID:  "club-111111111111",
+			IsInvalid: true,
+		}, { // validate error (uuid)
+			UUID:           "recruitment-11111111111",
+			ClubUUID:       "club-111111111111",
+			RecruitConcept: "유효성 오류",
+			IsInvalid:      true,
+		}, { // validate error (club_uuid)
+			UUID:           "recruitment-111111111111",
+			ClubUUID:       "club-11111111111",
+			RecruitConcept: "유효성 오류",
+			IsInvalid:      true,
+		}, { // no exist club uuid error
+			UUID:           "recruitment-222222222222",
+			ClubUUID:       "club-222222222222",
+			RecruitConcept: "FK 오류",
+			ExpectedError:  clubRecruitmentClubUUIDFKConstraintFailError,
+		}, { // uuid duplicate error
+			UUID:           "recruitment-123412341234",
+			ClubUUID:       "club-432143214321",
+			RecruitConcept: "UUID 중복 오류",
+			ExpectedError:  mysqlerr.DuplicateEntry(model.ClubRecruitmentInstance.UUID.KeyName(), "recruitment-123412341234"),
+		},
+	}
+
+	for _, test := range tests {
+		_, err := access.CreateRecruitment(&model.ClubRecruitment{
+			UUID:           model.UUID(test.UUID),
+			ClubUUID:       model.ClubUUID(test.ClubUUID),
+			RecruitConcept: model.RecruitConcept(test.RecruitConcept),
+			StartPeriod:    model.StartPeriod(test.StartPeriod),
+			EndPeriod:      model.EndPeriod(test.EndPeriod),
 		})
 
 		if mysqlErr, ok := err.(*mysql.MySQLError); ok {
