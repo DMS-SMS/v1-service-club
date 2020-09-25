@@ -110,7 +110,7 @@ func (d *_default) GetAllClubInforms() (informs []*model.ClubInform, err error) 
 	return
 }
 
-func (d *_default) GetAllRecruitments() (recruitments []*model.ClubRecruitment, err error) {
+func (d *_default) GetAllCurrentRecruitments() (recruitments []*model.ClubRecruitment, err error) {
 	recruitments = make([]*model.ClubRecruitment, 10, 10)
 	err = d.tx.Where("end_period >= ?", time.Now()).Or("end_period IS NULL").Find(&recruitments).Error
 

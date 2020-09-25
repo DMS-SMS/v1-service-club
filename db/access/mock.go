@@ -89,7 +89,7 @@ func (m _mock) GetAllClubInforms() ([]*model.ClubInform, error) {
 	return args.Get(0).([]*model.ClubInform), args.Error(1)
 }
 
-func (m _mock) GetAllRecruitments() ([]*model.ClubRecruitment, error) {
+func (m _mock) GetAllCurrentRecruitments() ([]*model.ClubRecruitment, error) {
 	args := m.mock.Called()
 	return args.Get(0).([]*model.ClubRecruitment), args.Error(1)
 }
