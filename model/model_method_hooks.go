@@ -5,6 +5,7 @@ import (
 	"club/tool/mysqlerr"
 	"fmt"
 	"github.com/jinzhu/gorm"
+	"log"
 )
 
 const (
@@ -34,8 +35,22 @@ func (c *Club) BeforeCreate(tx *gorm.DB) (err error) {
 	return
 }
 
-func (ci *ClubInform) BeforeCreate() error {
-	return validate.DBValidator.Struct(ci)
+func (ci *ClubInform) BeforeCreate(tx *gorm.DB) (err error) {
+	if err = validate.DBValidator.Struct(ci); err != nil {
+		return
+	}
+
+	if tx.Where("name = ?", ci.Name).Find(&ClubInform{}).RowsAffected != 0 {
+		err = mysqlerr.DuplicateEntry(ClubInformInstance.Name.KeyName(), string(ci.Name))
+		return
+	}
+
+	if tx.Where("location = ?", ci.Location).Find(&ClubInform{}).RowsAffected != 0 {
+		err = mysqlerr.DuplicateEntry(ClubInformInstance.Location.KeyName(), string(ci.Location))
+		return
+	}
+
+	return
 }
 
 func (cm *ClubMember) BeforeCreate(tx *gorm.DB) (err error) {
