@@ -22,8 +22,16 @@ const (
 	validRecruitConcept = "디자인에 좋은 감각이 있는 새로운 1학년 부원을 모집합니다!"
 )
 
-func (c *Club) BeforeCreate() error {
-	return validate.DBValidator.Struct(c)
+func (c *Club) BeforeCreate(tx *gorm.DB) (err error) {
+	if err = validate.DBValidator.Struct(c); err != nil {
+		return
+	}
+
+	selectResult := tx.Where("leader_uuid = ?", c.LeaderUUID).Find(&Club{})
+	if selectResult.RowsAffected != 0 {
+		err = mysqlerr.DuplicateEntry(ClubInstance.LeaderUUID.KeyName(), string(c.LeaderUUID))
+	}
+	return
 }
 
 func (ci *ClubInform) BeforeCreate() error {
