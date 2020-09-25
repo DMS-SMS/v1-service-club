@@ -88,7 +88,7 @@ func (ci *ClubInform) BeforeUpdate() error {
 	if clubInformForValidate.Name == emptyString     { clubInformForValidate.Name = validName }
 	if clubInformForValidate.Field == emptyString    { clubInformForValidate.Field = validField }
 	if clubInformForValidate.Location == emptyString { clubInformForValidate.Location = validLocation }
-	if clubInformForValidate.Floor == emptyInt       { clubInformForValidate.Floor = validFloor }
+	if clubInformForValidate.Floor == emptyString    { clubInformForValidate.Floor = validFloor }
 	if clubInformForValidate.LogoURI == emptyString  { clubInformForValidate.LogoURI = validLogoURI }
 
 	return validate.DBValidator.Struct(clubInformForValidate)
