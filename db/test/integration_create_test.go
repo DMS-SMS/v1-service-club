@@ -371,3 +371,119 @@ func Test_Accessor_CreateRecruitment(t *testing.T) {
 		}
 	}
 }
+
+func Test_Accessor_CreateRecruitMember(t *testing.T) {
+	access, err := manager.BeginTx()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		access.Rollback()
+		testGroup.Done()
+	}()
+
+	for _, club := range []*model.Club{
+		{
+			UUID:       "club-123412341234",
+			LeaderUUID: "student-123412341234",
+		}, {
+			UUID:       "club-432143214321",
+			LeaderUUID: "student-432143214321",
+		},
+	} {
+		if _, err := access.CreateClub(club); err != nil {
+			log.Fatal(err, club)
+		}
+	}
+
+	for _, recruitment := range []*model.ClubRecruitment{
+		{
+			UUID:           "recruitment-123412341234",
+			ClubUUID:       "club-123412341234",
+			RecruitConcept: "첫번쨰 공채",
+			StartPeriod:    model.StartPeriod(time.Now()),
+			EndPeriod:      model.EndPeriod(time.Now().Add(time.Hour * 10000)),
+		}, {
+			UUID:           "recruitment-432143214321",
+			ClubUUID:       "club-123412341234",
+			RecruitConcept: "두번쨰 공채",
+		},
+	} {
+		if _, err := access.CreateRecruitment(recruitment); err != nil {
+			log.Fatal(err, recruitment)
+		}
+	}
+
+	_ = model.RecruitMember{
+		RecruitmentUUID: "",
+		Grade:           0,
+		Field:           "",
+		Number:          0,
+	}
+
+	tests := []struct {
+		RecruitmentUUID string
+		Grade, Number   int64
+		Field           string
+		IsInvalid       bool
+		ExpectedError   error
+	} {
+		{ // success case 1
+			RecruitmentUUID: "recruitment-123412341234",
+			Grade:           2,
+			Field:           "서버개발자",
+			Number:          1,
+			ExpectedError:   nil,
+		}, { // success case 2
+			RecruitmentUUID: "recruitment-123412341234",
+			Grade:           2,
+			Field:           "프론트개발자",
+			Number:          2,
+			ExpectedError:   nil,
+		}, { // validate error (recruit_uuid)
+			RecruitmentUUID: "recruitment1-123412341234",
+			Grade:           2,
+			Field:           "모바일 앱 개발자",
+			Number:          1,
+			IsInvalid:       true,
+		}, { // validate error (grade)
+			RecruitmentUUID: "recruitment-123412341234",
+			Grade:           4,
+			Field:           "모바일 앱 개발자",
+			Number:          1,
+			IsInvalid:       true,
+		}, { // validate error (number)
+			RecruitmentUUID: "recruitment-123412341234",
+			Grade:           2,
+			Field:           "모바일 앱 개발자",
+			Number:          100,
+			IsInvalid:       true,
+		}, { // no exist recruitment uuid error
+			RecruitmentUUID: "recruitment-111111111111",
+			Grade:           2,
+			Field:           "모바일 앱 개발자",
+			Number:          1,
+			ExpectedError:   recruitMemberRecruitmentUUIDFKConstraintFailError,
+		},
+	}
+
+	for _, test := range tests {
+		_, err := access.CreateRecruitMember(&model.RecruitMember{
+			RecruitmentUUID: model.RecruitmentUUID(test.RecruitmentUUID),
+			Grade:           model.Grade(test.Grade),
+			Field:           model.Field(test.Field),
+			Number:          model.Number(test.Number),
+		})
+
+		if mysqlErr, ok := err.(*mysql.MySQLError); ok {
+			err = mysqlerr.ExceptReferenceInformFrom(mysqlErr)
+		}
+
+		if test.IsInvalid {
+			_, isInvalid := err.(validator.ValidationErrors)
+			assert.Equalf(t, test.IsInvalid, isInvalid, "invalid state assertion error (test case: %v)", test)
+		} else {
+			assert.Equalf(t, test.ExpectedError, err, "error assertion error (test case: %v)", test)
+		}
+	}
+}
