@@ -5,7 +5,6 @@ import (
 	"club/tool/mysqlerr"
 	"fmt"
 	"github.com/jinzhu/gorm"
-	"log"
 )
 
 const (
