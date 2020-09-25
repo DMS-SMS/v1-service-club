@@ -74,10 +74,10 @@ func (l *location) Scan(src interface{}) (err error) { *l = location(src.([]uint
 func (l location) KeyName() string { return "location" }
 
 // Floor 필드에서 사용할 사용자 정의 타입
-type floor int64
-func Floor(i int64) floor { return floor(i) }
-func (f floor) Value() (driver.Value, error) { return int64(f), nil }
-func (f *floor) Scan(src interface{}) (err error) { *f = floor(src.(int64)); return }
+type floor string
+func Floor(s string) floor { return floor(s) }
+func (f floor) Value() (driver.Value, error) { return string(f), nil }
+func (f *floor) Scan(src interface{}) (err error) { *f = floor(src.([]uint8)); return }
 func (f floor) KeyName() string { return "floor" }
 
 // Link 필드에서 사용할 사용자 정의 타입
