@@ -22,12 +22,34 @@ const (
 	validRecruitConcept = "디자인에 좋은 감각이 있는 새로운 1학년 부원을 모집합니다!"
 )
 
-func (c *Club) BeforeCreate() error {
-	return validate.DBValidator.Struct(c)
+func (c *Club) BeforeCreate(tx *gorm.DB) (err error) {
+	if err = validate.DBValidator.Struct(c); err != nil {
+		return
+	}
+
+	selectResult := tx.Where("leader_uuid = ?", c.LeaderUUID).Find(&Club{})
+	if selectResult.RowsAffected != 0 {
+		err = mysqlerr.DuplicateEntry(ClubInstance.LeaderUUID.KeyName(), string(c.LeaderUUID))
+	}
+	return
 }
 
-func (ci *ClubInform) BeforeCreate() error {
-	return validate.DBValidator.Struct(ci)
+func (ci *ClubInform) BeforeCreate(tx *gorm.DB) (err error) {
+	if err = validate.DBValidator.Struct(ci); err != nil {
+		return
+	}
+
+	if tx.Where("name = ?", ci.Name).Find(&ClubInform{}).RowsAffected != 0 {
+		err = mysqlerr.DuplicateEntry(ClubInformInstance.Name.KeyName(), string(ci.Name))
+		return
+	}
+
+	if tx.Where("location = ?", ci.Location).Find(&ClubInform{}).RowsAffected != 0 {
+		err = mysqlerr.DuplicateEntry(ClubInformInstance.Location.KeyName(), string(ci.Location))
+		return
+	}
+
+	return
 }
 
 func (cm *ClubMember) BeforeCreate(tx *gorm.DB) (err error) {
