@@ -2,6 +2,7 @@ package model
 
 import (
 	"club/model/validate"
+	"club/tool/mysqlerr"
 	"fmt"
 	"github.com/jinzhu/gorm"
 )
