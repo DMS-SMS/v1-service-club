@@ -18,7 +18,7 @@ type ClubInform struct {
 	Introduction introduction `gorm:"Type:varchar(100)" validate:"max=150"`
 	Field        field        `gorm:"Type:varchar(20);NOT NULL" validate:"min=1,max=20"`
 	Location     location     `gorm:"Type:varchar(20);NOT NULL" validate:"min=1,max=20"`
-	Floor        floor        `gorm:"Type:tinyint(1);NOT NULL" validate:"range=1~5"`
+	Floor        floor        `gorm:"Type:char(1);NOT NULL" validate:"strRange=1~5"`
 	Link         link         `gorm:"Type:varchar(100)" validate:"max=100"`
 	LogoURI      logoURI      `gorm:"Type:varchar(100);NOT NULL" validate:"min=1,max=100"`
 }
@@ -41,7 +41,7 @@ type ClubRecruitment struct {
 type RecruitMember struct {
 	gorm.Model
 	RecruitmentUUID recruitmentUUID `gorm:"Type:char(24);NOT NULL;INDEX" validate:"uuid=recruitment,len=24"`
-	Grade           grade           `gorm:"Type:tinyint(1);NOT NULL" validate:"range=1~3"`
+	Grade           grade           `gorm:"Type:char(1);NOT NULL" validate:"strRange=1~3"`
 	Field           field           `gorm:"Type:varchar(20);NOT NULL" validate:"min=1,max=20"`
-	Number          number          `gorm:"Type:tinyint(1);NOT NULL" validate:"range=1~20"`
+	Number          number          `gorm:"Type:char(2);NOT NULL" validate:"strRange=1~20"`
 }

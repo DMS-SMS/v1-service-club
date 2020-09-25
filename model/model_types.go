@@ -74,10 +74,10 @@ func (l *location) Scan(src interface{}) (err error) { *l = location(src.([]uint
 func (l location) KeyName() string { return "location" }
 
 // Floor 필드에서 사용할 사용자 정의 타입
-type floor int64
-func Floor(i int64) floor { return floor(i) }
-func (f floor) Value() (driver.Value, error) { return int64(f), nil }
-func (f *floor) Scan(src interface{}) (err error) { *f = floor(src.(int64)); return }
+type floor string
+func Floor(s string) floor { return floor(s) }
+func (f floor) Value() (driver.Value, error) { return string(f), nil }
+func (f *floor) Scan(src interface{}) (err error) { *f = floor(src.([]uint8)); return }
 func (f floor) KeyName() string { return "floor" }
 
 // Link 필드에서 사용할 사용자 정의 타입
@@ -148,15 +148,15 @@ func (ru *recruitmentUUID) Scan(src interface{}) (err error) { *ru = recruitment
 func (ru recruitmentUUID) KeyName() string { return "recruitment_uuid" }
 
 // Grade 필드에서 사용할 사용자 정의 타입
-type grade int64
-func Grade(i int64) grade { return grade(i) }
-func (g grade) Value() (value driver.Value, err error) { return int64(g), nil }
-func (g *grade) Scan(src interface{}) (_ error) { *g = grade(src.(int64)); return }
+type grade string
+func Grade(s string) grade { return grade(s) }
+func (g grade) Value() (value driver.Value, err error) { return string(g), nil }
+func (g *grade) Scan(src interface{}) (_ error) { *g = grade(src.([]uint8)); return }
 func (g grade) KeyName() string { return "grade" }
 
 // StudentNumber 필드에서 사용할 사용자 정의 타입
-type number int64
-func Number(i int64) number { return number(i) }
-func (n number) Value() (driver.Value, error) { return int64(n), nil }
-func (n *number) Scan(src interface{}) (err error) { *n = number(src.(int64)); return }
+type number string
+func Number(s string) number { return number(s) }
+func (n number) Value() (driver.Value, error) { return string(n), nil }
+func (n *number) Scan(src interface{}) (err error) { *n = number(src.([]uint8)); return }
 func (n number) KeyName() string { return "number" }
