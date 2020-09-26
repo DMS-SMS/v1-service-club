@@ -16,7 +16,6 @@ func Test_Accessor_GetClubWithClubUUID(t *testing.T) {
 	}
 	defer func() {
 		access.Rollback()
-		testGroup.Done()
 	}()
 
 	for _, club := range []*model.Club{
@@ -64,7 +63,6 @@ func Test_Accessor_GetClubWithLeaderUUID(t *testing.T) {
 	}
 	defer func() {
 		access.Rollback()
-		testGroup.Done()
 	}()
 
 	for _, club := range []*model.Club{
@@ -112,7 +110,6 @@ func Test_Accessor_GetCurrentRecruitmentWithClubUUID(t *testing.T) {
 	}
 	defer func() {
 		access.Rollback()
-		testGroup.Done()
 	}()
 
 	for _, club := range []*model.Club{
@@ -211,7 +208,6 @@ func Test_Accessor_GetClubInformsSortByUpdateTime(t *testing.T) {
 	}
 	defer func() {
 		access.Rollback()
-		testGroup.Done()
 	}()
 
 	for _, club := range []*model.Club{
@@ -371,5 +367,221 @@ func Test_Accessor_GetClubInformsSortByUpdateTime(t *testing.T) {
 
 		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
 		assert.Equalf(t, test.ExpectResults, exceptedInforms, "result informs assertion error (test case: %v)", test)
+	}
+}
+
+func Test_Accessor_GetCurrentRecruitmentsSortByCreateTime(t *testing.T) {
+	access, err := manager.BeginTx()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		access.Rollback()
+	}()
+
+	for _, club := range []*model.Club{
+		{
+			UUID:       "club-111111111111",
+			LeaderUUID: "student-111111111111",
+		}, {
+			UUID:       "club-222222222222",
+			LeaderUUID: "student-222222222222",
+		}, {
+			UUID:       "club-333333333333",
+			LeaderUUID: "student-333333333333",
+		}, {
+			UUID:       "club-444444444444",
+			LeaderUUID: "student-444444444444",
+		}, {
+			UUID:       "club-555555555555",
+			LeaderUUID: "student-555555555555",
+		},
+	} {
+		if _, err := access.CreateClub(club); err != nil {
+			log.Fatal(err, club)
+		}
+	}
+	for _, inform := range []*model.ClubInform{
+		{
+			ClubUUID: "club-111111111111",
+			Name:     "DMS",
+			Field:    "SW 개발",
+			Location: "2-1반 교실",
+			Floor:    "3",
+			LogoURI:  "logo.com/club-111111111111",
+		}, {
+			ClubUUID: "club-222222222222",
+			Name:     "SMS",
+			Field:    "SW 개발",
+			Location: "2-2반 교실",
+			Floor:    "3",
+			LogoURI:  "logo.com/club-222222222222",
+		}, {
+			ClubUUID: "club-333333333333",
+			Name:     "PPP",
+			Field:    "SW 개발",
+			Location: "2-3반 교실",
+			Floor:    "3",
+			LogoURI:  "logo.com/club-333333333333",
+		}, {
+			ClubUUID: "club-444444444444",
+			Name:     "PMS",
+			Field:    "SW 개발",
+			Location: "2-4반 교실",
+			Floor:    "3",
+			LogoURI:  "logo.com/club-444444444444",
+		}, {
+			ClubUUID: "club-555555555555",
+			Name:     "MSMS",
+			Field:    "SW 개발",
+			Location: "2-5반 교실",
+			Floor:    "3",
+			LogoURI:  "logo.com/club-555555555555",
+		},
+	} {
+		if _, err := access.CreateClubInform(inform); err != nil {
+			log.Fatal(err, inform)
+		}
+	}
+
+	now := time.Now()
+	startTime := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
+	endTime := startTime.Add(time.Hour * 24 * 7)
+
+	for _, recruitment := range []*model.ClubRecruitment{
+		{ // 종료된 채용
+			UUID:           "recruitment-111111111111",
+			ClubUUID:       "club-111111111111",
+			RecruitConcept: "첫 번째 공채",
+			StartPeriod:    model.StartPeriod(time.Date(2020, time.Month(9), 17, 0, 0, 0, 0, time.UTC)),
+			EndPeriod:      model.EndPeriod(time.Date(2020, time.Month(9), 24, 0, 0, 0, 0, time.UTC)),
+		}, { // 현재 진행중인 채용
+			UUID:           "recruitment-222222222222",
+			ClubUUID:       "club-111111111111",
+			RecruitConcept: "두 번째 공채",
+			StartPeriod:    model.StartPeriod(startTime),
+			EndPeriod:      model.EndPeriod(endTime),
+		}, { // 종료된 채용
+			UUID:           "recruitment-333333333333",
+			ClubUUID:       "club-222222222222",
+			RecruitConcept: "첫 번째 공채",
+			StartPeriod:    model.StartPeriod(time.Date(2020, time.Month(9), 17, 0, 0, 0, 0, time.UTC)),
+			EndPeriod:      model.EndPeriod(time.Date(2020, time.Month(9), 24, 0, 0, 0, 0, time.UTC)),
+		}, { // 상시 채용
+			UUID:           "recruitment-444444444444",
+			ClubUUID:       "club-222222222222",
+			RecruitConcept: "두 번째 상시 채용",
+		}, { // 상시 채용
+			UUID:           "recruitment-555555555555",
+			ClubUUID:       "club-333333333333",
+			RecruitConcept: "첫 번째 상시 채용",
+		}, { // 상시 채용 (모집 삭제 예정)
+			UUID:           "recruitment-666666666666",
+			ClubUUID:       "club-444444444444",
+			RecruitConcept: "첫 번째 상시 채용",
+		}, { // 상시 채용 (동아리 삭제 예정)
+			UUID:           "recruitment-777777777777",
+			ClubUUID:       "club-555555555555",
+			RecruitConcept: "첫 번째 상시 채용",
+		},
+	} {
+		if _, err := access.CreateRecruitment(recruitment); err != nil {
+			log.Fatal(err, recruitment)
+		}
+		time.Sleep(time.Millisecond * 500)
+	}
+
+	if err, _ := access.DeleteClubInform("club-555555555555"); err != nil {
+		log.Fatal(err)
+	}
+
+	if err, _ := access.DeleteRecruitment("recruitment-666666666666"); err != nil {
+		log.Fatal(err)
+	}
+
+	tests := []struct {
+		Offset, Limit int
+		Field, Name   string
+		ExpectResults []*model.ClubRecruitment
+		ExpectError   error
+	} {
+		{
+			Offset: 0,
+			Limit: 10,
+			ExpectResults: []*model.ClubRecruitment{
+				{
+					UUID:           "recruitment-555555555555",
+					ClubUUID:       "club-333333333333",
+					RecruitConcept: "첫 번째 상시 채용",
+				}, {
+					UUID:           "recruitment-444444444444",
+					ClubUUID:       "club-222222222222",
+					RecruitConcept: "두 번째 상시 채용",
+				}, {
+					UUID:           "recruitment-222222222222",
+					ClubUUID:       "club-111111111111",
+					RecruitConcept: "두 번째 공채",
+					StartPeriod:    model.StartPeriod(startTime),
+					EndPeriod:      model.EndPeriod(endTime),
+				},
+			},
+			ExpectError: nil,
+		}, {
+			Offset:      10,
+			Limit:       10,
+			ExpectError: gorm.ErrRecordNotFound,
+		}, {
+			Offset: 0,
+			Limit:  10,
+			Name:   "MS",
+			ExpectResults: []*model.ClubRecruitment{
+				{
+					UUID:           "recruitment-444444444444",
+					ClubUUID:       "club-222222222222",
+					RecruitConcept: "두 번째 상시 채용",
+				}, {
+					UUID:           "recruitment-222222222222",
+					ClubUUID:       "club-111111111111",
+					RecruitConcept: "두 번째 공채",
+					StartPeriod:    model.StartPeriod(startTime),
+					EndPeriod:      model.EndPeriod(endTime),
+				},
+			},
+			ExpectError: nil,
+		}, {
+			Offset: 0,
+			Limit:  3,
+			Field:  "SW",
+			ExpectResults: []*model.ClubRecruitment{
+				{
+					UUID:           "recruitment-555555555555",
+					ClubUUID:       "club-333333333333",
+					RecruitConcept: "첫 번째 상시 채용",
+				}, {
+					UUID:           "recruitment-444444444444",
+					ClubUUID:       "club-222222222222",
+					RecruitConcept: "두 번째 상시 채용",
+				}, {
+					UUID:           "recruitment-222222222222",
+					ClubUUID:       "club-111111111111",
+					RecruitConcept: "두 번째 공채",
+					StartPeriod:    model.StartPeriod(startTime),
+					EndPeriod:      model.EndPeriod(endTime),
+				},
+			},
+			ExpectError: nil,
+		},
+	}
+
+	for _, test := range tests {
+		recruitments, err := access.GetCurrentRecruitmentsSortByCreateTime(test.Offset, test.Limit, test.Field, test.Name)
+
+		var exceptedRecruitments []*model.ClubRecruitment
+		for _, recruitment := range recruitments {
+			exceptedRecruitments = append(exceptedRecruitments, recruitment.ExceptGormModel())
+		}
+
+		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
+		assert.Equalf(t, test.ExpectResults, exceptedRecruitments, "result recruitments assertion error (test case: %v)", test)
 	}
 }
