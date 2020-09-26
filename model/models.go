@@ -1,7 +1,7 @@
 package model
 
 import (
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 type Club struct {
@@ -21,12 +21,14 @@ type ClubInform struct {
 	Floor        floor        `gorm:"Type:char(1);NOT NULL" validate:"strRange=1~5"`
 	Link         link         `gorm:"Type:varchar(100)" validate:"max=100"`
 	LogoURI      logoURI      `gorm:"Type:varchar(100);NOT NULL" validate:"min=1,max=100"`
+	Club         *Club        `gorm:"foreignKey:ClubUUID;references:UUID"`
 }
 
 type ClubMember struct {
 	gorm.Model
 	ClubUUID    clubUUID    `gorm:"Type:char(17);NOT NULL;INDEX" validate:"uuid=club,len=17"`
 	StudentUUID studentUUID `gorm:"Type:char(20);NOT NULL" validate:"uuid=student,len=20"`
+	Club        *Club       `gorm:"foreignKey:ClubUUID;references:UUID"`
 }
 
 type ClubRecruitment struct {
@@ -36,12 +38,14 @@ type ClubRecruitment struct {
 	RecruitConcept recruitConcept `gorm:"Type:varchar(40);NOT NULL" validate:"min=1,max=40"`
 	StartPeriod    startPeriod    `gorm:"Type:datetime"`
 	EndPeriod      endPeriod      `gorm:"Type:datetime"`
+	Club           *Club          `gorm:"foreignKey:ClubUUID;references:UUID"`
 }
 
 type RecruitMember struct {
 	gorm.Model
-	RecruitmentUUID recruitmentUUID `gorm:"Type:char(24);NOT NULL;INDEX" validate:"uuid=recruitment,len=24"`
-	Grade           grade           `gorm:"Type:char(1);NOT NULL" validate:"strRange=1~3"`
-	Field           field           `gorm:"Type:varchar(20);NOT NULL" validate:"min=1,max=20"`
-	Number          number          `gorm:"Type:char(2);NOT NULL" validate:"strRange=1~20"`
+	RecruitmentUUID recruitmentUUID  `gorm:"Type:char(24);NOT NULL;INDEX" validate:"uuid=recruitment,len=24"`
+	Grade           grade            `gorm:"Type:char(1);NOT NULL" validate:"strRange=1~3"`
+	Field           field            `gorm:"Type:varchar(20);NOT NULL" validate:"min=1,max=20"`
+	Number          number           `gorm:"Type:char(2);NOT NULL" validate:"strRange=1~20"`
+	Club            *ClubRecruitment `gorm:"foreignKey:RecruitmentUUID;references:UUID"`
 }
