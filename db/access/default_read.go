@@ -129,8 +129,11 @@ func (d *_default) GetRecruitMembersWithRecruitmentUUID(recruitUUID string) ([]*
 }
 
 func (d *_default) GetAllClubInforms() ([]*model.ClubInform, error) {
+	joinedTx := d.tx.Table("club_informs").Joins("JOIN clubs ON clubs.uuid = club_informs.club_uuid")
+	joinedTx = joinedTx.Where("clubs.deleted_at IS NULL")
+
 	var informs []*model.ClubInform
-	err := d.tx.Find(&informs).Error
+	err := joinedTx.Find(&informs).Error
 
 	if len(informs) == 0 && err == nil {
 		err = gorm.ErrRecordNotFound
