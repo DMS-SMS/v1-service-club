@@ -1015,9 +1015,6 @@ func Test_Accessor_GetAllClubInforms(t *testing.T) {
 	if err, _ := access.DeleteClub("club-444444444444"); err != nil {
 		log.Fatal(err)
 	}
-	if err, _ := access.DeleteClubInform("club-444444444444"); err != nil {
-		log.Fatal(err)
-	}
 
 	tests := []struct {
 		ExpectResults []*model.ClubInform
@@ -1062,5 +1059,118 @@ func Test_Accessor_GetAllClubInforms(t *testing.T) {
 
 		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
 		assert.Equalf(t, test.ExpectResults, exceptedResult, "result informs assertion error (test case: %v)", test)
+	}
+}
+
+func Test_Accessor_GetAllCurrentRecruitments(t *testing.T) {
+	access, err := manager.BeginTx()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		access.Rollback()
+	}()
+
+	for _, club := range []*model.Club{
+		{
+			UUID:       "club-111111111111",
+			LeaderUUID: "student-111111111111",
+		}, {
+			UUID:       "club-222222222222",
+			LeaderUUID: "student-222222222222",
+		}, {
+			UUID:       "club-333333333333",
+			LeaderUUID: "student-333333333333",
+		}, {
+			UUID:       "club-444444444444",
+			LeaderUUID: "student-444444444444",
+		},
+	} {
+		if _, err := access.CreateClub(club); err != nil {
+			log.Fatal(err, club)
+		}
+	}
+
+	now := time.Now()
+	startTime := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
+	endTime := startTime.Add(time.Hour * 24 * 7)
+
+	for _, recruitment := range []*model.ClubRecruitment{
+		{ // 종료된 채용
+			UUID:           "recruitment-111111111111",
+			ClubUUID:       "club-111111111111",
+			RecruitConcept: "첫 번째 공채",
+			StartPeriod:    model.StartPeriod(time.Date(2020, time.Month(9), 17, 0, 0, 0, 0, time.UTC)),
+			EndPeriod:      model.EndPeriod(time.Date(2020, time.Month(9), 24, 0, 0, 0, 0, time.UTC)),
+		}, { // 현재 진행중인 채용
+			UUID:           "recruitment-222222222222",
+			ClubUUID:       "club-111111111111",
+			RecruitConcept: "두 번째 공채",
+			StartPeriod:    model.StartPeriod(startTime),
+			EndPeriod:      model.EndPeriod(endTime),
+		}, { // 종료된 채용
+			UUID:           "recruitment-333333333333",
+			ClubUUID:       "club-222222222222",
+			RecruitConcept: "첫 번째 공채",
+			StartPeriod:    model.StartPeriod(time.Date(2020, time.Month(9), 17, 0, 0, 0, 0, time.UTC)),
+			EndPeriod:      model.EndPeriod(time.Date(2020, time.Month(9), 24, 0, 0, 0, 0, time.UTC)),
+		}, { // 상시 채용
+			UUID:           "recruitment-444444444444",
+			ClubUUID:       "club-222222222222",
+			RecruitConcept: "두 번째 상시 채용",
+		}, { // 상시 채용
+			UUID:           "recruitment-555555555555",
+			ClubUUID:       "club-333333333333",
+			RecruitConcept: "첫 번째 상시 채용",
+		}, { // 상시 채용
+			UUID:           "recruitment-666666666666",
+			ClubUUID:       "club-444444444444",
+			RecruitConcept: "첫 번째 상시 채용",
+		},
+	} {
+		if _, err := access.CreateRecruitment(recruitment); err != nil {
+			log.Fatal(err, recruitment)
+		}
+	}
+
+	if err, _ := access.DeleteClub("club-333333333333"); err != nil {
+		log.Fatal(err)
+	}
+	if err, _ := access.DeleteRecruitment("recruitment-666666666666"); err != nil {
+		log.Fatal(err)
+	}
+
+	tests := []struct {
+		ExpectResults []*model.ClubRecruitment
+		ExpectError   error
+	} {
+		{
+			ExpectResults: []*model.ClubRecruitment{
+				{ // 현재 진행중인 채용
+					UUID:           "recruitment-222222222222",
+					ClubUUID:       "club-111111111111",
+					RecruitConcept: "두 번째 공채",
+					StartPeriod:    model.StartPeriod(startTime),
+					EndPeriod:      model.EndPeriod(endTime),
+				}, { // 상시 채용
+					UUID:           "recruitment-444444444444",
+					ClubUUID:       "club-222222222222",
+					RecruitConcept: "두 번째 상시 채용",
+				},
+			},
+			ExpectError: nil,
+		},
+	}
+
+	for _, test := range tests {
+		resultMembers, err := access.GetAllCurrentRecruitments()
+
+		var exceptedResult []*model.ClubRecruitment
+		for _, member := range resultMembers {
+			exceptedResult = append(exceptedResult, member.ExceptGormModel())
+		}
+
+		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
+		assert.Equalf(t, test.ExpectResults, exceptedResult, "result recruitments assertion error (test case: %v)", test)
 	}
 }
