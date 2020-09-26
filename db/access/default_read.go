@@ -29,22 +29,30 @@ func (d *_default) GetClubWithLeaderUUID(leaderUUID string) (club *model.Club, e
 func (d *_default) GetCurrentRecruitmentWithClubUUID(clubUUID string) (recruit *model.ClubRecruitment, err error) {
 	recruit = new(model.ClubRecruitment)
 	now := time.Now()
-	selectedTx := d.tx.Where("club_uuid = ? AND end_period >= ?", clubUUID, now).Or("club_uuid = ? AND end_period IS NULL", clubUUID)
-	err = selectedTx.Find(recruit).Error
+
+	fromSubQuery := d.tx.Table(model.ClubRecruitmentInstance.TableName()).Where("club_uuid = ?", clubUUID)
+	selectedTx := d.tx.Table("(?) as club_recruitments", fromSubQuery)
+	selectResult := selectedTx.Where("club_recruitments.end_period >= ?", now).Or("club_recruitments.end_period IS NULL").Find(recruit)
+
+	err = selectResult.Error
+	if selectResult.RowsAffected == 0 && err == nil {
+		err = gorm.ErrRecordNotFound
+	}
+
 	return
 }
 
 func (d *_default) GetClubInformsSortByUpdateTime(offset, limit int, field, name string) (clubInforms []*model.ClubInform, err error) {
-	selectedTX := d.tx.New()
+	selectedTx := d.tx.Table(model.ClubInformInstance.TableName())
 	if field != "" {
-		selectedTX = selectedTX.Where("field LIKE ?", "%"+field+"%")
+		selectedTx = selectedTx.Where("field LIKE ?", "%"+field+"%")
 	}
 	if name != "" {
-		selectedTX = selectedTX.Where("name LIKE ?", "%"+name+"%")
+		selectedTx = selectedTx.Where("name LIKE ?", "%"+name+"%")
 	}
 
 	clubInforms = make([]*model.ClubInform, limit)
-	err = selectedTX.Order("updated_at desc").Limit(limit).Offset(offset).Find(&clubInforms).Error
+	err = selectedTx.Order("updated_at desc").Limit(limit).Offset(offset).Find(&clubInforms).Error
 
 	if len(clubInforms) == 0 && err == nil {
 		err = gorm.ErrRecordNotFound
