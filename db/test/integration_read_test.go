@@ -749,27 +749,6 @@ func Test_Accessor_GetClubMembersWithClubUUID(t *testing.T) {
 		}
 	}
 
-	startTime := time.Date(2020, time.Month(9), 17, 0, 0, 0, 0, time.Local)
-	endTime := time.Date(2020, time.Month(9), 24, 0, 0, 0, 0, time.Local)
-
-	for _, recruitment := range []*model.ClubRecruitment{
-		{ // 종료된 채용
-			UUID:           "recruitment-111111111111",
-			ClubUUID:       "club-111111111111",
-			RecruitConcept: "첫 번째 공채",
-			StartPeriod:    model.StartPeriod(startTime),
-			EndPeriod:      model.EndPeriod(endTime),
-		}, { // 현재 진행중인 채용
-			UUID:           "recruitment-222222222222",
-			ClubUUID:       "club-111111111111",
-			RecruitConcept: "두 번째 공채",
-		},
-	} {
-		if _, err := access.CreateRecruitment(recruitment); err != nil {
-			log.Fatal(err, recruitment)
-		}
-	}
-
 	for _, member := range []*model.ClubMember{
 		{
 			ClubUUID:    "club-111111111111",
@@ -824,6 +803,138 @@ func Test_Accessor_GetClubMembersWithClubUUID(t *testing.T) {
 		resultMembers, err := access.GetClubMembersWithClubUUID(test.ClubUUID)
 
 		var exceptedResult []*model.ClubMember
+		for _, member := range resultMembers {
+			exceptedResult = append(exceptedResult, member.ExceptGormModel())
+		}
+
+		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
+		assert.Equalf(t, test.ExpectResults, exceptedResult, "result members assertion error (test case: %v)", test)
+	}
+}
+
+func Test_Accessor_GetRecruitMembersWithRecruitmentUUID(t *testing.T) {
+	access, err := manager.BeginTx()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		access.Rollback()
+	}()
+
+	for _, club := range []*model.Club{
+		{
+			UUID:       "club-111111111111",
+			LeaderUUID: "student-111111111111",
+		},
+	} {
+		if _, err := access.CreateClub(club); err != nil {
+			log.Fatal(err, club)
+		}
+	}
+
+	startTime := time.Date(2020, time.Month(9), 17, 0, 0, 0, 0, time.Local)
+	endTime := time.Date(2020, time.Month(9), 24, 0, 0, 0, 0, time.Local)
+
+	for _, recruitment := range []*model.ClubRecruitment{
+		{ // 종료된 채용
+			UUID:           "recruitment-111111111111",
+			ClubUUID:       "club-111111111111",
+			RecruitConcept: "첫 번째 공채",
+			StartPeriod:    model.StartPeriod(startTime),
+			EndPeriod:      model.EndPeriod(endTime),
+		}, { // 현재 진행중인 채용
+			UUID:           "recruitment-222222222222",
+			ClubUUID:       "club-111111111111",
+			RecruitConcept: "두 번째 공채",
+		},
+	} {
+		if _, err := access.CreateRecruitment(recruitment); err != nil {
+			log.Fatal(err, recruitment)
+		}
+	}
+
+	for _, member := range []*model.RecruitMember{
+		{
+			RecruitmentUUID: "recruitment-111111111111",
+			Grade:           "2",
+			Field:           "서버 개발자",
+			Number:          "2",
+		}, {
+			RecruitmentUUID: "recruitment-111111111111",
+			Grade:           "2",
+			Field:           "웹 프론트 개발자",
+			Number:          "2",
+		}, {
+			RecruitmentUUID: "recruitment-111111111111",
+			Grade:           "2",
+			Field:           "안드로이드 개발자",
+			Number:          "2",
+		}, {
+			RecruitmentUUID: "recruitment-111111111111",
+			Grade:           "2",
+			Field:           "iOS 개발자",
+			Number:          "2",
+		}, {
+			RecruitmentUUID: "recruitment-111111111111",
+			Grade:           "2",
+			Field:           "다 사랑해",
+			Number:          "8",
+		},
+	} {
+		if _, err := access.CreateRecruitMember(member); err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	tests := []struct {
+		RecruitmentUUID string
+		ExpectResults   []*model.RecruitMember
+		ExpectError     error
+	} {
+		{
+			RecruitmentUUID: "recruitment-111111111111",
+			ExpectResults: []*model.RecruitMember{
+				{
+					RecruitmentUUID: "recruitment-111111111111",
+					Grade:           "2",
+					Field:           "서버 개발자",
+					Number:          "2",
+				}, {
+					RecruitmentUUID: "recruitment-111111111111",
+					Grade:           "2",
+					Field:           "웹 프론트 개발자",
+					Number:          "2",
+				}, {
+					RecruitmentUUID: "recruitment-111111111111",
+					Grade:           "2",
+					Field:           "안드로이드 개발자",
+					Number:          "2",
+				}, {
+					RecruitmentUUID: "recruitment-111111111111",
+					Grade:           "2",
+					Field:           "iOS 개발자",
+					Number:          "2",
+				}, {
+					RecruitmentUUID: "recruitment-111111111111",
+					Grade:           "2",
+					Field:           "다 사랑해",
+					Number:          "8",
+				},
+			},
+			ExpectError: nil,
+		}, {
+			RecruitmentUUID: "recruitment-222222222222",
+			ExpectError:     gorm.ErrRecordNotFound,
+		}, {
+			RecruitmentUUID: "recruitment-333333333333",
+			ExpectError:     gorm.ErrRecordNotFound,
+		},
+	}
+
+	for _, test := range tests {
+		resultMembers, err := access.GetRecruitMembersWithRecruitmentUUID(test.RecruitmentUUID)
+
+		var exceptedResult []*model.RecruitMember
 		for _, member := range resultMembers {
 			exceptedResult = append(exceptedResult, member.ExceptGormModel())
 		}
