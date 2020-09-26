@@ -106,46 +106,46 @@ func (d *_default) GetRecruitmentWithRecruitmentUUID(recruitUUID string) (recrui
 	return
 }
 
-func (d *_default) GetClubMembersWithClubUUID(clubUUID string) (members []*model.ClubMember, err error) {
-	members = make([]*model.ClubMember, 5, 5)
-	err = d.tx.Where("club_uuid = ?", clubUUID).Find(&members).Error
+func (d *_default) GetClubMembersWithClubUUID(clubUUID string) ([]*model.ClubMember, error) {
+	var members []*model.ClubMember
+	err := d.tx.Where("club_uuid = ?", clubUUID).Find(&members).Error
 
 	if len(members) == 0 && err == nil {
 		err = gorm.ErrRecordNotFound
 	}
 
-	return
+	return members, err
 }
 
-func (d *_default) GetRecruitMembersWithRecruitmentUUID(recruitUUID string) (members []*model.RecruitMember, err error) {
-	members = make([]*model.RecruitMember, 5, 5)
-	err = d.tx.Where("recruitment_uuid = ?", recruitUUID).Find(&members).Error
+func (d *_default) GetRecruitMembersWithRecruitmentUUID(recruitUUID string) ([]*model.RecruitMember, error) {
+	var members []*model.RecruitMember
+	err := d.tx.Where("recruitment_uuid = ?", recruitUUID).Find(&members).Error
 
 	if len(members) == 0 && err == nil {
 		err = gorm.ErrRecordNotFound
 	}
 
-	return
+	return members, err
 }
 
-func (d *_default) GetAllClubInforms() (informs []*model.ClubInform, err error) {
-	informs = make([]*model.ClubInform, 10, 10)
-	err = d.tx.Find(&informs).Error
+func (d *_default) GetAllClubInforms() ([]*model.ClubInform, error) {
+	var informs []*model.ClubInform
+	err := d.tx.Find(&informs).Error
 
 	if len(informs) == 0 && err == nil {
 		err = gorm.ErrRecordNotFound
 	}
 
-	return
+	return informs, err
 }
 
-func (d *_default) GetAllCurrentRecruitments() (recruitments []*model.ClubRecruitment, err error) {
-	recruitments = make([]*model.ClubRecruitment, 10, 10)
-	err = d.tx.Where("end_period >= ?", time.Now()).Or("end_period IS NULL").Find(&recruitments).Error
+func (d *_default) GetAllCurrentRecruitments() ([]*model.ClubRecruitment, error) {
+	var recruitments []*model.ClubRecruitment
+	err := d.tx.Where("end_period >= ?", time.Now()).Or("end_period IS NULL").Find(&recruitments).Error
 
 	if len(recruitments) == 0 && err == nil {
 		err = gorm.ErrRecordNotFound
 	}
 
-	return
+	return recruitments, err
 }
