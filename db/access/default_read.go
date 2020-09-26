@@ -62,17 +62,21 @@ func (d *_default) GetClubInformsSortByUpdateTime(offset, limit int, field, name
 }
 
 func (d *_default) GetCurrentRecruitmentsSortByCreateTime(offset, limit int, field, name string) (recruits []*model.ClubRecruitment, err error) {
-	selectedTX := d.tx.New()
+	fromSubQuery := d.tx.Table(model.ClubRecruitmentInstance.TableName()).Select("club_recruitments.*")
+	fromSubQuery = fromSubQuery.Joins("JOIN club_informs ON club_informs.club_uuid = club_recruitments.club_uuid")
+	fromSubQuery = fromSubQuery.Where("club_informs.deleted_at IS NULL")
+
 	if field != "" {
-		selectedTX = selectedTX.Where("field = ?", field)
+		fromSubQuery = fromSubQuery.Where("club_informs.field LIKE ?", "%"+field+"%")
 	}
 	if name != "" {
-		selectedTX = selectedTX.Where("name = ?", name)
+		fromSubQuery = fromSubQuery.Where("club_informs.name LIKE ?", "%"+name+"%")
 	}
 
 	recruits = make([]*model.ClubRecruitment, limit)
-	selectedTX = selectedTX.Where("end_period >= ?", time.Now()).Or("end_period IS NULL")
-	err = selectedTX.Order("created_at desc").Limit(limit).Offset(offset).Find(&recruits).Error
+	selectedTX := d.tx.Table("(?) as club_recruitments", fromSubQuery)
+	selectedTX = selectedTX.Where("club_recruitments.end_period >= ?", time.Now()).Or("club_recruitments.end_period IS NULL")
+	err = selectedTX.Order("club_recruitments.created_at desc").Limit(limit).Offset(offset).Find(&recruits).Error
 
 	if len(recruits) == 0 && err == nil {
 		err = gorm.ErrRecordNotFound
