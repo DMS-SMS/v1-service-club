@@ -2,8 +2,8 @@ package access
 
 import (
 	"club/model"
-	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/mock"
+	"gorm.io/gorm"
 )
 
 type _mock struct {

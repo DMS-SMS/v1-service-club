@@ -2,7 +2,7 @@ package access
 
 import (
 	"club/model"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 type None struct {}
