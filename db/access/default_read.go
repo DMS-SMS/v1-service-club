@@ -129,7 +129,7 @@ func (d *_default) GetRecruitMembersWithRecruitmentUUID(recruitUUID string) ([]*
 }
 
 func (d *_default) GetAllClubInforms() ([]*model.ClubInform, error) {
-	joinedTx := d.tx.Table("club_informs").Joins("JOIN clubs ON clubs.uuid = club_informs.club_uuid")
+	joinedTx := d.tx.Table(model.ClubInformInstance.TableName()).Joins("JOIN clubs ON clubs.uuid = club_informs.club_uuid")
 	joinedTx = joinedTx.Where("clubs.deleted_at IS NULL")
 
 	var informs []*model.ClubInform
@@ -143,8 +143,12 @@ func (d *_default) GetAllClubInforms() ([]*model.ClubInform, error) {
 }
 
 func (d *_default) GetAllCurrentRecruitments() ([]*model.ClubRecruitment, error) {
+	fromSubQuery := d.tx.Table(model.ClubRecruitmentInstance.TableName()).Select("club_recruitments.*")
+	fromSubQuery = fromSubQuery.Joins("JOIN clubs ON clubs.uuid = club_recruitments.club_uuid").Where("clubs.deleted_at IS NULL")
+
 	var recruitments []*model.ClubRecruitment
-	err := d.tx.Where("end_period >= ?", time.Now()).Or("end_period IS NULL").Find(&recruitments).Error
+	selectedTx := d.tx.Table("(?) AS club_recruitments", fromSubQuery)
+	err := selectedTx.Where("club_recruitments.end_period >= ?", time.Now()).Or("club_recruitments.end_period IS NULL").Find(&recruitments).Error
 
 	if len(recruitments) == 0 && err == nil {
 		err = gorm.ErrRecordNotFound
