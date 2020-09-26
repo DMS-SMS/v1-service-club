@@ -722,3 +722,113 @@ func Test_Accessor_GetRecruitmentWithRecruitmentUUID(t *testing.T) {
 		assert.Equalf(t, test.ExpectResult, result.ExceptGormModel(), "result recruitment assertion error (test case: %v)", test)
 	}
 }
+
+func Test_Accessor_GetClubMembersWithClubUUID(t *testing.T) {
+	access, err := manager.BeginTx()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		access.Rollback()
+	}()
+
+	for _, club := range []*model.Club{
+		{
+			UUID:       "club-111111111111",
+			LeaderUUID: "student-111111111111",
+		}, {
+			UUID:       "club-222222222222",
+			LeaderUUID: "student-222222222222",
+		}, {
+			UUID:       "club-333333333333",
+			LeaderUUID: "student-333333333333",
+		},
+	} {
+		if _, err := access.CreateClub(club); err != nil {
+			log.Fatal(err, club)
+		}
+	}
+
+	startTime := time.Date(2020, time.Month(9), 17, 0, 0, 0, 0, time.Local)
+	endTime := time.Date(2020, time.Month(9), 24, 0, 0, 0, 0, time.Local)
+
+	for _, recruitment := range []*model.ClubRecruitment{
+		{ // 종료된 채용
+			UUID:           "recruitment-111111111111",
+			ClubUUID:       "club-111111111111",
+			RecruitConcept: "첫 번째 공채",
+			StartPeriod:    model.StartPeriod(startTime),
+			EndPeriod:      model.EndPeriod(endTime),
+		}, { // 현재 진행중인 채용
+			UUID:           "recruitment-222222222222",
+			ClubUUID:       "club-111111111111",
+			RecruitConcept: "두 번째 공채",
+		},
+	} {
+		if _, err := access.CreateRecruitment(recruitment); err != nil {
+			log.Fatal(err, recruitment)
+		}
+	}
+
+	for _, member := range []*model.ClubMember{
+		{
+			ClubUUID:    "club-111111111111",
+			StudentUUID: "student-111111111111",
+		}, {
+			ClubUUID:    "club-111111111111",
+			StudentUUID: "student-222222222222",
+		}, {
+			ClubUUID:    "club-111111111111",
+			StudentUUID: "student-333333333333",
+		}, {
+			ClubUUID:    "club-222222222222",
+			StudentUUID: "student-333333333333",
+		},
+	} {
+		if _, err := access.CreateClubMember(member); err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	if err, _ := access.DeleteClubMember("club-111111111111", "student-333333333333"); err != nil {
+		log.Fatal(err)
+	}
+
+	tests := []struct {
+		ClubUUID      string
+		ExpectResults []*model.ClubMember
+		ExpectError   error
+	} {
+		{
+			ClubUUID: "club-111111111111",
+			ExpectResults: []*model.ClubMember{
+				{
+					ClubUUID:    "club-111111111111",
+					StudentUUID: "student-111111111111",
+				}, {
+					ClubUUID:    "club-111111111111",
+					StudentUUID: "student-222222222222",
+				},
+			},
+			ExpectError: nil,
+		}, {
+			ClubUUID:      "club-333333333333",
+			ExpectError:   gorm.ErrRecordNotFound,
+		}, {
+			ClubUUID:      "club-444444444444",
+			ExpectError:   gorm.ErrRecordNotFound,
+		},
+	}
+
+	for _, test := range tests {
+		resultMembers, err := access.GetClubMembersWithClubUUID(test.ClubUUID)
+
+		var exceptedResult []*model.ClubMember
+		for _, member := range resultMembers {
+			exceptedResult = append(exceptedResult, member.ExceptGormModel())
+		}
+
+		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
+		assert.Equalf(t, test.ExpectResults, exceptedResult, "result members assertion error (test case: %v)", test)
+	}
+}
