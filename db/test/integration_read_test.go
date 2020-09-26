@@ -651,3 +651,74 @@ func Test_Accessor_GetClubInformWithClubUUID(t *testing.T) {
 		assert.Equalf(t, test.ExpectResult, result.ExceptGormModel(), "result club inform assertion error (test case: %v)", test)
 	}
 }
+
+func Test_Accessor_GetRecruitmentWithRecruitmentUUID(t *testing.T) {
+	access, err := manager.BeginTx()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		access.Rollback()
+	}()
+
+	for _, club := range []*model.Club{
+		{
+			UUID:       "club-111111111111",
+			LeaderUUID: "student-111111111111",
+		},
+	} {
+		if _, err := access.CreateClub(club); err != nil {
+			log.Fatal(err, club)
+		}
+	}
+
+	startTime := time.Date(2020, time.Month(9), 17, 0, 0, 0, 0, time.Local)
+	endTime := time.Date(2020, time.Month(9), 24, 0, 0, 0, 0, time.Local)
+
+	for _, recruitment := range []*model.ClubRecruitment{
+		{ // 종료된 채용
+			UUID:           "recruitment-111111111111",
+			ClubUUID:       "club-111111111111",
+			RecruitConcept: "첫 번째 공채",
+			StartPeriod:    model.StartPeriod(startTime),
+			EndPeriod:      model.EndPeriod(endTime),
+		}, { // 현재 진행중인 채용
+			UUID:           "recruitment-222222222222",
+			ClubUUID:       "club-111111111111",
+			RecruitConcept: "두 번째 공채",
+		},
+	} {
+		if _, err := access.CreateRecruitment(recruitment); err != nil {
+			log.Fatal(err, recruitment)
+		}
+	}
+
+	tests := []struct {
+		RecruitmentUUID string
+		ExpectResult    *model.ClubRecruitment
+		ExpectError     error
+	} {
+		{
+			RecruitmentUUID: "recruitment-111111111111",
+			ExpectResult: &model.ClubRecruitment{
+				UUID:           "recruitment-111111111111",
+				ClubUUID:       "club-111111111111",
+				RecruitConcept: "첫 번째 공채",
+				StartPeriod:    model.StartPeriod(startTime),
+				EndPeriod:      model.EndPeriod(endTime),
+			},
+			ExpectError: nil,
+		}, {
+			RecruitmentUUID: "club-333333333333",
+			ExpectResult:    &model.ClubRecruitment{},
+			ExpectError:     gorm.ErrRecordNotFound,
+		},
+	}
+
+	for _, test := range tests {
+		result, err := access.GetRecruitmentWithRecruitmentUUID(test.RecruitmentUUID)
+
+		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
+		assert.Equalf(t, test.ExpectResult, result.ExceptGormModel(), "result recruitment assertion error (test case: %v)", test)
+	}
+}
