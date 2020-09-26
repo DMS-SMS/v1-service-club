@@ -1,6 +1,7 @@
 package model
 
 import (
+	"gorm.io/gorm"
 	"reflect"
 	"time"
 )
@@ -21,7 +22,7 @@ func exceptGormModel(model interface{}) (gormModelExceptTable interface{}) {
 	reflect.ValueOf(gormModelExceptTable).Elem().FieldByName("ID").Set(reflect.ValueOf(uint(0)))
 	reflect.ValueOf(gormModelExceptTable).Elem().FieldByName("CreatedAt").Set(reflect.ValueOf(time.Time{}))
 	reflect.ValueOf(gormModelExceptTable).Elem().FieldByName("UpdatedAt").Set(reflect.ValueOf(time.Time{}))
-	reflect.ValueOf(gormModelExceptTable).Elem().FieldByName("DeletedAt").Set(reflect.ValueOf((*time.Time)(nil)))
+	reflect.ValueOf(gormModelExceptTable).Elem().FieldByName("DeletedAt").Set(reflect.ValueOf(gorm.DeletedAt{}))
 	return
 }
 
@@ -40,10 +41,10 @@ func (cr *ClubRecruitment) ExceptGormModel() *ClubRecruitment { return exceptGor
 func (rm *RecruitMember)   ExceptGormModel() *RecruitMember   { return exceptGormModel(rm).(*RecruitMember) }
 
 // XXXConstraintName 메서드 -> XXX PK의 Constraint Name 값 반환 메서드
-func (ci *ClubInform)      ClubUUIDConstraintName()        string { return "club_informs_club_uuid_clubs_uuid_foreign" }
-func (cm *ClubMember)      ClubUUIDConstraintName()        string { return "club_members_club_uuid_clubs_uuid_foreign" }
-func (cr *ClubRecruitment) ClubUUIDConstraintName()        string { return "club_recruitments_club_uuid_clubs_uuid_foreign" }
-func (rm *RecruitMember)   RecruitmentUUIDConstraintName() string { return "recruit_members_recruitment_uuid_club_recruitments_uuid_foreign" }
+func (ci *ClubInform)      ClubUUIDConstraintName()        string { return "fk_club_informs_club" }
+func (cm *ClubMember)      ClubUUIDConstraintName()        string { return "fk_club_members_club" }
+func (cr *ClubRecruitment) ClubUUIDConstraintName()        string { return "fk_club_recruitments_club" }
+func (rm *RecruitMember)   RecruitmentUUIDConstraintName() string { return "fk_recruit_members_club" }
 
 // TableName 메서드 -> 리시버 변수에 해당되는 테이블의 이름 반환 메서드
 func (c *Club)             TableName() string { return "clubs" }

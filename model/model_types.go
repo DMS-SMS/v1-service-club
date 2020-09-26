@@ -8,13 +8,13 @@ import (
 )
 
 var (
-	nullReplaceValueForStartPeriod string
-	nullReplaceValueForEndPeriod string
+	nullReplaceValueForStartPeriod time.Time
+	nullReplaceValueForEndPeriod time.Time
 )
 
 func init() {
-	nullReplaceValueForStartPeriod = random.StringConsistOfIntWithLength(10)
-	nullReplaceValueForEndPeriod = random.StringConsistOfIntWithLength(10)
+	nullReplaceValueForStartPeriod = time.Date(0, 0, 0, 0, random.IntWithLength(11), 0, 0, time.UTC)
+	nullReplaceValueForEndPeriod = time.Date(0, 0, 0, 0, random.IntWithLength(11), 0, 0, time.UTC)
 }
 
 // UUID 필드에서 사용할 사용자 정의 타입
@@ -68,16 +68,16 @@ func (f field) KeyName() string { return "field" }
 
 // Introduction 필드에서 사용할 사용자 정의 타입
 type location string
-func Location(s string) field { return field(s) }
+func Location(s string) location { return location(s) }
 func (l location) Value() (driver.Value, error) { return string(l), nil }
 func (l *location) Scan(src interface{}) (err error) { *l = location(src.([]uint8)); return }
 func (l location) KeyName() string { return "location" }
 
 // Floor 필드에서 사용할 사용자 정의 타입
-type floor int64
-func Floor(i int64) floor { return floor(i) }
-func (f floor) Value() (driver.Value, error) { return int64(f), nil }
-func (f *floor) Scan(src interface{}) (err error) { *f = floor(src.(int64)); return }
+type floor string
+func Floor(s string) floor { return floor(s) }
+func (f floor) Value() (driver.Value, error) { return string(f), nil }
+func (f *floor) Scan(src interface{}) (err error) { *f = floor(src.([]uint8)); return }
 func (f floor) KeyName() string { return "floor" }
 
 // Link 필드에서 사용할 사용자 정의 타입
@@ -122,7 +122,7 @@ func (sp startPeriod) Value() (value driver.Value, err error) {
 }
 func (sp *startPeriod) Scan(src interface{}) (err error) { *sp = startPeriod(src.(time.Time)); return }
 func (sp startPeriod) KeyName() string { return "start_period" }
-func (sp startPeriod) NullReplaceValue() string { return nullReplaceValueForStartPeriod  }
+func (sp startPeriod) NullReplaceValue() time.Time { return nullReplaceValueForStartPeriod  }
 
 // EndPeriod 필드에서 사용할 사용자 정의 타입
 type endPeriod time.Time
@@ -138,26 +138,25 @@ func (ep endPeriod) Value() (value driver.Value, err error) {
 }
 func (ep *endPeriod) Scan(src interface{}) (err error) { *ep = endPeriod(src.(time.Time)); return }
 func (ep endPeriod) KeyName() string { return "end_period" }
-func (ep endPeriod) NullReplaceValue() string { return nullReplaceValueForEndPeriod  }
-
+func (ep endPeriod) NullReplaceValue() time.Time { return nullReplaceValueForEndPeriod  }
 
 // RecruitmentUUID 필드에서 사용할 사용자 정의 타입
 type recruitmentUUID string
 func RecruitmentUUID(s string) recruitmentUUID { return recruitmentUUID(s) }
 func (ru recruitmentUUID) Value() (driver.Value, error) { return string(ru), nil }
 func (ru *recruitmentUUID) Scan(src interface{}) (err error) { *ru = recruitmentUUID(src.([]uint8)); return }
-func (ru recruitmentUUID) KeyName() string { return "end_period" }
+func (ru recruitmentUUID) KeyName() string { return "recruitment_uuid" }
 
 // Grade 필드에서 사용할 사용자 정의 타입
-type grade int64
-func Grade(i int64) grade { return grade(i) }
-func (g grade) Value() (value driver.Value, err error) { return int64(g), nil }
-func (g *grade) Scan(src interface{}) (_ error) { *g = grade(src.(int64)); return }
+type grade string
+func Grade(s string) grade { return grade(s) }
+func (g grade) Value() (value driver.Value, err error) { return string(g), nil }
+func (g *grade) Scan(src interface{}) (_ error) { *g = grade(src.([]uint8)); return }
 func (g grade) KeyName() string { return "grade" }
 
 // StudentNumber 필드에서 사용할 사용자 정의 타입
-type number int64
-func Number(i int64) number { return number(i) }
-func (n number) Value() (driver.Value, error) { return int64(n), nil }
-func (n *number) Scan(src interface{}) (err error) { *n = number(src.(int64)); return }
+type number string
+func Number(s string) number { return number(s) }
+func (n number) Value() (driver.Value, error) { return string(n), nil }
+func (n *number) Scan(src interface{}) (err error) { *n = number(src.([]uint8)); return }
 func (n number) KeyName() string { return "number" }
