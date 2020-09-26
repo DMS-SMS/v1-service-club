@@ -72,16 +72,23 @@ func (rm *RecruitMember) BeforeCreate(tx *gorm.DB) error {
 	return validate.DBValidator.Struct(rm)
 }
 
-func (c *Club) BeforeUpdate(tx *gorm.DB) error {
+func (c *Club) BeforeUpdate(tx *gorm.DB) (err error) {
 	clubForValidate := c.DeepCopy()
 
 	if clubForValidate.UUID == emptyString       { clubForValidate.UUID = validClubUUID }
 	if clubForValidate.LeaderUUID == emptyString { clubForValidate.LeaderUUID = validLeaderUUID }
 
-	return validate.DBValidator.Struct(clubForValidate)
+	if err = validate.DBValidator.Struct(clubForValidate); err != nil {
+		return
+	}
+
+	if c.LeaderUUID != "" && tx.Where("leader_uuid = ?", c.LeaderUUID).Find(&Club{}).RowsAffected != 0 {
+		err = mysqlerr.DuplicateEntry(ClubInstance.LeaderUUID.KeyName(), string(c.LeaderUUID))
+	}
+	return
 }
 
-func (ci *ClubInform) BeforeUpdate(tx *gorm.DB) error {
+func (ci *ClubInform) BeforeUpdate(tx *gorm.DB) (err error) {
 	clubInformForValidate := ci.DeepCopy()
 
 	if clubInformForValidate.ClubUUID == emptyString { clubInformForValidate.ClubUUID = validClubUUID }
@@ -91,7 +98,20 @@ func (ci *ClubInform) BeforeUpdate(tx *gorm.DB) error {
 	if clubInformForValidate.Floor == emptyString    { clubInformForValidate.Floor = validFloor }
 	if clubInformForValidate.LogoURI == emptyString  { clubInformForValidate.LogoURI = validLogoURI }
 
-	return validate.DBValidator.Struct(clubInformForValidate)
+	if err = validate.DBValidator.Struct(clubInformForValidate); err != nil {
+		return
+	}
+
+	if ci.Name != "" && tx.Where("name = ?", ci.Name).Find(&ClubInform{}).RowsAffected != 0 {
+		err = mysqlerr.DuplicateEntry(ClubInformInstance.Name.KeyName(), string(ci.Name))
+		return
+	}
+
+	if ci.Location != "" && tx.Where("location = ?", ci.Location).Find(&ClubInform{}).RowsAffected != 0 {
+		err = mysqlerr.DuplicateEntry(ClubInformInstance.Location.KeyName(), string(ci.Location))
+		return
+	}
+	return
 }
 
 func (cr *ClubRecruitment) BeforeUpdate(tx *gorm.DB) error {
