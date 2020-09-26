@@ -1,6 +1,7 @@
 package model
 
 import (
+	"gorm.io/gorm"
 	"reflect"
 	"time"
 )
@@ -21,7 +22,7 @@ func exceptGormModel(model interface{}) (gormModelExceptTable interface{}) {
 	reflect.ValueOf(gormModelExceptTable).Elem().FieldByName("ID").Set(reflect.ValueOf(uint(0)))
 	reflect.ValueOf(gormModelExceptTable).Elem().FieldByName("CreatedAt").Set(reflect.ValueOf(time.Time{}))
 	reflect.ValueOf(gormModelExceptTable).Elem().FieldByName("UpdatedAt").Set(reflect.ValueOf(time.Time{}))
-	reflect.ValueOf(gormModelExceptTable).Elem().FieldByName("DeletedAt").Set(reflect.ValueOf((*time.Time)(nil)))
+	reflect.ValueOf(gormModelExceptTable).Elem().FieldByName("DeletedAt").Set(reflect.ValueOf(gorm.DeletedAt{}))
 	return
 }
 
