@@ -4,7 +4,7 @@ import (
 	"club/model/validate"
 	"club/tool/mysqlerr"
 	"fmt"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 const (
@@ -64,15 +64,15 @@ func (cm *ClubMember) BeforeCreate(tx *gorm.DB) (err error) {
 	return
 }
 
-func (cr *ClubRecruitment) BeforeCreate() error {
+func (cr *ClubRecruitment) BeforeCreate(tx *gorm.DB) error {
 	return validate.DBValidator.Struct(cr)
 }
 
-func (rm *RecruitMember) BeforeCreate() error {
+func (rm *RecruitMember) BeforeCreate(tx *gorm.DB) error {
 	return validate.DBValidator.Struct(rm)
 }
 
-func (c *Club) BeforeUpdate() error {
+func (c *Club) BeforeUpdate(tx *gorm.DB) error {
 	clubForValidate := c.DeepCopy()
 
 	if clubForValidate.UUID == emptyString       { clubForValidate.UUID = validClubUUID }
@@ -81,7 +81,7 @@ func (c *Club) BeforeUpdate() error {
 	return validate.DBValidator.Struct(clubForValidate)
 }
 
-func (ci *ClubInform) BeforeUpdate() error {
+func (ci *ClubInform) BeforeUpdate(tx *gorm.DB) error {
 	clubInformForValidate := ci.DeepCopy()
 
 	if clubInformForValidate.ClubUUID == emptyString { clubInformForValidate.ClubUUID = validClubUUID }
@@ -94,7 +94,7 @@ func (ci *ClubInform) BeforeUpdate() error {
 	return validate.DBValidator.Struct(clubInformForValidate)
 }
 
-func (cr *ClubRecruitment) BeforeUpdate() error {
+func (cr *ClubRecruitment) BeforeUpdate(tx *gorm.DB) error {
 	recruitmentForValidate := cr.DeepCopy()
 
 	if recruitmentForValidate.UUID == emptyString           { recruitmentForValidate.UUID = validRecruitmentUUID }
