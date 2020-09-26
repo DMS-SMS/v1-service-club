@@ -585,3 +585,69 @@ func Test_Accessor_GetCurrentRecruitmentsSortByCreateTime(t *testing.T) {
 		assert.Equalf(t, test.ExpectResults, exceptedRecruitments, "result recruitments assertion error (test case: %v)", test)
 	}
 }
+
+func Test_Accessor_GetClubInformWithClubUUID(t *testing.T) {
+	access, err := manager.BeginTx()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		access.Rollback()
+	}()
+
+	for _, club := range []*model.Club{
+		{
+			UUID:       "club-111111111111",
+			LeaderUUID: "student-111111111111",
+		},
+	} {
+		if _, err := access.CreateClub(club); err != nil {
+			log.Fatal(err, club)
+		}
+	}
+
+	for _, inform := range []*model.ClubInform{
+		{
+			ClubUUID: "club-111111111111",
+			Name:     "DMS",
+			Field:    "SW 개발",
+			Location: "2-1반 교실",
+			Floor:    "3",
+			LogoURI:  "logo.com/club-111111111111",
+		},
+	} {
+		if _, err := access.CreateClubInform(inform); err != nil {
+			log.Fatal(err, inform)
+		}
+	}
+
+	tests := []struct {
+		ClubUUID   string
+		ExpectResult *model.ClubInform
+		ExpectError  error
+	}{
+		{
+			ClubUUID: "club-111111111111",
+			ExpectResult: &model.ClubInform{
+				ClubUUID: "club-111111111111",
+				Name:     "DMS",
+				Field:    "SW 개발",
+				Location: "2-1반 교실",
+				Floor:    "3",
+				LogoURI:  "logo.com/club-111111111111",
+			},
+			ExpectError: nil,
+		}, {
+			ClubUUID:     "club-222222222222",
+			ExpectResult: &model.ClubInform{},
+			ExpectError:  gorm.ErrRecordNotFound,
+		},
+	}
+
+	for _, test := range tests {
+		result, err := access.GetClubInformWithClubUUID(test.ClubUUID)
+
+		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
+		assert.Equalf(t, test.ExpectResult, result.ExceptGormModel(), "result club inform assertion error (test case: %v)", test)
+	}
+}
