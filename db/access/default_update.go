@@ -7,7 +7,9 @@ import (
 )
 
 func (d *_default) ChangeClubLeader(clubUUID, newLeaderUUID string) (err error, rowAffected int64) {
-	updateResult := d.tx.Model(model.Club{}).Where("uuid = ?", clubUUID).Update("leader_uuid", newLeaderUUID)
+	updateResult := d.tx.Model(&model.Club{}).Where("uuid = ?", clubUUID).Updates(&model.Club{
+		LeaderUUID: model.LeaderUUID(newLeaderUUID),
+	})
 	err = updateResult.Error
 	rowAffected = updateResult.RowsAffected
 	return
