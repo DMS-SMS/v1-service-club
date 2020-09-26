@@ -2,19 +2,27 @@ package access
 
 import (
 	"club/model"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 	"time"
 )
 
 func (d *_default) GetClubWithClubUUID(clubUUID string) (club *model.Club, err error) {
 	club = new(model.Club)
-	err = d.tx.Where("uuid = ?", clubUUID).Find(club).Error
+	selectResult := d.tx.Where("uuid = ?", clubUUID).Find(club)
+	err = selectResult.Error
+	if selectResult.RowsAffected == 0 && err == nil {
+		err = gorm.ErrRecordNotFound
+	}
 	return
 }
 
 func (d *_default) GetClubWithLeaderUUID(leaderUUID string) (club *model.Club, err error) {
 	club = new(model.Club)
-	err = d.tx.Where("leader_uuid = ?", leaderUUID).Find(club).Error
+	selectResult := d.tx.Where("leader_uuid = ?", leaderUUID).Find(club)
+	err = selectResult.Error
+	if selectResult.RowsAffected == 0 && err == nil {
+		err = gorm.ErrRecordNotFound
+	}
 	return
 }
 
@@ -67,13 +75,22 @@ func (d *_default) GetCurrentRecruitmentsSortByCreateTime(offset, limit int, fie
 
 func (d *_default) GetClubInformWithClubUUID(clubUUID string) (inform *model.ClubInform, err error) {
 	inform = new(model.ClubInform)
-	err = d.tx.Where("club_uuid = ?", clubUUID).Find(inform).Error
+	selectResult := d.tx.Where("club_uuid = ?", clubUUID).Find(inform)
+	err = selectResult.Error
+	if selectResult.RowsAffected == 0 && err == nil {
+		err = gorm.ErrRecordNotFound
+	}
 	return
 }
 
 func (d *_default) GetRecruitmentWithRecruitmentUUID(recruitUUID string) (recruit *model.ClubRecruitment, err error) {
 	recruit = new(model.ClubRecruitment)
-	err = d.tx.Where("uuid = ?", recruitUUID).Find(recruit).Error
+	selectResult := d.tx.Where("uuid = ?", recruitUUID).Find(recruit)
+	err = selectResult.Error
+	if selectResult.RowsAffected == 0 && err == nil {
+		err = gorm.ErrRecordNotFound
+	}
+
 	return
 }
 
