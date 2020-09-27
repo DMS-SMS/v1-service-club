@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"log"
 	"testing"
+	"time"
 )
 
 func Test_Accessor_ChangeClubLeader(t *testing.T) {
@@ -222,5 +223,124 @@ func Test_Accessor_ModifyClubInform(t *testing.T) {
 
 		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
 		assert.Equalf(t, test.ExpectResult, result.ExceptGormModel(), "result club inform assertion error (test case: %v)", test)
+	}
+}
+
+func Test_Accessor_ModifyRecruitment(t *testing.T) {
+	access, err := manager.BeginTx()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		access.Commit()
+	}()
+
+	for _, club := range []*model.Club{
+		{
+			UUID:       "club-111111111111",
+			LeaderUUID: "student-111111111111",
+		},
+	} {
+		if _, err := access.CreateClub(club); err != nil {
+			log.Fatal(err, club)
+		}
+	}
+
+	now := time.Now()
+	startTime := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
+	endTime := startTime.Add(time.Hour * 24 * 7)
+
+	for _, recruitment := range []*model.ClubRecruitment{
+		{
+			UUID:           "recruitment-111111111111",
+			ClubUUID:       "club-111111111111",
+			RecruitConcept: "기간제 공채",
+			StartPeriod:    model.StartPeriod(startTime),
+			EndPeriod:      model.EndPeriod(endTime),
+		},
+	} {
+		if _, err := access.CreateRecruitment(recruitment); err != nil {
+			log.Fatal(err, recruitment)
+		}
+	}
+
+	tests := []struct {
+		RecruitmentUUID string
+		RevisionRecruit *model.ClubRecruitment
+		IsInvalid       bool
+		ExpectError     error
+		ExpectRows      int64
+	} {
+		{ // success case
+			RecruitmentUUID: "recruitment-111111111111",
+			RevisionRecruit: &model.ClubRecruitment{
+				RecruitConcept: "응 상시 채용으로 바꿔",
+				StartPeriod:    model.StartPeriod(model.ClubRecruitmentInstance.StartPeriod.NullReplaceValue()),
+				EndPeriod:      model.EndPeriod(model.ClubRecruitmentInstance.EndPeriod.NullReplaceValue()),
+			},
+			ExpectError: nil,
+			ExpectRows:  1,
+		}, { // floor invalid
+			RecruitmentUUID: "recruitment-111111111111",
+			RevisionRecruit: &model.ClubRecruitment{
+				RecruitConcept: "이것도 40자가 넘도록 만들어야되는데 곧 있으면 40자가 될 것 같다 만약 이게 40자가 된다면 유효성 오류가 발생해야한다",
+			},
+			IsInvalid:  true,
+			ExpectRows: 0,
+		}, {
+			RecruitmentUUID: "recruitment-111111111111",
+			RevisionRecruit: &model.ClubRecruitment{
+				ClubUUID: "club-123412341234",
+			},
+			ExpectError: errors.ClubUUIDCannotBeChanged,
+			ExpectRows:  0,
+		}, {
+			RecruitmentUUID: "recruitment-111111111111",
+			RevisionRecruit: &model.ClubRecruitment{
+				UUID: "recruitment-123412341234",
+			},
+			ExpectError: errors.RecruitmentUUIDCannotBeChanged,
+			ExpectRows:  0,
+		},
+	}
+
+	for _, test := range tests {
+		time.Sleep(time.Millisecond*1000)
+		err, rowAffected := access.ModifyRecruitment(test.RecruitmentUUID, test.RevisionRecruit)
+
+		if mysqlErr, ok := err.(*mysql.MySQLError); ok {
+			err = mysqlerr.ExceptReferenceInformFrom(mysqlErr)
+		}
+
+		if test.IsInvalid {
+			_, isInvalid := err.(validator.ValidationErrors)
+			assert.Equalf(t, test.IsInvalid, isInvalid, "invalid state assertion error (test case: %v)", test)
+		} else {
+			assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
+		}
+		assert.Equalf(t, test.ExpectRows, rowAffected, "row affected assertion error (test case: %v)", test)
+	}
+
+	confirmTests := []struct {
+		RecruitmentUUID string
+		ExpectResult    *model.ClubRecruitment
+		ExpectError     error
+	} {
+		{
+			RecruitmentUUID: "recruitment-111111111111",
+			ExpectResult: &model.ClubRecruitment{
+				UUID:           "recruitment-111111111111",
+				ClubUUID:       "club-111111111111",
+				RecruitConcept: "응 상시 채용으로 바꿔",
+			},
+			ExpectError: nil,
+		},
+	}
+
+	for _, test := range confirmTests {
+		result, err := access.GetRecruitmentWithRecruitmentUUID(test.RecruitmentUUID)
+
+		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
+		assert.Equalf(t, test.ExpectResult, result.ExceptGormModel(), "result recruitment assertion error (test case: %v)", test)
 	}
 }
