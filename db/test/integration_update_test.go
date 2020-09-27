@@ -305,7 +305,6 @@ func Test_Accessor_ModifyRecruitment(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		time.Sleep(time.Millisecond*1000)
 		err, rowAffected := access.ModifyRecruitment(test.RecruitmentUUID, test.RevisionRecruit)
 
 		if mysqlErr, ok := err.(*mysql.MySQLError); ok {

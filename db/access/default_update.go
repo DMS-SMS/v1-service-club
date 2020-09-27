@@ -38,7 +38,7 @@ func (d *_default) ModifyRecruitment(recruitUUID string, revisionRecruit *model.
 		return
 	}
 
-	var updateAttrs []interface{}
+	var updateAttrs = []interface{}{"updated_at"}
 
 	if revisionRecruit.RecruitConcept != "" {
 		updateAttrs = append(updateAttrs, model.ClubRecruitmentInstance.RecruitConcept.KeyName())
@@ -58,14 +58,8 @@ func (d *_default) ModifyRecruitment(recruitUUID string, revisionRecruit *model.
 		}
 	}
 
-	selectedTx := d.tx.Model(&model.ClubRecruitment{})
-	if len(updateAttrs) != 0 {
-		argsAttr := updateAttrs[1:]
-		selectedTx = selectedTx.Select(updateAttrs[0], argsAttr...)
-	} else {
-		selectedTx = selectedTx.Select("")
-	}
-
+	revisionRecruit.UpdatedAt = time.Now()
+	selectedTx := d.tx.Model(&model.ClubRecruitment{}).Select(updateAttrs[0], updateAttrs[1:]...)
 	updateResult := selectedTx.Where("uuid = ?", recruitUUID).Updates(revisionRecruit)
 	err = updateResult.Error
 	rowAffected = updateResult.RowsAffected
