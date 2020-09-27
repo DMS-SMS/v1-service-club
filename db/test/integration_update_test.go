@@ -232,7 +232,7 @@ func Test_Accessor_ModifyRecruitment(t *testing.T) {
 		log.Fatal(err)
 	}
 	defer func() {
-		access.Commit()
+		access.Rollback()
 	}()
 
 	for _, club := range []*model.Club{
