@@ -9,6 +9,7 @@ import (
 
 var manager db.AccessorManage
 
+
 var (
 	clubInformClubUUIDFKConstraintFailError = mysqlerr.FKConstraintFailWithoutReferenceInform(mysqlerr.FKInform{
 		DBName:         strings.ToLower("SMS_Club_Test_DB"),
