@@ -18,7 +18,6 @@ func Test_Accessor_CreateClub(t *testing.T) {
 	}
 	defer func() {
 		access.Rollback()
-		testGroup.Done()
 	}()
 
 	tests := []struct {
@@ -71,7 +70,6 @@ func Test_Accessor_CreateClubInform(t *testing.T) {
 	}
 	defer func() {
 		access.Rollback()
-		testGroup.Done()
 	}()
 
 	for _, club := range []*model.Club{
@@ -196,7 +194,6 @@ func Test_Accessor_CreateClubMember(t *testing.T) {
 	}
 	defer func() {
 		access.Rollback()
-		testGroup.Done()
 	}()
 
 	for _, club := range []*model.Club{
@@ -276,7 +273,6 @@ func Test_Accessor_CreateRecruitment(t *testing.T) {
 	}
 	defer func() {
 		access.Rollback()
-		testGroup.Done()
 	}()
 
 	for _, club := range []*model.Club{
@@ -379,7 +375,6 @@ func Test_Accessor_CreateRecruitMember(t *testing.T) {
 	}
 	defer func() {
 		access.Rollback()
-		testGroup.Done()
 	}()
 
 	for _, club := range []*model.Club{

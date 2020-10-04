@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"github.com/go-playground/validator/v10"
 	"github.com/hashicorp/consul/api"
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/mysql"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 	"os"
 	"strings"
 )
@@ -53,7 +54,9 @@ func connectToMysql(conf DBConfig) (db *gorm.DB, err error) {
 		err = errors.New("please set DB_PASSWORD environment variable")
 		return
 	}
-	args := fmt.Sprintf("%s:%s@(%s)/%s?charset=utf8&parseTime=True&loc=Local", conf.User, pwd, conf.Host, conf.DB)
-	db, err = gorm.Open(conf.Dialect, args)
+	dns := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local", conf.User, pwd, conf.Host, conf.Port, conf.DB)
+	db, err = gorm.Open(mysql.Open(dns), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Silent),
+	})
 	return
 }

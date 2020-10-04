@@ -5,15 +5,10 @@ import (
 	"club/model"
 	"club/tool/mysqlerr"
 	"strings"
-	"sync"
 )
 
-var (
-	manager db.AccessorManage
-	testGroup sync.WaitGroup
-)
+var manager db.AccessorManage
 
-const numberOfTestFunc = 5
 
 var (
 	clubInformClubUUIDFKConstraintFailError = mysqlerr.FKConstraintFailWithoutReferenceInform(mysqlerr.FKInform{

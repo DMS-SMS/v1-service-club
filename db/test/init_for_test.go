@@ -6,7 +6,6 @@ import (
 	"club/db/access"
 	"github.com/hashicorp/consul/api"
 	"log"
-	"sync"
 )
 
 func init() {
@@ -25,11 +24,4 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	go func() {
-		testGroup = sync.WaitGroup{}
-		testGroup.Add(numberOfTestFunc)
-		testGroup.Wait()
-		_ = dbc.Close()
-	}()
 }
