@@ -25,3 +25,21 @@ func newDefault(setters ...FieldSetter) (h *_default) {
 	}
 	return
 }
+
+func AccessManager(am db.AccessorManage) FieldSetter {
+	return func(h *_default) {
+		h.accessManage = am
+	}
+}
+
+func Tracer(t opentracing.Tracer) FieldSetter {
+	return func(h *_default) {
+		h.tracer = t
+	}
+}
+
+func AWSSession(s *session.Session) FieldSetter {
+	return func(h *_default) {
+		h.awsSession = s
+	}
+}
