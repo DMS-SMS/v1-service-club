@@ -1,4 +1,4 @@
-package for_test
+package test
 
 import (
 	"bufio"
