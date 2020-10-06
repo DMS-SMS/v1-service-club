@@ -57,6 +57,69 @@ func (test *CreateNewClubCase) ChangeEmptyReplaceValueToEmptyValue() {
 	if test.SpanContextString == EmptyReplaceValueForString        { test.SpanContextString = "" }
 }
 
+func (test *CreateNewClubCase) OnExpectMethodsTo(mock *mock.Mock) {
+	for method, returns := range test.ExpectedMethods {
+		test.onMethod(mock, method, returns)
+	}
+}
+
+func (test *CreateNewClubCase) onMethod(mock *mock.Mock, method Method, returns Returns) {
+	switch method {
+	case "CreateClub":
+		const indexClubModel = 0
+		const indexError = 1
+		if _, ok := returns[indexClubModel].(*model.Club); ok && returns[indexError] == nil {
+			modelToReturn := test.getClubModel()
+			modelToReturn.Model = createGormModelOnCurrentTime()
+			returns[indexClubModel] = modelToReturn
+		}
+		mock.On(string(method), test.getClubModel()).Return(returns...)
+
+	case "CreateClubInform":
+		const indexClubInformModel = 0
+		const indexError = 1
+		if _, ok := returns[indexClubInformModel].(*model.ClubInform); ok && returns[indexError] == nil {
+			modelToReturn := test.getClubInformModel()
+			modelToReturn.Model = createGormModelOnCurrentTime()
+			returns[indexClubInformModel] = modelToReturn
+		}
+		mock.On(string(method), test.getClubInformModel()).Return(returns...)
+
+	case "CreateClubMembers":
+		const indexClubMemberModel = 0
+		const indexError = 1
+		for index := range test.MemberUUIDs {
+			if _, ok := returns[indexClubMemberModel].(*model.ClubMember); ok && returns[indexError] == nil {
+				modelToReturn := test.getClubMemberModelWithIndex(index)
+				modelToReturn.Model = createGormModelOnCurrentTime()
+				returns[indexClubMemberModel] = modelToReturn
+			}
+			mock.On(string(method), test.getClubMemberModelWithIndex(index)).Return(returns...)
+		}
+
+	case "GetClubWithClubUUID":
+		mock.On(string(method), test.ClubUUID).Return(returns...)
+
+	case "GetStudentInformsWithUUIDs":
+		requestCtx := context.Background()
+		requestCtx = metadata.Set(requestCtx, "X-Request-Id", test.XRequestID)
+		requestCtx = metadata.Set(requestCtx, "Span-Context", "123412341234:123412341234:123412341234")
+		mock.On(string(method), requestCtx, &authproto.GetStudentInformsWithUUIDsRequest{
+			UUID:         test.UUID,
+			StudentUUIDs: test.MemberUUIDs,
+		}).Return(returns...)
+
+	case "BeginTx":
+		mock.On(string(method)).Return(returns...)
+	case "Commit":
+		mock.On(string(method)).Return(returns...)
+	case "Rollback":
+		mock.On(string(method)).Return(returns...)
+	default:
+		log.Fatalf("this method cannot be registered, method name: %s", method)
+	}
+}
+
 func (test *CreateNewClubCase) getClubModel() *model.Club {
 	return &model.Club{
 		UUID:       model.UUID(test.UUID),
