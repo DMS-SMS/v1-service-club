@@ -1,4 +1,14 @@
-package for_test
+package test
+
+import (
+	"club/model"
+	authproto "club/proto/golang/auth"
+	clubproto "club/proto/golang/club"
+	"context"
+	"github.com/micro/go-micro/v2/metadata"
+	"github.com/stretchr/testify/mock"
+	"log"
+)
 
 type Method string
 type Returns []interface{}
@@ -45,4 +55,29 @@ func (test *CreateNewClubCase) ChangeEmptyReplaceValueToEmptyValue() {
 	if test.ClubUUID == EmptyReplaceValueForString                 { test.ClubUUID = "" }
 	if test.XRequestID == EmptyReplaceValueForString               { test.XRequestID = "" }
 	if test.SpanContextString == EmptyReplaceValueForString        { test.SpanContextString = "" }
+}
+
+func (test *CreateNewClubCase) getClubModel() *model.Club {
+	return &model.Club{
+		UUID:       model.UUID(test.UUID),
+		LeaderUUID: model.LeaderUUID(test.LeaderUUID),
+	}
+}
+
+func (test *CreateNewClubCase) getClubInformModel() *model.ClubInform {
+	return &model.ClubInform{
+		ClubUUID:     model.ClubUUID(test.ClubUUID),
+		Name:         model.Name(test.Name),
+		Field:        model.Field(test.Field),
+		Location:     model.Location(test.Location),
+		Floor:        model.Floor(test.Floor),
+	}
+}
+
+func (test *CreateNewClubCase) getClubMemberModelWithIndex(index int) *model.ClubMember {
+	return &model.ClubMember{
+		ClubUUID:    model.ClubUUID(test.ClubUUID),
+		StudentUUID: model.StudentUUID(test.MemberUUIDs[index]),
+		Club:        nil,
+	}
 }
