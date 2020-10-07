@@ -5,7 +5,9 @@ import (
 	authproto "club/proto/golang/auth"
 	clubproto "club/proto/golang/club"
 	"context"
+	"github.com/micro/go-micro/v2/client"
 	"github.com/micro/go-micro/v2/metadata"
+	"github.com/micro/go-micro/v2/registry"
 	"github.com/stretchr/testify/mock"
 	"log"
 )
@@ -100,19 +102,21 @@ func (test *CreateNewClubCase) onMethod(mock *mock.Mock, method Method, returns 
 	case "GetClubWithClubUUID":
 		mock.On(string(method), test.ClubUUID).Return(returns...)
 
-	case "GetStudentInformsWithUUIDs":
-		requestCtx := context.Background()
-		requestCtx = metadata.Set(requestCtx, "X-Request-Id", test.XRequestID)
-		requestCtx = metadata.Set(requestCtx, "Span-Context", "123412341234:123412341234:123412341234")
-		mock.On(string(method), requestCtx, &authproto.GetStudentInformsWithUUIDsRequest{
+	case "GetStudentInformsWithUUIDs": // 모의 객체에서 Request 객체만 넘겨줘야 함
+		mock.On(string(method), &authproto.GetStudentInformsWithUUIDsRequest{
 			UUID:         test.UUID,
 			StudentUUIDs: test.MemberUUIDs,
 		}).Return(returns...)
 
+	case "GetNextServiceNode":
+		mock.On(string(method)).Return(returns...)
+
 	case "BeginTx":
 		mock.On(string(method)).Return(returns...)
+
 	case "Commit":
 		mock.On(string(method)).Return(returns...)
+
 	case "Rollback":
 		mock.On(string(method)).Return(returns...)
 	default:
