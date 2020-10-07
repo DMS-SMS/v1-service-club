@@ -14,7 +14,7 @@ func Mock(mock *mock.Mock) _mock {
 }
 
 
-func (m _mock) GetNextServiceNode() (*registry.Node, error) {
-	args := m.mock.Called()
+func (m _mock) GetNextServiceNode(service string) (*registry.Node, error) {
+	args := m.mock.Called(service)
 	return args.Get(0).(*registry.Node), args.Error(1)
 }
