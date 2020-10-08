@@ -15,6 +15,7 @@ import (
 	microerrors "github.com/micro/go-micro/v2/errors"
 	"github.com/micro/go-micro/v2/registry"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"gorm.io/gorm"
 	"net/http"
 	"testing"
@@ -32,7 +33,7 @@ func Test_default_CreateNewClub(t *testing.T) {
 					Id:      "DMS.SMS.v1.service.auth-6b37b034-5f0b-4c9f-a03a-decbcb3799ef",
 					Address: "127.0.0.1:10101",
 				}, nil},
-				"GetStudentInformsWithUUID": {&authproto.GetStudentInformsWithUUIDsResponse{
+				"GetStudentInformsWithUUIDs": {&authproto.GetStudentInformsWithUUIDsResponse{
 					Status:  http.StatusOK,
 					Message: "success!",
 					StudentInforms: []*authproto.StudentInform{{
@@ -81,7 +82,7 @@ func Test_default_CreateNewClub(t *testing.T) {
 					Id:      "DMS.SMS.v1.service.auth-6b37b034-5f0b-4c9f-a03a-decbcb3799ef",
 					Address: "127.0.0.1:10101",
 				}, nil},
-				"GetStudentInformsWithUUID": {&authproto.GetStudentInformsWithUUIDsResponse{
+				"GetStudentInformsWithUUIDs": {&authproto.GetStudentInformsWithUUIDsResponse{
 					Status:  http.StatusOK,
 					Message: "success!",
 					StudentInforms: []*authproto.StudentInform{{
@@ -108,7 +109,7 @@ func Test_default_CreateNewClub(t *testing.T) {
 					Id:      "DMS.SMS.v1.service.auth-6b37b034-5f0b-4c9f-a03a-decbcb3799ef",
 					Address: "127.0.0.1:10101",
 				}, nil},
-				"GetStudentInformsWithUUID": {&authproto.GetStudentInformsWithUUIDsResponse{
+				"GetStudentInformsWithUUIDs": {&authproto.GetStudentInformsWithUUIDsResponse{
 					Status:  http.StatusOK,
 					Message: "success!",
 					StudentInforms: []*authproto.StudentInform{{
@@ -140,7 +141,7 @@ func Test_default_CreateNewClub(t *testing.T) {
 					Id:      "DMS.SMS.v1.service.auth-6b37b034-5f0b-4c9f-a03a-decbcb3799ef",
 					Address: "127.0.0.1:10101",
 				}, nil},
-				"GetStudentInformsWithUUID": {&authproto.GetStudentInformsWithUUIDsResponse{
+				"GetStudentInformsWithUUIDs": {&authproto.GetStudentInformsWithUUIDsResponse{
 					Status:  http.StatusConflict,
 					Code:    code.StudentUUIDsContainNoExistUUID,
 					Message: "student uuid array contain no exist uuid",
@@ -157,7 +158,7 @@ func Test_default_CreateNewClub(t *testing.T) {
 			},
 			ExpectedStatus: http.StatusConflict,
 			ExpectedCode:   code.MemberUUIDsIncludeNoExistUUID,
-		}, { // GetStudentInformsWithUUID return not 200 or 407
+		}, { // GetStudentInformsWithUUIDs return not 200 or 407
 			LeaderUUID:  "student-111111111111",
 			MemberUUIDs: []string{"student-111111111111"},
 			ExpectedMethods: map[test.Method]test.Returns{
@@ -165,13 +166,13 @@ func Test_default_CreateNewClub(t *testing.T) {
 					Id:      "DMS.SMS.v1.service.auth-6b37b034-5f0b-4c9f-a03a-decbcb3799ef",
 					Address: "127.0.0.1:10101",
 				}, nil},
-				"GetStudentInformsWithUUID": {&authproto.GetStudentInformsWithUUIDsResponse{
+				"GetStudentInformsWithUUIDs": {&authproto.GetStudentInformsWithUUIDsResponse{
 					Status:  http.StatusInternalServerError,
 					Message: "internal server error",
 				}, nil},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
-		}, { // GetStudentInformsWithUUID return any error
+		}, { // GetStudentInformsWithUUIDs return any error
 			LeaderUUID:  "student-111111111111",
 			MemberUUIDs: []string{"student-111111111111"},
 			ExpectedMethods: map[test.Method]test.Returns{
@@ -179,10 +180,10 @@ func Test_default_CreateNewClub(t *testing.T) {
 					Id:      "DMS.SMS.v1.service.auth-6b37b034-5f0b-4c9f-a03a-decbcb3799ef",
 					Address: "127.0.0.1:10101",
 				}, nil},
-				"GetStudentInformsWithUUID": {&authproto.GetStudentInformsWithUUIDsResponse{}, errors.New("I don't know what error is")},
+				"GetStudentInformsWithUUIDs": {&authproto.GetStudentInformsWithUUIDsResponse{}, errors.New("I don't know what error is")},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
-		}, { // GetStudentInformsWithUUID return micro error
+		}, { // GetStudentInformsWithUUIDs return micro error
 			LeaderUUID:  "student-111111111111",
 			MemberUUIDs: []string{"student-111111111111"},
 			ExpectedMethods: map[test.Method]test.Returns{
@@ -190,7 +191,7 @@ func Test_default_CreateNewClub(t *testing.T) {
 					Id:      "DMS.SMS.v1.service.auth-6b37b034-5f0b-4c9f-a03a-decbcb3799ef",
 					Address: "127.0.0.1:10101",
 				}, nil},
-				"GetStudentInformsWithUUID": {&authproto.GetStudentInformsWithUUIDsResponse{}, microerrors.Error{
+				"GetStudentInformsWithUUIDs": {&authproto.GetStudentInformsWithUUIDsResponse{}, microerrors.Error{
 					Code: http.StatusNetworkAuthenticationRequired,
 				}},
 			},
@@ -217,7 +218,7 @@ func Test_default_CreateNewClub(t *testing.T) {
 					Id:      "DMS.SMS.v1.service.auth-6b37b034-5f0b-4c9f-a03a-decbcb3799ef",
 					Address: "127.0.0.1:10101",
 				}, nil},
-				"GetStudentInformsWithUUID": {&authproto.GetStudentInformsWithUUIDsResponse{
+				"GetStudentInformsWithUUIDs": {&authproto.GetStudentInformsWithUUIDsResponse{
 					Status:  http.StatusOK,
 					Message: "success!",
 					StudentInforms: []*authproto.StudentInform{{
@@ -243,7 +244,7 @@ func Test_default_CreateNewClub(t *testing.T) {
 					Id:      "DMS.SMS.v1.service.auth-6b37b034-5f0b-4c9f-a03a-decbcb3799ef",
 					Address: "127.0.0.1:10101",
 				}, nil},
-				"GetStudentInformsWithUUID": {&authproto.GetStudentInformsWithUUIDsResponse{
+				"GetStudentInformsWithUUIDs": {&authproto.GetStudentInformsWithUUIDsResponse{
 					Status:  http.StatusOK,
 					Message: "success!",
 					StudentInforms: []*authproto.StudentInform{{
@@ -269,7 +270,7 @@ func Test_default_CreateNewClub(t *testing.T) {
 					Id:      "DMS.SMS.v1.service.auth-6b37b034-5f0b-4c9f-a03a-decbcb3799ef",
 					Address: "127.0.0.1:10101",
 				}, nil},
-				"GetStudentInformsWithUUID": {&authproto.GetStudentInformsWithUUIDsResponse{
+				"GetStudentInformsWithUUIDs": {&authproto.GetStudentInformsWithUUIDsResponse{
 					Status:  http.StatusOK,
 					Message: "success!",
 					StudentInforms: []*authproto.StudentInform{{
@@ -294,7 +295,7 @@ func Test_default_CreateNewClub(t *testing.T) {
 					Id:      "DMS.SMS.v1.service.auth-6b37b034-5f0b-4c9f-a03a-decbcb3799ef",
 					Address: "127.0.0.1:10101",
 				}, nil},
-				"GetStudentInformsWithUUID": {&authproto.GetStudentInformsWithUUIDsResponse{
+				"GetStudentInformsWithUUIDs": {&authproto.GetStudentInformsWithUUIDsResponse{
 					Status:  http.StatusOK,
 					Message: "success!",
 					StudentInforms: []*authproto.StudentInform{{
@@ -320,7 +321,7 @@ func Test_default_CreateNewClub(t *testing.T) {
 					Id:      "DMS.SMS.v1.service.auth-6b37b034-5f0b-4c9f-a03a-decbcb3799ef",
 					Address: "127.0.0.1:10101",
 				}, nil},
-				"GetStudentInformsWithUUID": {&authproto.GetStudentInformsWithUUIDsResponse{
+				"GetStudentInformsWithUUIDs": {&authproto.GetStudentInformsWithUUIDsResponse{
 					Status:  http.StatusOK,
 					Message: "success!",
 					StudentInforms: []*authproto.StudentInform{{
@@ -348,7 +349,7 @@ func Test_default_CreateNewClub(t *testing.T) {
 					Id:      "DMS.SMS.v1.service.auth-6b37b034-5f0b-4c9f-a03a-decbcb3799ef",
 					Address: "127.0.0.1:10101",
 				}, nil},
-				"GetStudentInformsWithUUID": {&authproto.GetStudentInformsWithUUIDsResponse{
+				"GetStudentInformsWithUUIDs": {&authproto.GetStudentInformsWithUUIDsResponse{
 					Status:  http.StatusOK,
 					Message: "success!",
 					StudentInforms: []*authproto.StudentInform{{
@@ -375,7 +376,7 @@ func Test_default_CreateNewClub(t *testing.T) {
 					Id:      "DMS.SMS.v1.service.auth-6b37b034-5f0b-4c9f-a03a-decbcb3799ef",
 					Address: "127.0.0.1:10101",
 				}, nil},
-				"GetStudentInformsWithUUID": {&authproto.GetStudentInformsWithUUIDsResponse{
+				"GetStudentInformsWithUUIDs": {&authproto.GetStudentInformsWithUUIDsResponse{
 					Status:  http.StatusOK,
 					Message: "success!",
 					StudentInforms: []*authproto.StudentInform{{
@@ -401,7 +402,7 @@ func Test_default_CreateNewClub(t *testing.T) {
 					Id:      "DMS.SMS.v1.service.auth-6b37b034-5f0b-4c9f-a03a-decbcb3799ef",
 					Address: "127.0.0.1:10101",
 				}, nil},
-				"GetStudentInformsWithUUID": {&authproto.GetStudentInformsWithUUIDsResponse{
+				"GetStudentInformsWithUUIDs": {&authproto.GetStudentInformsWithUUIDsResponse{
 					Status:  http.StatusOK,
 					Message: "success!",
 					StudentInforms: []*authproto.StudentInform{{
@@ -429,7 +430,7 @@ func Test_default_CreateNewClub(t *testing.T) {
 					Id:      "DMS.SMS.v1.service.auth-6b37b034-5f0b-4c9f-a03a-decbcb3799ef",
 					Address: "127.0.0.1:10101",
 				}, nil},
-				"GetStudentInformsWithUUID": {&authproto.GetStudentInformsWithUUIDsResponse{
+				"GetStudentInformsWithUUIDs": {&authproto.GetStudentInformsWithUUIDsResponse{
 					Status:  http.StatusOK,
 					Message: "success!",
 					StudentInforms: []*authproto.StudentInform{{
@@ -465,7 +466,7 @@ func Test_default_CreateNewClub(t *testing.T) {
 					Id:      "DMS.SMS.v1.service.auth-6b37b034-5f0b-4c9f-a03a-decbcb3799ef",
 					Address: "127.0.0.1:10101",
 				}, nil},
-				"GetStudentInformsWithUUID": {&authproto.GetStudentInformsWithUUIDsResponse{
+				"GetStudentInformsWithUUIDs": {&authproto.GetStudentInformsWithUUIDsResponse{
 					Status:  http.StatusOK,
 					Message: "success!",
 					StudentInforms: []*authproto.StudentInform{{
@@ -500,7 +501,7 @@ func Test_default_CreateNewClub(t *testing.T) {
 					Id:      "DMS.SMS.v1.service.auth-6b37b034-5f0b-4c9f-a03a-decbcb3799ef",
 					Address: "127.0.0.1:10101",
 				}, nil},
-				"GetStudentInformsWithUUID": {&authproto.GetStudentInformsWithUUIDsResponse{
+				"GetStudentInformsWithUUIDs": {&authproto.GetStudentInformsWithUUIDsResponse{
 					Status:  http.StatusOK,
 					Message: "success!",
 					StudentInforms: []*authproto.StudentInform{{
@@ -533,10 +534,12 @@ func Test_default_CreateNewClub(t *testing.T) {
 	}
 
 	for _, testCase := range tests {
-		mock, handler := setAndGetTestEnv()
+		newMock := &mock.Mock{}
+		handler := newDefaultMockHandler(newMock)
+
 		testCase.ChangeEmptyValueToValidValue()
 		testCase.ChangeEmptyReplaceValueToEmptyValue()
-		testCase.OnExpectMethodsTo(mock)
+		testCase.OnExpectMethodsTo(newMock)
 
 		req := new(clubproto.CreateNewClubRequest)
 		testCase.SetRequestContextOf(req)
@@ -550,6 +553,6 @@ func Test_default_CreateNewClub(t *testing.T) {
 		assert.Equalf(t, testCase.ExpectedCode, resp.Code, "code assertion error (test case: %v, message: %s)", testCase, resp.Message)
 		assert.Regexpf(t, testCase.ExpectedClubUUID, resp.ClubUUID, "club uuid assertion error (test case: %v, message: %s)", testCase, resp.Message)
 
-		mock.AssertExpectations(t)
+		newMock.AssertExpectations(t)
 	}
 }
