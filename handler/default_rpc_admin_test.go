@@ -531,4 +531,25 @@ func Test_default_CreateNewClub(t *testing.T) {
 			ExpectedStatus: http.StatusInternalServerError,
 		},
 	}
+
+	for _, testCase := range tests {
+		mock, handler := setAndGetTestEnv()
+		testCase.ChangeEmptyValueToValidValue()
+		testCase.ChangeEmptyReplaceValueToEmptyValue()
+		testCase.OnExpectMethodsTo(mock)
+
+		req := new(clubproto.CreateNewClubRequest)
+		testCase.SetRequestContextOf(req)
+		ctx := testCase.GetMetadataContext()
+
+		resp := new(clubproto.CreateNewClubResponse)
+		_ = handler.CreateNewClub(ctx, req, resp)
+
+		testCase.Logo = nil
+		assert.Equalf(t, int(testCase.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", testCase, resp.Message)
+		assert.Equalf(t, testCase.ExpectedCode, resp.Code, "code assertion error (test case: %v, message: %s)", testCase, resp.Message)
+		assert.Regexpf(t, testCase.ExpectedClubUUID, resp.ClubUUID, "club uuid assertion error (test case: %v, message: %s)", testCase, resp.Message)
+
+		mock.AssertExpectations(t)
+	}
 }
