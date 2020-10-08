@@ -5,9 +5,7 @@ import (
 	authproto "club/proto/golang/auth"
 	clubproto "club/proto/golang/club"
 	"context"
-	"github.com/micro/go-micro/v2/client"
 	"github.com/micro/go-micro/v2/metadata"
-	"github.com/micro/go-micro/v2/registry"
 	"github.com/stretchr/testify/mock"
 	"log"
 )
