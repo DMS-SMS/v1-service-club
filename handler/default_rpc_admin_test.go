@@ -4,6 +4,7 @@ import (
 	test "club/handler/for_test"
 	"club/model"
 	authproto "club/proto/golang/auth"
+	clubproto "club/proto/golang/club"
 	consulagent "club/tool/consul/agent"
 	"club/tool/mysqlerr"
 	code "club/utils/code/golang"
@@ -13,6 +14,7 @@ import (
 	"github.com/go-sql-driver/mysql"
 	microerrors "github.com/micro/go-micro/v2/errors"
 	"github.com/micro/go-micro/v2/registry"
+	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
 	"net/http"
 	"testing"
@@ -96,6 +98,32 @@ func Test_default_CreateNewClub(t *testing.T) {
 				"GetClubWithClubUUID": {&model.Club{}, gorm.ErrRecordNotFound},
 				"CreateClub":          {&model.Club{}, nil},
 				"CreateClubInform":    {&model.ClubInform{}, (validator.ValidationErrors)(nil)},
+				"Rollback":            {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusProxyAuthRequired,
+		}, { // invalid request (logo not exist)
+			Logo: nil,
+			ExpectedMethods: map[test.Method]test.Returns{
+				"GetNextServiceNode": {&registry.Node{
+					Id:      "DMS.SMS.v1.service.auth-6b37b034-5f0b-4c9f-a03a-decbcb3799ef",
+					Address: "127.0.0.1:10101",
+				}, nil},
+				"GetStudentInformsWithUUID": {&authproto.GetStudentInformsWithUUIDsResponse{
+					Status:  http.StatusOK,
+					Message: "success!",
+					StudentInforms: []*authproto.StudentInform{{
+						StudentUUID:   "student-111111111111",
+						Grade:         2,
+						Group:         2,
+						StudentNumber: 7,
+						Name:          "박진홍",
+						PhoneNumber:   "01088378347",
+						ImageURI:      "profiles/student-111111111111",
+					}},
+				}, nil},
+				"BeginTx":             {},
+				"GetClubWithClubUUID": {&model.Club{}, gorm.ErrRecordNotFound},
+				"CreateClub":          {&model.Club{}, nil},
 				"Rollback":            {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusProxyAuthRequired,
