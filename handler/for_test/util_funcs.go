@@ -12,6 +12,6 @@ func createGormModelOnCurrentTime() gorm.Model {
 		ID:        uint(random.Int64WithLength(3)),
 		CreatedAt: currentTime,
 		UpdatedAt: currentTime,
-		DeletedAt: nil,
+		DeletedAt: gorm.DeletedAt{},
 	}
 }
