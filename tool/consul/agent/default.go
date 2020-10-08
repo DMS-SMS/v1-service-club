@@ -51,7 +51,7 @@ func (d *_default) GetNextServiceNode(service string) (*registry.Node, error) {
 	}
 
 	if len(checks) == 0 {
-		return nil, errors.New("there is no currently available services")
+		return nil, ErrAvailableNodeNotFound
 	}
 
 	var nodes []*registry.Node
