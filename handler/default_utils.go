@@ -5,6 +5,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/micro/go-micro/v2/metadata"
 	"github.com/uber/jaeger-client-go"
+	"regexp"
 )
 
 const (
@@ -13,6 +14,12 @@ const (
 	proxyAuthRequiredMessageFormat = "proxy auth required (reason: %s)"
 	conflictErrorFormat = "conflict (reason: %s)"
 	internalServerErrorFormat = "internal server error (reason: %s)"
+)
+
+var (
+	adminUUIDRegex = regexp.MustCompile("^admin-\\d{12}")
+	studentUUIDRegex = regexp.MustCompile("^student-\\d{12}")
+	clubUUIDRegex = regexp.MustCompile("^club-\\d{12}")
 )
 
 func (_ _default) getContextFromMetadata(ctx context.Context) (parsedCtx context.Context, proxyAuthenticated bool, reason string) {
