@@ -128,7 +128,7 @@ func Test_default_CreateNewClub(t *testing.T) {
 				}, nil},
 			},
 			ExpectedStatus: http.StatusConflict,
-			ExpectedCode:   code.MemeberUUIDsIncludeNoExistUUID,
+			ExpectedCode:   code.MemberUUIDsIncludeNoExistUUID,
 		}, { // GetStudentInformsWithUUID return not 200 or 407
 			LeaderUUID:  "student-111111111111",
 			MemberUUIDs: []string{"student-111111111111"},
@@ -234,7 +234,7 @@ func Test_default_CreateNewClub(t *testing.T) {
 				"Rollback":            {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusConflict,
-			ExpectedCode:   code.LeaderUUIDDuplicate,
+			ExpectedCode:   code.ClubLeaderAlreadyExist,
 		}, { // CreateClub return invalid message in duplicate error
 			ExpectedMethods: map[test.Method]test.Returns{
 				"GetNextServiceNode": {&registry.Node{
