@@ -8,7 +8,9 @@ import (
 	"club/tool/mysqlerr"
 	code "club/utils/code/golang"
 	"errors"
+	mysqlcode "github.com/VividCortex/mysqlerr"
 	"github.com/go-playground/validator/v10"
+	"github.com/go-sql-driver/mysql"
 	microerrors "github.com/micro/go-micro/v2/errors"
 	"github.com/micro/go-micro/v2/registry"
 	"gorm.io/gorm"
@@ -70,7 +72,7 @@ func Test_default_CreateNewClub(t *testing.T) {
 			UUID:            "parent-111111111111",
 			ExpectedMethods: map[test.Method]test.Returns{},
 			ExpectedStatus:  http.StatusForbidden,
-		},  { // invalid request (floor -> in 1~5)
+		}, { // invalid request (floor -> in 1~5)
 			Floor: "100",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"GetNextServiceNode": {&registry.Node{
@@ -165,20 +167,46 @@ func Test_default_CreateNewClub(t *testing.T) {
 				}},
 			},
 			ExpectedStatus: http.StatusNetworkAuthenticationRequired,
-		},{ // GetNextServiceNode return any error
+		}, { // GetNextServiceNode return any error
 			LeaderUUID:  "student-111111111111",
 			MemberUUIDs: []string{"student-111111111111"},
 			ExpectedMethods: map[test.Method]test.Returns{
 				"GetNextServiceNode": {nil, errors.New("I don't know what error is")},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
-		},  { // GetNextServiceNode return ErrAvailableNodeNotFound
+		}, { // GetNextServiceNode return ErrAvailableNodeNotFound
 			LeaderUUID:  "student-111111111111",
 			MemberUUIDs: []string{"student-111111111111"},
 			ExpectedMethods: map[test.Method]test.Returns{
 				"GetNextServiceNode": {nil, consulagent.ErrAvailableNodeNotFound},
 			},
 			ExpectedStatus: http.StatusServiceUnavailable,
+		}, { // GetClubWithClubUUID unexpected error
+			LeaderUUID:  "student-111111111111",
+			MemberUUIDs: []string{"student-111111111111"},
+			ExpectedMethods: map[test.Method]test.Returns{
+				"GetNextServiceNode": {&registry.Node{
+					Id:      "DMS.SMS.v1.service.auth-6b37b034-5f0b-4c9f-a03a-decbcb3799ef",
+					Address: "127.0.0.1:10101",
+				}, nil},
+				"GetStudentInformsWithUUID": {&authproto.GetStudentInformsWithUUIDsResponse{
+					Status:  http.StatusOK,
+					Message: "success!",
+					StudentInforms: []*authproto.StudentInform{{
+						StudentUUID:   "student-111111111111",
+						Grade:         2,
+						Group:         2,
+						StudentNumber: 7,
+						Name:          "박진홍",
+						PhoneNumber:   "01088378347",
+						ImageURI:      "profiles/student-111111111111",
+					}},
+				}, nil},
+				"BeginTx":             {},
+				"GetClubWithClubUUID": {&model.Club{}, errors.New("unexpected error")},
+				"Rollback":            {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
 		}, { // leader uuid duplicate error
 			LeaderUUID:  "student-111111111111",
 			MemberUUIDs: []string{"student-111111111111"},
@@ -201,11 +229,62 @@ func Test_default_CreateNewClub(t *testing.T) {
 					}},
 				}, nil},
 				"BeginTx":             {},
-				"GetClubWithClubUUID": {&model.Club{}, mysqlerr.DuplicateEntry(model.ClubInstance.LeaderUUID.KeyName(), "student-111111111111")},
+				"GetClubWithClubUUID": {&model.Club{}, gorm.ErrRecordNotFound},
+				"CreateClub":          {&model.Club{}, mysqlerr.DuplicateEntry(model.ClubInstance.LeaderUUID.KeyName(), "student-111111111111")},
 				"Rollback":            {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusConflict,
 			ExpectedCode:   code.LeaderUUIDDuplicate,
+		}, { // CreateClub return invalid message in duplicate error
+			ExpectedMethods: map[test.Method]test.Returns{
+				"GetNextServiceNode": {&registry.Node{
+					Id:      "DMS.SMS.v1.service.auth-6b37b034-5f0b-4c9f-a03a-decbcb3799ef",
+					Address: "127.0.0.1:10101",
+				}, nil},
+				"GetStudentInformsWithUUID": {&authproto.GetStudentInformsWithUUIDsResponse{
+					Status:  http.StatusOK,
+					Message: "success!",
+					StudentInforms: []*authproto.StudentInform{{
+						StudentUUID:   "student-111111111111",
+						Grade:         2,
+						Group:         2,
+						StudentNumber: 7,
+						Name:          "박진홍",
+						PhoneNumber:   "01088378347",
+						ImageURI:      "profiles/student-111111111111",
+					}},
+				}, nil},
+				"BeginTx":             {},
+				"GetClubWithClubUUID": {&model.Club{}, gorm.ErrRecordNotFound},
+				"CreateClub":          {&model.Club{}, mysql.MySQLError{Number: mysqlcode.ER_DUP_ENTRY, Message: "Invalid Message"}},
+				"Rollback":            {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // CreateClub return unexpected error code
+			ExpectedMethods: map[test.Method]test.Returns{
+				"GetNextServiceNode": {&registry.Node{
+					Id:      "DMS.SMS.v1.service.auth-6b37b034-5f0b-4c9f-a03a-decbcb3799ef",
+					Address: "127.0.0.1:10101",
+				}, nil},
+				"GetStudentInformsWithUUID": {&authproto.GetStudentInformsWithUUIDsResponse{
+					Status:  http.StatusOK,
+					Message: "success!",
+					StudentInforms: []*authproto.StudentInform{{
+						StudentUUID:   "student-111111111111",
+						Grade:         2,
+						Group:         2,
+						StudentNumber: 7,
+						Name:          "박진홍",
+						PhoneNumber:   "01088378347",
+						ImageURI:      "profiles/student-111111111111",
+					}},
+				}, nil},
+				"BeginTx":             {},
+				"GetClubWithClubUUID": {&model.Club{}, gorm.ErrRecordNotFound},
+				"CreateClub":          {&model.Club{}, mysql.MySQLError{Number: mysqlcode.ER_BAD_NULL_ERROR, Message: "Unexpected Err Code"}},
+				"Rollback":            {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
 		}, { // Club Name Duplicate error
 			Name: "DMS",
 			ExpectedMethods: map[test.Method]test.Returns{
@@ -262,7 +341,59 @@ func Test_default_CreateNewClub(t *testing.T) {
 			},
 			ExpectedStatus: http.StatusConflict,
 			ExpectedCode:   code.ClubLocationDuplicate,
-		}, { // Club Location Duplicate error
+		}, { // CreateClubInform returns invalid message in duplicate error
+			ExpectedMethods: map[test.Method]test.Returns{
+				"GetNextServiceNode": {&registry.Node{
+					Id:      "DMS.SMS.v1.service.auth-6b37b034-5f0b-4c9f-a03a-decbcb3799ef",
+					Address: "127.0.0.1:10101",
+				}, nil},
+				"GetStudentInformsWithUUID": {&authproto.GetStudentInformsWithUUIDsResponse{
+					Status:  http.StatusOK,
+					Message: "success!",
+					StudentInforms: []*authproto.StudentInform{{
+						StudentUUID:   "student-111111111111",
+						Grade:         2,
+						Group:         2,
+						StudentNumber: 7,
+						Name:          "박진홍",
+						PhoneNumber:   "01088378347",
+						ImageURI:      "profiles/student-111111111111",
+					}},
+				}, nil},
+				"BeginTx":             {},
+				"GetClubWithClubUUID": {&model.Club{}, gorm.ErrRecordNotFound},
+				"CreateClub":          {&model.Club{}, nil},
+				"CreateClubInform":    {&model.ClubInform{}, mysql.MySQLError{Number: mysqlcode.ER_DUP_ENTRY, Message: "Invalid Message"}},
+				"Rollback":            {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // CreateClubInform returns unexpected mysql error
+			ExpectedMethods: map[test.Method]test.Returns{
+				"GetNextServiceNode": {&registry.Node{
+					Id:      "DMS.SMS.v1.service.auth-6b37b034-5f0b-4c9f-a03a-decbcb3799ef",
+					Address: "127.0.0.1:10101",
+				}, nil},
+				"GetStudentInformsWithUUID": {&authproto.GetStudentInformsWithUUIDsResponse{
+					Status:  http.StatusOK,
+					Message: "success!",
+					StudentInforms: []*authproto.StudentInform{{
+						StudentUUID:   "student-111111111111",
+						Grade:         2,
+						Group:         2,
+						StudentNumber: 7,
+						Name:          "박진홍",
+						PhoneNumber:   "01088378347",
+						ImageURI:      "profiles/student-111111111111",
+					}},
+				}, nil},
+				"BeginTx":             {},
+				"GetClubWithClubUUID": {&model.Club{}, gorm.ErrRecordNotFound},
+				"CreateClub":          {&model.Club{}, nil},
+				"CreateClubInform":    {&model.ClubInform{}, mysql.MySQLError{Number: mysqlcode.ER_BAD_NULL_ERROR, Message: "Unexpected error code"}},
+				"Rollback":            {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // Club Member duplicate error
 			LeaderUUID:  "student-111111111111",
 			MemberUUIDs: []string{"student-111111111111", "student-111111111111"},
 			ExpectedMethods: map[test.Method]test.Returns{
@@ -300,6 +431,76 @@ func Test_default_CreateNewClub(t *testing.T) {
 			},
 			ExpectedStatus: http.StatusConflict,
 			ExpectedCode:   code.ClubMemberDuplicate,
+		}, { // CreateClubMembers returns invalid message in duplicate error
+			ExpectedMethods: map[test.Method]test.Returns{
+				"GetNextServiceNode": {&registry.Node{
+					Id:      "DMS.SMS.v1.service.auth-6b37b034-5f0b-4c9f-a03a-decbcb3799ef",
+					Address: "127.0.0.1:10101",
+				}, nil},
+				"GetStudentInformsWithUUID": {&authproto.GetStudentInformsWithUUIDsResponse{
+					Status:  http.StatusOK,
+					Message: "success!",
+					StudentInforms: []*authproto.StudentInform{{
+						StudentUUID:   "student-111111111111",
+						Grade:         2,
+						Group:         2,
+						StudentNumber: 7,
+						Name:          "박진홍",
+						PhoneNumber:   "01088378347",
+						ImageURI:      "profiles/student-111111111111",
+					}, {
+						StudentUUID:   "student-111111111111",
+						Grade:         2,
+						Group:         2,
+						StudentNumber: 7,
+						Name:          "박진홍",
+						PhoneNumber:   "01088378347",
+						ImageURI:      "profiles/student-111111111111",
+					}},
+				}, nil},
+				"BeginTx":             {},
+				"GetClubWithClubUUID": {&model.Club{}, gorm.ErrRecordNotFound},
+				"CreateClub":          {&model.Club{}, nil},
+				"CreateClubInform":    {&model.ClubInform{}, nil},
+				"CreateClubMembers":   {[]*model.ClubMember{}, mysql.MySQLError{Number: mysqlcode.ER_DUP_ENTRY, Message: "Invalid Message"}},
+				"Rollback":            {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // CreateClubMembers returns unexpected mysql error
+			ExpectedMethods: map[test.Method]test.Returns{
+				"GetNextServiceNode": {&registry.Node{
+					Id:      "DMS.SMS.v1.service.auth-6b37b034-5f0b-4c9f-a03a-decbcb3799ef",
+					Address: "127.0.0.1:10101",
+				}, nil},
+				"GetStudentInformsWithUUID": {&authproto.GetStudentInformsWithUUIDsResponse{
+					Status:  http.StatusOK,
+					Message: "success!",
+					StudentInforms: []*authproto.StudentInform{{
+						StudentUUID:   "student-111111111111",
+						Grade:         2,
+						Group:         2,
+						StudentNumber: 7,
+						Name:          "박진홍",
+						PhoneNumber:   "01088378347",
+						ImageURI:      "profiles/student-111111111111",
+					}, {
+						StudentUUID:   "student-111111111111",
+						Grade:         2,
+						Group:         2,
+						StudentNumber: 7,
+						Name:          "박진홍",
+						PhoneNumber:   "01088378347",
+						ImageURI:      "profiles/student-111111111111",
+					}},
+				}, nil},
+				"BeginTx":             {},
+				"GetClubWithClubUUID": {&model.Club{}, gorm.ErrRecordNotFound},
+				"CreateClub":          {&model.Club{}, nil},
+				"CreateClubInform":    {&model.ClubInform{}, nil},
+				"CreateClubMembers":   {[]*model.ClubMember{}, mysql.MySQLError{Number: mysqlcode.ER_BAD_NULL_ERROR, Message: "Unexpected Error Code"}},
+				"Rollback":            {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
 		},
 	}
 }
