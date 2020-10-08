@@ -11,24 +11,21 @@ import (
 	"log"
 )
 
-func setAndGetTestEnv() (newMock *mock.Mock, h *_default) {
-	newMock = new(mock.Mock)
-
+func newDefaultMockHandler(mock *mock.Mock) *_default {
 	exampleTracerForRPCService, closer, err := jaegercfg.Configuration{ServiceName: "DMS.SMS.v1.service.auth"}.NewTracer()
 	if err != nil { log.Fatal(fmt.Sprintf("error while creating new tracer for service, err: %v", err)) }
 	defer func() { _ = closer.Close() }()
 
-	mockAccessManage, err := db.NewAccessorManage(access.Mock(newMock))
+	mockAccessManage, err := db.NewAccessorManage(access.Mock(mock))
 	if err != nil { log.Fatal(fmt.Sprintf("error while creating new access manage with mock, err: %v", err)) }
 
-	mockConsulAgent := consulagent.Mock(newMock)
-	mockAuthStudent := authproto.MockAuthStudentService(newMock)
+	mockConsulAgent := consulagent.Mock(mock)
+	mockAuthStudent := authproto.MockAuthStudentService(mock)
 
-	h = Default(
+	return Default(
 		AccessManager(mockAccessManage),
 		Tracer(exampleTracerForRPCService),
 		ConsulAgent(mockConsulAgent),
 		AuthStudent(mockAuthStudent),
 	)
-	return
 }
