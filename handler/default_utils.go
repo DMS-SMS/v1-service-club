@@ -7,6 +7,14 @@ import (
 	"github.com/uber/jaeger-client-go"
 )
 
+const (
+	forbiddenMessageFormat = "forbidden (reason: %s)"
+	notFoundMessageFormat = "not found (reason: %s)"
+	proxyAuthRequiredMessageFormat = "proxy auth required (reason: %s)"
+	conflictErrorFormat = "conflict (reason: %s)"
+	internalServerErrorFormat = "internal server error (reason: %s)"
+)
+
 func (_ _default) getContextFromMetadata(ctx context.Context) (parsedCtx context.Context, proxyAuthenticated bool, reason string) {
 	md, ok := metadata.FromContext(ctx)
 	if !ok {
