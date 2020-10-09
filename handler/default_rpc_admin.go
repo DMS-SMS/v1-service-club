@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"bytes"
 	"club/model"
 	authproto "club/proto/golang/auth"
 	clubproto "club/proto/golang/club"
@@ -12,6 +13,8 @@ import (
 	"context"
 	"fmt"
 	mysqlcode "github.com/VividCortex/mysqlerr"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/go-playground/validator/v10"
 	"github.com/go-sql-driver/mysql"
 	microerrors "github.com/micro/go-micro/v2/errors"
@@ -192,6 +195,90 @@ func (d *_default) CreateNewClub(ctx context.Context, req *clubproto.CreateNewCl
 		access.Rollback()
 		resp.Status = http.StatusInternalServerError
 		resp.Message = fmt.Sprintf(internalServerMessageFormat, "unexpected type of CreateClub errors, err: " + assertedError.Error())
+		return
+	}
+
+	if string(req.Logo) == "" {
+		access.Rollback()
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "Logo attribute cannot be null")
+		return
+	}
+
+	if d.awsSession != nil {
+		spanForS3 := d.tracer.StartSpan("PutObject", opentracing.ChildOf(parentSpan))
+		_, err = s3.New(d.awsSession).PutObject(&s3.PutObjectInput{
+			Bucket: aws.String("dms-sms"),
+			Key:    aws.String(fmt.Sprintf("logos/%s", string(createdClub.UUID))),
+			Body:   bytes.NewReader(req.Logo),
+		})
+		spanForS3.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))
+		spanForS3.Finish()
+
+		if err != nil {
+			access.Rollback()
+			resp.Status = http.StatusInternalServerError
+			resp.Message = fmt.Sprintf(internalServerMessageFormat, "unable to upload profile to s3, err: " + err.Error())
+			return
+		}
+	}
+
+	spanForDB = d.tracer.StartSpan("CreateClubInform", opentracing.ChildOf(parentSpan))
+	createdInform, err := access.CreateClubInform(&model.ClubInform{
+		ClubUUID: model.ClubUUID(cUUID),
+		Name:     model.Name(req.Name),
+		Field:    model.Field(req.Field),
+		Location: model.Location(req.Location),
+		Floor:    model.Floor(req.Floor),
+		LogoURI:  model.LogoURI(fmt.Sprintf("logos/%s", string(createdClub.UUID))),
+	})
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("CreatedInform", createdInform), log.Error(err))
+	spanForDB.Finish()
+
+	// Handling Error of CreateClubInform Method
+	switch assertedError := err.(type) {
+	case nil:
+		break
+	case validator.ValidationErrors:
+		access.Rollback()
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "invalid data for club inform model, err: " + err.Error())
+		return
+	case *mysql.MySQLError:
+		access.Rollback()
+		switch assertedError.Number {
+		case mysqlcode.ER_DUP_ENTRY:
+			key, entry, err := mysqlerr.ParseDuplicateEntryErrorFrom(assertedError)
+			if err != nil {
+				resp.Status = http.StatusInternalServerError
+				resp.Message = fmt.Sprintf(internalServerMessageFormat, "unable to parse MySQL duplicate error, err: " + err.Error())
+				return
+			}
+			switch key {
+			case model.ClubInformInstance.Name.KeyName():
+				resp.Status = http.StatusConflict
+				resp.Code = code.ClubNameDuplicate
+				resp.Message = fmt.Sprintf(conflictMessageFormat, "that club name is alreay exist, entry: " + entry)
+				return
+			case model.ClubInformInstance.Location.KeyName():
+				resp.Status = http.StatusConflict
+				resp.Code = code.ClubLocationDuplicate
+				resp.Message = fmt.Sprintf(conflictMessageFormat, "that club location is alreay exist, entry: " + entry)
+				return
+			default:
+				resp.Status = http.StatusInternalServerError
+				resp.Message = fmt.Sprintf(internalServerMessageFormat, "unexpected duplicate entry, key: " + key)
+				return
+			}
+		default:
+			resp.Status = http.StatusInternalServerError
+			resp.Message = fmt.Sprintf(internalServerMessageFormat, "unexpected CreateClubInform MySQL error code, err: " + assertedError.Error())
+			return
+		}
+	default:
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "unexpected type of CreateClubInform errors, err: " + assertedError.Error())
 		return
 	}
 }
