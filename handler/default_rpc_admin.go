@@ -2,9 +2,13 @@ package handler
 
 import (
 	clubproto "club/proto/golang/club"
+	consulagent "club/tool/consul/agent"
 	code "club/utils/code/golang"
+	topic "club/utils/topic/golang"
 	"context"
 	"fmt"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"github.com/uber/jaeger-client-go"
 	"net/http"
 )
@@ -33,4 +37,22 @@ func (d *_default) CreateNewClub(ctx context.Context, req *clubproto.CreateNewCl
 		return
 	}
 
+	spanForConsul := d.tracer.StartSpan("GetNextServiceNode", opentracing.ChildOf(parentSpan))
+	selectedNode, err := d.consulAgent.GetNextServiceNode(topic.AuthServiceName)
+	spanForConsul.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedNode", selectedNode), log.Error(err))
+	spanForConsul.Finish()
+
+	// Handling Response Error of Consul Query
+	switch err {
+	case nil:
+		break
+	case consulagent.ErrAvailableNodeNotFound:
+		resp.Status = http.StatusServiceUnavailable
+		resp.Message = fmt.Sprintf(serviceUnavailableMessageFormat, "there is no available server, name: " + topic.AuthServiceName)
+		return
+	default:
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "unable to query in consul agent, err: " + err.Error())
+		return
+	}
 }
