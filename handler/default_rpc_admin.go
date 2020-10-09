@@ -4,6 +4,7 @@ import (
 	authproto "club/proto/golang/auth"
 	clubproto "club/proto/golang/club"
 	consulagent "club/tool/consul/agent"
+	"club/tool/random"
 	code "club/utils/code/golang"
 	topic "club/utils/topic/golang"
 	"context"
@@ -13,6 +14,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/uber/jaeger-client-go"
+	"gorm.io/gorm"
 	"net/http"
 )
 
@@ -111,5 +113,30 @@ func (d *_default) CreateNewClub(ctx context.Context, req *clubproto.CreateNewCl
 		resp.Status = respOfReq.Status
 		resp.Message = fmt.Sprintf("unexpected status returned, message: %s", respOfReq.Message)
 		return
+	}
+
+	access := d.accessManage.BeginTx()
+
+	cUUID, ok := ctx.Value("ClubUUID").(string)
+	if !ok || cUUID == "" {
+		cUUID = fmt.Sprintf("club-%s", random.StringConsistOfIntWithLength(12))
+	}
+
+	for {
+		spanForDB := d.tracer.StartSpan("GetClubWithClubUUID", opentracing.ChildOf(parentSpan))
+		selectedClub, err := access.GetClubWithClubUUID(cUUID)
+		spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedClub", selectedClub), log.Error(err))
+		spanForDB.Finish()
+		if err == gorm.ErrRecordNotFound {
+			break
+		}
+		if err != nil {
+			access.Rollback()
+			resp.Status = http.StatusInternalServerError
+			resp.Message = fmt.Sprintf(internalServerMessageFormat, "unexpected error in GetClubWithClubUUID, err: " + err.Error())
+			return
+		}
+		cUUID = fmt.Sprintf("club-%s", random.StringConsistOfIntWithLength(12))
+		continue
 	}
 }
