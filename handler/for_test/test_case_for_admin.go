@@ -4,6 +4,7 @@ import (
 	"club/model"
 	authproto "club/proto/golang/auth"
 	clubproto "club/proto/golang/club"
+	topic "club/utils/topic/golang"
 	"context"
 	"github.com/micro/go-micro/v2/metadata"
 	"github.com/stretchr/testify/mock"
@@ -86,15 +87,18 @@ func (test *CreateNewClubCase) onMethod(mock *mock.Mock, method Method, returns 
 		mock.On(string(method), test.getClubInformModel()).Return(returns...)
 
 	case "CreateClubMembers":
-		const indexClubMemberModel = 0
+		//const indexClubMemberModel = 0
 		const indexError = 1
 		for index := range test.MemberUUIDs {
-			if _, ok := returns[indexClubMemberModel].(*model.ClubMember); ok && returns[indexError] == nil {
-				modelToReturn := test.getClubMemberModelWithIndex(index)
-				modelToReturn.Model = createGormModelOnCurrentTime()
-				returns[indexClubMemberModel] = modelToReturn
+			//if _, ok := returns[indexClubMemberModel].(*model.ClubMember); ok && returns[indexError] == nil {
+			//	modelToReturn := test.getClubMemberModelWithIndex(index)
+			//	modelToReturn.Model = createGormModelOnCurrentTime()
+			//	returns[indexClubMemberModel] = modelToReturn
+			//}
+			mock.On("CreateClubMember", test.getClubMemberModelWithIndex(index)).Return(&model.ClubMember{}, returns[indexError])
+			if returns[indexError] != nil {
+				break
 			}
-			mock.On(string(method), test.getClubMemberModelWithIndex(index)).Return(returns...)
 		}
 
 	case "GetClubWithClubUUID":
@@ -107,7 +111,7 @@ func (test *CreateNewClubCase) onMethod(mock *mock.Mock, method Method, returns 
 		}).Return(returns...)
 
 	case "GetNextServiceNode":
-		mock.On(string(method)).Return(returns...)
+		mock.On(string(method), topic.AuthServiceName).Return(returns...)
 
 	case "BeginTx":
 		mock.On(string(method)).Return(returns...)
