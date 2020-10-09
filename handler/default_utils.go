@@ -67,9 +67,7 @@ func (_ _default) getContextFromMetadata(ctx context.Context) (parsedCtx context
 	parsedCtx = context.WithValue(parsedCtx, "X-Request-Id", reqID)
 	parsedCtx = context.WithValue(parsedCtx, "Span-Context", parentSpan)
 
-	if sUUID, ok := md.Get("StudentUUID"); ok { parsedCtx = context.WithValue(parsedCtx, "StudentUUID", sUUID) }
-	if tUUID, ok := md.Get("TeacherUUID"); ok { parsedCtx = context.WithValue(parsedCtx, "TeacherUUID", tUUID) }
-	if pUUID, ok := md.Get("ParentUUID"); ok  { parsedCtx = context.WithValue(parsedCtx, "ParentUUID", pUUID) }
+	if cUUID, ok := md.Get("ClubUUID"); ok { parsedCtx = context.WithValue(parsedCtx, "ClubUUID", cUUID) }
 
 	return
 }
