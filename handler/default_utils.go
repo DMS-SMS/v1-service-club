@@ -71,3 +71,12 @@ func (_ _default) getContextFromMetadata(ctx context.Context) (parsedCtx context
 
 	return
 }
+
+func contains(slice []string, item string) bool {
+	for _, element := range slice {
+		if item == element {
+			return true
+		}
+	}
+	return false
+}
