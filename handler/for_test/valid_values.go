@@ -15,6 +15,7 @@ import (
 const (
 	validAdminUUID = "admin-111111111111"
 	validLeaderUUID = "student-111111111111"
+	validStudentUUID = "student-111111111111"
 	validClubUUID = "club-111111111111"
 
 	validClubName = "DMS"
