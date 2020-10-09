@@ -1,14 +1,19 @@
 package handler
 
 import (
+	"club/model"
 	authproto "club/proto/golang/auth"
 	clubproto "club/proto/golang/club"
 	consulagent "club/tool/consul/agent"
+	"club/tool/mysqlerr"
 	"club/tool/random"
 	code "club/utils/code/golang"
 	topic "club/utils/topic/golang"
 	"context"
 	"fmt"
+	mysqlcode "github.com/VividCortex/mysqlerr"
+	"github.com/go-playground/validator/v10"
+	"github.com/go-sql-driver/mysql"
 	microerrors "github.com/micro/go-micro/v2/errors"
 	"github.com/micro/go-micro/v2/metadata"
 	"github.com/opentracing/opentracing-go"
@@ -138,5 +143,55 @@ func (d *_default) CreateNewClub(ctx context.Context, req *clubproto.CreateNewCl
 		}
 		cUUID = fmt.Sprintf("club-%s", random.StringConsistOfIntWithLength(12))
 		continue
+	}
+
+	spanForDB := d.tracer.StartSpan("CreateClub", opentracing.ChildOf(parentSpan))
+	createdClub, err := access.CreateClub(&model.Club{
+		UUID:       model.UUID(cUUID),
+		LeaderUUID: model.LeaderUUID(req.LeaderUUID),
+	})
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("CreatedClub", createdClub), log.Error(err))
+	spanForDB.Finish()
+
+	// Handling Error of CreateClub Method
+	switch assertedError := err.(type) {
+	case nil:
+		break
+	case validator.ValidationErrors:
+		access.Rollback()
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "invalid data for club model, err: " + err.Error())
+		return
+	case *mysql.MySQLError:
+		access.Rollback()
+		switch assertedError.Number {
+		case mysqlcode.ER_DUP_ENTRY:
+			key, entry, err := mysqlerr.ParseDuplicateEntryErrorFrom(assertedError)
+			if err != nil {
+				resp.Status = http.StatusInternalServerError
+				resp.Message = fmt.Sprintf(internalServerMessageFormat, "unable to parse MySQL duplicate error, err: " + err.Error())
+				return
+			}
+			switch key {
+			case model.ClubInstance.LeaderUUID.KeyName():
+				resp.Status = http.StatusConflict
+				resp.Code = code.ClubLeaderAlreadyExist
+				resp.Message = fmt.Sprintf(conflictMessageFormat, "club with that leader uuid is already exist, entry: " + entry)
+				return
+			default:
+				resp.Status = http.StatusInternalServerError
+				resp.Message = fmt.Sprintf(internalServerMessageFormat, "unexpected duplicate entry, key: " + key)
+				return
+			}
+		default:
+			resp.Status = http.StatusInternalServerError
+			resp.Message = fmt.Sprintf(internalServerMessageFormat, "unexpected CreateClub MySQL error code, err: " + assertedError.Error())
+			return
+		}
+	default:
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "unexpected type of CreateClub errors, err: " + assertedError.Error())
+		return
 	}
 }
