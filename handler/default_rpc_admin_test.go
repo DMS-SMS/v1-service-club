@@ -172,7 +172,7 @@ func Test_default_CreateNewClub(t *testing.T) {
 				}, nil},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
-		}, { // GetStudentInformsWithUUIDs return any error
+		}, { // GetStudentInformsWithUUIDs return time out error
 			LeaderUUID:  "student-111111111111",
 			MemberUUIDs: []string{"student-111111111111"},
 			ExpectedMethods: map[test.Method]test.Returns{
@@ -180,22 +180,37 @@ func Test_default_CreateNewClub(t *testing.T) {
 					Id:      "DMS.SMS.v1.service.auth-6b37b034-5f0b-4c9f-a03a-decbcb3799ef",
 					Address: "127.0.0.1:10101",
 				}, nil},
-				"GetStudentInformsWithUUIDs": {&authproto.GetStudentInformsWithUUIDsResponse{}, errors.New("I don't know what error is")},
-			},
-			ExpectedStatus: http.StatusInternalServerError,
-		}, { // GetStudentInformsWithUUIDs return micro error
-			LeaderUUID:  "student-111111111111",
-			MemberUUIDs: []string{"student-111111111111"},
-			ExpectedMethods: map[test.Method]test.Returns{
-				"GetNextServiceNode": {&registry.Node{
-					Id:      "DMS.SMS.v1.service.auth-6b37b034-5f0b-4c9f-a03a-decbcb3799ef",
-					Address: "127.0.0.1:10101",
-				}, nil},
-				"GetStudentInformsWithUUIDs": {&authproto.GetStudentInformsWithUUIDsResponse{}, microerrors.Error{
-					Code: http.StatusNetworkAuthenticationRequired,
+				"GetStudentInformsWithUUIDs": {&authproto.GetStudentInformsWithUUIDsResponse{}, &microerrors.Error{
+					Code:   http.StatusRequestTimeout,
+					Detail: "request time out",
 				}},
 			},
-			ExpectedStatus: http.StatusNetworkAuthenticationRequired,
+			ExpectedStatus: http.StatusRequestTimeout,
+		}, { // GetStudentInformsWithUUIDs return unexpected error 1
+			LeaderUUID:  "student-111111111111",
+			MemberUUIDs: []string{"student-111111111111"},
+			ExpectedMethods: map[test.Method]test.Returns{
+				"GetNextServiceNode": {&registry.Node{
+					Id:      "DMS.SMS.v1.service.auth-6b37b034-5f0b-4c9f-a03a-decbcb3799ef",
+					Address: "127.0.0.1:10101",
+				}, nil},
+				"GetStudentInformsWithUUIDs": {&authproto.GetStudentInformsWithUUIDsResponse{}, &microerrors.Error{
+					Code:   http.StatusNetworkAuthenticationRequired,
+					Detail: "what is this error?",
+				}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // GetStudentInformsWithUUIDs return unexpected error 2
+			LeaderUUID:  "student-111111111111",
+			MemberUUIDs: []string{"student-111111111111"},
+			ExpectedMethods: map[test.Method]test.Returns{
+				"GetNextServiceNode": {&registry.Node{
+					Id:      "DMS.SMS.v1.service.auth-6b37b034-5f0b-4c9f-a03a-decbcb3799ef",
+					Address: "127.0.0.1:10101",
+				}, nil},
+				"GetStudentInformsWithUUIDs": {&authproto.GetStudentInformsWithUUIDsResponse{}, errors.New("unexpected error")},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
 		}, { // GetNextServiceNode return any error
 			LeaderUUID:  "student-111111111111",
 			MemberUUIDs: []string{"student-111111111111"},
