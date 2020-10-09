@@ -1,6 +1,7 @@
 package test
 
 import (
+	"club/model"
 	clubproto "club/proto/golang/club"
 	"context"
 	"github.com/micro/go-micro/v2/metadata"
@@ -17,11 +18,11 @@ type GetClubsSortByUpdateTimeCase struct {
 	ExpectedMethods   map[Method]Returns
 	ExpectedStatus    uint32
 	ExpectedCode      int32
-	ExpectedClubUUID  string
+	ExpectClubInforms []*model.ClubInform
 }
 
 func (test *GetClubsSortByUpdateTimeCase) ChangeEmptyValueToValidValue() {
-	if test.UUID == EmptyString              { test.UUID = validAdminUUID }
+	if test.UUID == EmptyString              { test.UUID = validStudentUUID }
 	if test.XRequestID == EmptyString        { test.XRequestID = validXRequestID }
 	if test.SpanContextString == EmptyString { test.SpanContextString = validSpanContextString }
 }
@@ -42,6 +43,10 @@ func (test *GetClubsSortByUpdateTimeCase) OnExpectMethodsTo(mock *mock.Mock) {
 func (test *GetClubsSortByUpdateTimeCase) onMethod(mock *mock.Mock, method Method, returns Returns) {
 	switch method {
 	case "GetClubInformsSortByUpdateTime":
+		const defaultCountValue = 10
+		if test.Count == 0 {
+			test.Count = defaultCountValue
+		}
 		mock.On(string(method), test.Start, test.Count, test.Field, test.Name).Return(returns...)
 	case "BeginTx":
 		mock.On(string(method)).Return(returns...)
