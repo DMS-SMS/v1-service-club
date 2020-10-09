@@ -12,8 +12,10 @@ const (
 	forbiddenMessageFormat = "forbidden (reason: %s)"
 	notFoundMessageFormat = "not found (reason: %s)"
 	proxyAuthRequiredMessageFormat = "proxy auth required (reason: %s)"
-	conflictErrorFormat = "conflict (reason: %s)"
-	internalServerErrorFormat = "internal server error (reason: %s)"
+	requestTimeoutMessageFormat = "request time out (reason: %s)"
+	conflictMessageFormat = "conflict (reason: %s)"
+	internalServerMessageFormat = "internal server error (reason: %s)"
+	serviceUnavailableMessageFormat = "service unavailable (reason: %s)"
 )
 
 var (
