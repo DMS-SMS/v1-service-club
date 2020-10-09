@@ -6,6 +6,7 @@ import (
 	clubproto "club/proto/golang/club"
 	topic "club/utils/topic/golang"
 	"context"
+	"fmt"
 	"github.com/micro/go-micro/v2/metadata"
 	"github.com/stretchr/testify/mock"
 	"log"
@@ -128,18 +129,19 @@ func (test *CreateNewClubCase) onMethod(mock *mock.Mock, method Method, returns 
 
 func (test *CreateNewClubCase) getClubModel() *model.Club {
 	return &model.Club{
-		UUID:       model.UUID(test.UUID),
+		UUID:       model.UUID(test.ClubUUID),
 		LeaderUUID: model.LeaderUUID(test.LeaderUUID),
 	}
 }
 
 func (test *CreateNewClubCase) getClubInformModel() *model.ClubInform {
 	return &model.ClubInform{
-		ClubUUID:     model.ClubUUID(test.ClubUUID),
-		Name:         model.Name(test.Name),
-		Field:        model.Field(test.Field),
-		Location:     model.Location(test.Location),
-		Floor:        model.Floor(test.Floor),
+		ClubUUID: model.ClubUUID(test.ClubUUID),
+		Name:     model.Name(test.Name),
+		Field:    model.Field(test.Field),
+		Location: model.Location(test.Location),
+		Floor:    model.Floor(test.Floor),
+		LogoURI:  model.LogoURI(fmt.Sprintf("logos/%s", test.ClubUUID)),
 	}
 }
 
@@ -157,8 +159,8 @@ func (test *CreateNewClubCase) SetRequestContextOf(req *clubproto.CreateNewClubR
 	req.LeaderUUID = test.LeaderUUID
 	req.MemberUUIDs = test.MemberUUIDs
 	req.Floor = test.Floor
-	req.LeaderUUID = test.LeaderUUID
-	req.Floor = test.Floor
+	req.Field = test.Field
+	req.Location = test.Location
 	req.Logo = test.Logo
 }
 
