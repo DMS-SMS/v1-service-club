@@ -18,7 +18,7 @@ type GetClubsSortByUpdateTimeCase struct {
 	ExpectedMethods   map[Method]Returns
 	ExpectedStatus    uint32
 	ExpectedCode      int32
-	ExpectClubInforms []*model.ClubInform
+	ExpectClubInforms []*clubproto.ClubInform
 }
 
 func (test *GetClubsSortByUpdateTimeCase) ChangeEmptyValueToValidValue() {
@@ -47,7 +47,16 @@ func (test *GetClubsSortByUpdateTimeCase) onMethod(mock *mock.Mock, method Metho
 		if test.Count == 0 {
 			test.Count = defaultCountValue
 		}
-		mock.On(string(method), test.Start, test.Count, test.Field, test.Name).Return(returns...)
+		mock.On(string(method), int(test.Start), int(test.Count), test.Field, test.Name).Return(returns...)
+	case "GetClubsWithClubUUIDs":
+		const indexForClubInforms = 0
+		informs := test.ExpectedMethods["GetClubInformsSortByUpdateTime"][indexForClubInforms].([]*model.ClubInform)
+		clubUUIDs := make([]string, len(informs))
+		for index, inform := range informs {
+			clubUUIDs[index] = string(inform.ClubUUID)
+		}
+		mock.On(string(method), clubUUIDs).Return(returns...)
+
 	case "BeginTx":
 		mock.On(string(method)).Return(returns...)
 	case "Commit":
