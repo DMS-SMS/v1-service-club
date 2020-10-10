@@ -5,6 +5,8 @@ import (
 	"club/model"
 	clubproto "club/proto/golang/club"
 	"errors"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"gorm.io/gorm"
 	"net/http"
 	"testing"
@@ -282,5 +284,27 @@ func Test_Default_GetClubsSortByUpdateTime(t *testing.T) {
 			},
 			ExpectedStatus: http.StatusInternalServerError,
 		},
+	}
+
+	for _, testCase := range tests {
+		newMock := &mock.Mock{}
+		handler := newDefaultMockHandler(newMock)
+
+		testCase.ChangeEmptyValueToValidValue()
+		testCase.ChangeEmptyReplaceValueToEmptyValue()
+		testCase.OnExpectMethodsTo(newMock)
+
+		req := new(clubproto.GetClubsSortByUpdateTimeRequest)
+		testCase.SetRequestContextOf(req)
+		ctx := testCase.GetMetadataContext()
+
+		resp := new(clubproto.GetClubsSortByUpdateTimeResponse)
+		_ = handler.GetClubsSortByUpdateTime(ctx, req, resp)
+
+		assert.Equalf(t, int(testCase.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", testCase, resp.Message)
+		assert.Equalf(t, testCase.ExpectedCode, resp.Code, "code assertion error (test case: %v, message: %s)", testCase, resp.Message)
+		assert.Equalf(t, testCase.ExpectClubInforms, resp.Clubs, "club informs assertion error (test case: %v, message: %s)", testCase, resp.Message)
+
+		newMock.AssertExpectations(t)
 	}
 }
