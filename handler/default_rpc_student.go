@@ -103,7 +103,7 @@ func (d *_default) GetClubsSortByUpdateTime(ctx context.Context, req *clubproto.
 
 	access.Commit()
 	resp.Status = http.StatusOK
-	resp.Clubs = informs
+	resp.Informs = informs
 	resp.Message = "get clubs success"
 
 	return

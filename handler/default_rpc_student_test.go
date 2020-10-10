@@ -303,7 +303,7 @@ func Test_Default_GetClubsSortByUpdateTime(t *testing.T) {
 
 		assert.Equalf(t, int(testCase.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", testCase, resp.Message)
 		assert.Equalf(t, testCase.ExpectedCode, resp.Code, "code assertion error (test case: %v, message: %s)", testCase, resp.Message)
-		assert.Equalf(t, testCase.ExpectClubInforms, resp.Clubs, "club informs assertion error (test case: %v, message: %s)", testCase, resp.Message)
+		assert.Equalf(t, testCase.ExpectClubInforms, resp.Informs, "club informs assertion error (test case: %v, message: %s)", testCase, resp.Message)
 
 		newMock.AssertExpectations(t)
 	}
