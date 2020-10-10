@@ -3,6 +3,7 @@ package handler
 import (
 	test "club/handler/for_test"
 	"club/model"
+	clubproto "club/proto/golang/club"
 	"errors"
 	"gorm.io/gorm"
 	"net/http"
@@ -41,11 +42,22 @@ func Test_Default_GetClubsSortByUpdateTime(t *testing.T) {
 					Floor:    "3",
 					LogoURI:  "logo.com/club-111111111111",
 				}}, nil},
+				"GetClubsWithClubUUIDs": {[]*model.Club{{
+					UUID:       "club-222222222222",
+					LeaderUUID: "student-222222222222",
+				}, {
+					UUID:       "club-333333333333",
+					LeaderUUID: "student-333333333333",
+				}, {
+					UUID:       "club-111111111111",
+					LeaderUUID: "student-111111111111",
+				}}, nil},
 				"Commit": {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusOK,
-			ExpectClubInforms: []*model.ClubInform{{
+			ExpectClubInforms: []*clubproto.ClubInform{{
 				ClubUUID:     "club-222222222222",
+				LeaderUUID:   "student-222222222222",
 				Name:         "SMS",
 				ClubConcept:  "DMS의 소속부서 SMS 입니다!",
 				Introduction: "School Management System 서비스를 개발 및 운영합니다",
@@ -55,21 +67,24 @@ func Test_Default_GetClubsSortByUpdateTime(t *testing.T) {
 				Floor:        "3",
 				LogoURI:      "logo.com/club-222222222222",
 			}, {
-				ClubUUID: "club-333333333333",
-				Name:     "PMS",
-				Field:    "SW 개발",
-				Location: "2-3반 교실",
-				Floor:    "3",
-				LogoURI:  "logo.com/club-333333333333",
+				ClubUUID:   "club-333333333333",
+				LeaderUUID: "student-333333333333",
+				Name:       "PMS",
+				Field:      "SW 개발",
+				Location:   "2-3반 교실",
+				Floor:      "3",
+				LogoURI:    "logo.com/club-333333333333",
 			}, {
-				ClubUUID: "club-111111111111",
-				Name:     "DMS",
-				Field:    "SW 개발",
-				Location: "2-1반 교실",
-				Floor:    "3",
-				LogoURI:  "logo.com/club-111111111111",
+				ClubUUID:   "club-111111111111",
+				LeaderUUID: "student-111111111111",
+				Name:       "DMS",
+				Field:      "SW 개발",
+				Location:   "2-1반 교실",
+				Floor:      "3",
+				LogoURI:    "logo.com/club-111111111111",
 			}},
 		}, { // Start, Count Set X -> default(0, 10)
+			UUID: "admin-111111111111",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx": {},
 				"GetClubInformsSortByUpdateTime": {[]*model.ClubInform{{
@@ -97,11 +112,22 @@ func Test_Default_GetClubsSortByUpdateTime(t *testing.T) {
 					Floor:    "3",
 					LogoURI:  "logo.com/club-111111111111",
 				}}, nil},
+				"GetClubsWithClubUUIDs": {[]*model.Club{{
+					UUID:       "club-222222222222",
+					LeaderUUID: "student-222222222222",
+				}, {
+					UUID:       "club-333333333333",
+					LeaderUUID: "student-333333333333",
+				}, {
+					UUID:       "club-111111111111",
+					LeaderUUID: "student-111111111111",
+				}}, nil},
 				"Commit": {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusOK,
-			ExpectClubInforms: []*model.ClubInform{{
+			ExpectClubInforms: []*clubproto.ClubInform{{
 				ClubUUID:     "club-222222222222",
+				LeaderUUID:   "student-222222222222",
 				Name:         "SMS",
 				ClubConcept:  "DMS의 소속부서 SMS 입니다!",
 				Introduction: "School Management System 서비스를 개발 및 운영합니다",
@@ -111,19 +137,21 @@ func Test_Default_GetClubsSortByUpdateTime(t *testing.T) {
 				Floor:        "3",
 				LogoURI:      "logo.com/club-222222222222",
 			}, {
-				ClubUUID: "club-333333333333",
-				Name:     "PMS",
-				Field:    "SW 개발",
-				Location: "2-3반 교실",
-				Floor:    "3",
-				LogoURI:  "logo.com/club-333333333333",
+				ClubUUID:   "club-333333333333",
+				LeaderUUID: "student-333333333333",
+				Name:       "PMS",
+				Field:      "SW 개발",
+				Location:   "2-3반 교실",
+				Floor:      "3",
+				LogoURI:    "logo.com/club-333333333333",
 			}, {
-				ClubUUID: "club-111111111111",
-				Name:     "DMS",
-				Field:    "SW 개발",
-				Location: "2-1반 교실",
-				Floor:    "3",
-				LogoURI:  "logo.com/club-111111111111",
+				ClubUUID:   "club-111111111111",
+				LeaderUUID: "student-111111111111",
+				Name:       "DMS",
+				Field:      "SW 개발",
+				Location:   "2-1반 교실",
+				Floor:      "3",
+				LogoURI:    "logo.com/club-111111111111",
 			}},
 		}, { // Set Name and Field
 			Name:  "SMS",
@@ -141,11 +169,16 @@ func Test_Default_GetClubsSortByUpdateTime(t *testing.T) {
 					Floor:        "3",
 					LogoURI:      "logo.com/club-222222222222",
 				}}, nil},
+				"GetClubsWithClubUUIDs": {[]*model.Club{{
+					UUID:       "club-222222222222",
+					LeaderUUID: "student-222222222222",
+				}}, nil},
 				"Commit": {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusOK,
-			ExpectClubInforms: []*model.ClubInform{{
+			ExpectClubInforms: []*clubproto.ClubInform{{
 				ClubUUID:     "club-222222222222",
+				LeaderUUID:   "student-222222222222",
 				Name:         "SMS",
 				ClubConcept:  "DMS의 소속부서 SMS 입니다!",
 				Introduction: "School Management System 서비스를 개발 및 운영합니다",
@@ -186,6 +219,66 @@ func Test_Default_GetClubsSortByUpdateTime(t *testing.T) {
 				"BeginTx":                        {},
 				"GetClubInformsSortByUpdateTime": {[]*model.ClubInform{}, errors.New("db connect fail")},
 				"Rollback":                       {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // GetClubsWithClubUUIDs returns unexpected error
+			Name:  "SMS",
+			Field: "SW",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetClubInformsSortByUpdateTime": {[]*model.ClubInform{{
+					ClubUUID:     "club-222222222222",
+					Name:         "SMS",
+					ClubConcept:  "DMS의 소속부서 SMS 입니다!",
+					Introduction: "School Management System 서비스를 개발 및 운영합니다",
+					Link:         "facebook.com/DMS-SMS",
+					Field:        "SW 개발",
+					Location:     "2-2반 교실",
+					Floor:        "3",
+					LogoURI:      "logo.com/club-222222222222",
+				}}, nil},
+				"GetClubsWithClubUUIDs": {[]*model.Club{}, errors.New("some error occurs")},
+				"Rollback":              {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // GetClubsWithClubUUIDs return RecordNotFound error
+			Name:  "SMS",
+			Field: "SW",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetClubInformsSortByUpdateTime": {[]*model.ClubInform{{
+					ClubUUID:     "club-222222222222",
+					Name:         "SMS",
+					ClubConcept:  "DMS의 소속부서 SMS 입니다!",
+					Introduction: "School Management System 서비스를 개발 및 운영합니다",
+					Link:         "facebook.com/DMS-SMS",
+					Field:        "SW 개발",
+					Location:     "2-2반 교실",
+					Floor:        "3",
+					LogoURI:      "logo.com/club-222222222222",
+				}}, nil},
+				"GetClubsWithClubUUIDs": {[]*model.Club{}, gorm.ErrRecordNotFound},
+				"Rollback":              {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // GetClubsWithClubUUIDs return abnormal length array
+			Name:  "SMS",
+			Field: "SW",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetClubInformsSortByUpdateTime": {[]*model.ClubInform{{
+					ClubUUID:     "club-222222222222",
+					Name:         "SMS",
+					ClubConcept:  "DMS의 소속부서 SMS 입니다!",
+					Introduction: "School Management System 서비스를 개발 및 운영합니다",
+					Link:         "facebook.com/DMS-SMS",
+					Field:        "SW 개발",
+					Location:     "2-2반 교실",
+					Floor:        "3",
+					LogoURI:      "logo.com/club-222222222222",
+				}}, nil},
+				"GetClubsWithClubUUIDs": {[]*model.Club{}, nil},
+				"Rollback":              {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
 		},
