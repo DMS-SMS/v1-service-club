@@ -77,4 +77,34 @@ func (d *_default) GetClubsSortByUpdateTime(ctx context.Context, req *clubproto.
 	for index, inform := range informs {
 		clubUUIDs[index] = inform.ClubUUID
 	}
+
+	spanForDB = d.tracer.StartSpan("GetClubsWithClubUUIDs", opentracing.ChildOf(parentSpan))
+	selectedClubs, err := access.GetClubsWithClubUUIDs(clubUUIDs)
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedClubs", selectedClubs), log.Error(err))
+	spanForDB.Finish()
+
+	if err != nil {
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "GetClubsWithClubUUIDs return errors, err: " + err.Error())
+		return
+	}
+
+	if len(selectedClubs) != len(informs) {
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "GetClubsWithClubUUIDs return abnormal length slice")
+		return
+	}
+
+	for index, club := range selectedClubs {
+		informs[index].LeaderUUID = string(club.LeaderUUID)
+	}
+
+	access.Commit()
+	resp.Status = http.StatusOK
+	resp.Clubs = informs
+	resp.Message = "get clubs success"
+
+	return
 }
