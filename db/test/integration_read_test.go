@@ -10,10 +10,7 @@ import (
 )
 
 func Test_Accessor_GetClubWithClubUUID(t *testing.T) {
-	access, err := manager.BeginTx()
-	if err != nil {
-		log.Fatal(err)
-	}
+	access := manager.BeginTx()
 	defer func() {
 		access.Rollback()
 	}()
@@ -57,10 +54,7 @@ func Test_Accessor_GetClubWithClubUUID(t *testing.T) {
 }
 
 func Test_Accessor_GetClubWithLeaderUUID(t *testing.T) {
-	access, err := manager.BeginTx()
-	if err != nil {
-		log.Fatal(err)
-	}
+	access := manager.BeginTx()
 	defer func() {
 		access.Rollback()
 	}()
@@ -104,10 +98,7 @@ func Test_Accessor_GetClubWithLeaderUUID(t *testing.T) {
 }
 
 func Test_Accessor_GetCurrentRecruitmentWithClubUUID(t *testing.T) {
-	access, err := manager.BeginTx()
-	if err != nil {
-		log.Fatal(err)
-	}
+	access := manager.BeginTx()
 	defer func() {
 		access.Rollback()
 	}()
@@ -202,10 +193,7 @@ func Test_Accessor_GetCurrentRecruitmentWithClubUUID(t *testing.T) {
 }
 
 func Test_Accessor_GetClubInformsSortByUpdateTime(t *testing.T) {
-	access, err := manager.BeginTx()
-	if err != nil {
-		log.Fatal(err)
-	}
+	access := manager.BeginTx()
 	defer func() {
 		access.Rollback()
 	}()
@@ -371,10 +359,7 @@ func Test_Accessor_GetClubInformsSortByUpdateTime(t *testing.T) {
 }
 
 func Test_Accessor_GetCurrentRecruitmentsSortByCreateTime(t *testing.T) {
-	access, err := manager.BeginTx()
-	if err != nil {
-		log.Fatal(err)
-	}
+	access := manager.BeginTx()
 	defer func() {
 		access.Rollback()
 	}()
@@ -587,10 +572,7 @@ func Test_Accessor_GetCurrentRecruitmentsSortByCreateTime(t *testing.T) {
 }
 
 func Test_Accessor_GetClubInformWithClubUUID(t *testing.T) {
-	access, err := manager.BeginTx()
-	if err != nil {
-		log.Fatal(err)
-	}
+	access := manager.BeginTx()
 	defer func() {
 		access.Rollback()
 	}()
@@ -653,10 +635,7 @@ func Test_Accessor_GetClubInformWithClubUUID(t *testing.T) {
 }
 
 func Test_Accessor_GetRecruitmentWithRecruitmentUUID(t *testing.T) {
-	access, err := manager.BeginTx()
-	if err != nil {
-		log.Fatal(err)
-	}
+	access := manager.BeginTx()
 	defer func() {
 		access.Rollback()
 	}()
@@ -724,10 +703,7 @@ func Test_Accessor_GetRecruitmentWithRecruitmentUUID(t *testing.T) {
 }
 
 func Test_Accessor_GetClubMembersWithClubUUID(t *testing.T) {
-	access, err := manager.BeginTx()
-	if err != nil {
-		log.Fatal(err)
-	}
+	access := manager.BeginTx()
 	defer func() {
 		access.Rollback()
 	}()
@@ -813,10 +789,7 @@ func Test_Accessor_GetClubMembersWithClubUUID(t *testing.T) {
 }
 
 func Test_Accessor_GetRecruitMembersWithRecruitmentUUID(t *testing.T) {
-	access, err := manager.BeginTx()
-	if err != nil {
-		log.Fatal(err)
-	}
+	access := manager.BeginTx()
 	defer func() {
 		access.Rollback()
 	}()
@@ -945,10 +918,7 @@ func Test_Accessor_GetRecruitMembersWithRecruitmentUUID(t *testing.T) {
 }
 
 func Test_Accessor_GetAllClubInforms(t *testing.T) {
-	access, err := manager.BeginTx()
-	if err != nil {
-		log.Fatal(err)
-	}
+	access := manager.BeginTx()
 	defer func() {
 		access.Rollback()
 	}()
@@ -1063,10 +1033,7 @@ func Test_Accessor_GetAllClubInforms(t *testing.T) {
 }
 
 func Test_Accessor_GetAllCurrentRecruitments(t *testing.T) {
-	access, err := manager.BeginTx()
-	if err != nil {
-		log.Fatal(err)
-	}
+	access := manager.BeginTx()
 	defer func() {
 		access.Rollback()
 	}()
