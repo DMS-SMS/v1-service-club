@@ -32,12 +32,11 @@ func NewAccessorManage(accessor Accessor) (manager AccessorManage, err error) {
 	return
 }
 
-func (atm AccessorManage) BeginTx() (accessor Accessor, err error) {
-	if atm.accessorType == nil {
-		err = errors.New("please create db.AccessorManage instance object through the constructor")
-		return
-	}
-
+func (atm AccessorManage) BeginTx() (accessor Accessor) {
+	//if atm.accessorType == nil {
+	//	err = errors.New("please create db.AccessorManage instance object through the constructor")
+	//	return
+	//}
 	newAccessor := reflect.New(atm.accessorType)
 	newAccessor.Elem().Set(atm.accessorValue)
 
