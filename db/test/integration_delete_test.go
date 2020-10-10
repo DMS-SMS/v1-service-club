@@ -8,6 +8,7 @@ import (
 
 func Test_Accessor_DeleteXXX(t *testing.T) {
 	access := manager.BeginTx()
+
 	defer func() {
 		access.Rollback()
 	}()
