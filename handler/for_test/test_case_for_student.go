@@ -83,3 +83,15 @@ func (test *GetClubsSortByUpdateTimeCase) GetMetadataContext() (ctx context.Cont
 	ctx = metadata.Set(ctx, "Span-Context", test.SpanContextString)
 	return
 }
+
+type GetRecruitmentsSortByCreateTimeCase struct {
+	UUID               string
+	Field, Name        string
+	Start, Count       uint32
+	XRequestID         string
+	SpanContextString  string
+	ExpectedMethods    map[Method]Returns
+	ExpectedStatus     uint32
+	ExpectedCode       int32
+	ExpectRecruitments []*clubproto.RecruitmentInform
+}
