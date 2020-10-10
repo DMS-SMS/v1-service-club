@@ -12,10 +12,7 @@ import (
 )
 
 func Test_Accessor_CreateClub(t *testing.T) {
-	access, err := manager.BeginTx()
-	if err != nil {
-		log.Fatal(err)
-	}
+	access := manager.BeginTx()
 	defer func() {
 		access.Rollback()
 	}()
@@ -64,10 +61,7 @@ func Test_Accessor_CreateClub(t *testing.T) {
 }
 
 func Test_Accessor_CreateClubInform(t *testing.T) {
-	access, err := manager.BeginTx()
-	if err != nil {
-		log.Fatal(err)
-	}
+	access := manager.BeginTx()
 	defer func() {
 		access.Rollback()
 	}()
@@ -188,10 +182,7 @@ func Test_Accessor_CreateClubInform(t *testing.T) {
 }
 
 func Test_Accessor_CreateClubMember(t *testing.T) {
-	access, err := manager.BeginTx()
-	if err != nil {
-		log.Fatal(err)
-	}
+	access := manager.BeginTx()
 	defer func() {
 		access.Rollback()
 	}()
@@ -267,10 +258,7 @@ func Test_Accessor_CreateClubMember(t *testing.T) {
 }
 
 func Test_Accessor_CreateRecruitment(t *testing.T) {
-	access, err := manager.BeginTx()
-	if err != nil {
-		log.Fatal(err)
-	}
+	access := manager.BeginTx()
 	defer func() {
 		access.Rollback()
 	}()
@@ -369,10 +357,7 @@ func Test_Accessor_CreateRecruitment(t *testing.T) {
 }
 
 func Test_Accessor_CreateRecruitMember(t *testing.T) {
-	access, err := manager.BeginTx()
-	if err != nil {
-		log.Fatal(err)
-	}
+	access := manager.BeginTx()
 	defer func() {
 		access.Rollback()
 	}()
