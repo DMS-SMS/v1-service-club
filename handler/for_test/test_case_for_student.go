@@ -181,7 +181,7 @@ type GetClubInformWithUUIDCase struct {
 	ExpectedMethods   map[Method]Returns
 	ExpectedStatus    uint32
 	ExpectedCode      int32
-	ExpectInform      []*clubproto.ClubInform
+	ExpectInform      *clubproto.ClubInform
 }
 
 func (test *GetClubInformWithUUIDCase) ChangeEmptyValueToValidValue() {
