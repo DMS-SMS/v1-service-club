@@ -101,6 +101,26 @@ func (d *_default) GetClubsSortByUpdateTime(ctx context.Context, req *clubproto.
 		informsForResp[index].LeaderUUID = string(club.LeaderUUID)
 	}
 
+	for index, informForResp := range informsForResp {
+		spanForDB = d.tracer.StartSpan("GetClubMembersWithClubUUID", opentracing.ChildOf(parentSpan))
+		selectedMembers, err := access.GetClubMembersWithClubUUID(informForResp.ClubUUID)
+		spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedMembers", selectedMembers), log.Error(err))
+		spanForDB.Finish()
+
+		if err != nil && err != gorm.ErrRecordNotFound {
+			access.Rollback()
+			resp.Status = http.StatusInternalServerError
+			resp.Message = fmt.Sprintf(internalServerMessageFormat, "GetClubMembersWithClubUUID returns unexpected error, err: " + err.Error())
+			return
+		}
+
+		membersForResp := make([]string, len(selectedMembers))
+		for index, selectedMember := range selectedMembers {
+			membersForResp[index] = string(selectedMember.StudentUUID)
+		}
+		informsForResp[index].MemberUUIDs = membersForResp
+	}
+
 	access.Commit()
 	resp.Status = http.StatusOK
 	resp.Informs = informsForResp
