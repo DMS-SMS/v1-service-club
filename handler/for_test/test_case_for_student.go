@@ -117,7 +117,7 @@ func (test *GetRecruitmentsSortByCreateTimeCase) OnExpectMethodsTo(mock *mock.Mo
 
 func (test *GetRecruitmentsSortByCreateTimeCase) onMethod(mock *mock.Mock, method Method, returns Returns) {
 	switch method {
-	case "GetRecruitmentsSortByCreateTimeCase":
+	case "GetCurrentRecruitmentsSortByCreateTime":
 		const defaultCountValue = 10
 		if test.Count == 0 {
 			test.Count = defaultCountValue
@@ -127,9 +127,9 @@ func (test *GetRecruitmentsSortByCreateTimeCase) onMethod(mock *mock.Mock, metho
 		const indexForRecruitments = 0
 		const indexForRecruitMembersList = 0
 		const indexForError = 1
-		recruitments := test.ExpectedMethods["GetRecruitmentsSortByCreateTimeCase"][indexForRecruitments].([]*model.ClubRecruitment)
+		recruitments := test.ExpectedMethods["GetCurrentRecruitmentsSortByCreateTime"][indexForRecruitments].([]*model.ClubRecruitment)
 		for index, recruitment := range recruitments {
-			mock.On(string(method), string(recruitment.UUID)).Return(returns[indexForRecruitMembersList].([][]*model.RecruitMember)[index], returns[indexForError])
+			mock.On("GetRecruitMembersWithRecruitmentUUID", string(recruitment.UUID)).Return(returns[indexForRecruitMembersList].([][]*model.RecruitMember)[index], returns[indexForError])
 			if returns[indexForError] != nil && returns[indexForError] != gorm.ErrRecordNotFound {
 				break
 			}
