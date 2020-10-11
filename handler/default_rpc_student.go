@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"club/model"
 	clubproto "club/proto/golang/club"
 	"context"
 	"fmt"
@@ -73,13 +74,15 @@ func (d *_default) GetClubsSortByUpdateTime(ctx context.Context, req *clubproto.
 		}
 	}
 
-	clubUUIDs := make([]string, len(informsForResp))
-	for index, informForResp := range informsForResp {
-		clubUUIDs[index] = informForResp.ClubUUID
-	}
-
 	spanForDB = d.tracer.StartSpan("GetClubsWithClubUUIDs", opentracing.ChildOf(parentSpan))
-	selectedClubs, err := access.GetClubsWithClubUUIDs(clubUUIDs)
+	selectedClubs := make([]*model.Club, len(informsForResp))
+	for index, informForResp := range informsForResp {
+		selectedClub, queryErr := access.GetClubWithClubUUID(informForResp.ClubUUID)
+		selectedClubs[index] = selectedClub
+		if queryErr != nil {
+			err = queryErr
+		}
+	}
 	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedClubs", selectedClubs), log.Error(err))
 	spanForDB.Finish()
 
@@ -87,13 +90,6 @@ func (d *_default) GetClubsSortByUpdateTime(ctx context.Context, req *clubproto.
 		access.Rollback()
 		resp.Status = http.StatusInternalServerError
 		resp.Message = fmt.Sprintf(internalServerMessageFormat, "GetClubsWithClubUUIDs return errors, err: " + err.Error())
-		return
-	}
-
-	if len(selectedClubs) != len(informsForResp) {
-		access.Rollback()
-		resp.Status = http.StatusInternalServerError
-		resp.Message = fmt.Sprintf(internalServerMessageFormat, "GetClubsWithClubUUIDs return abnormal length slice")
 		return
 	}
 
