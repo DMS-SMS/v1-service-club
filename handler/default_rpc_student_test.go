@@ -315,7 +315,7 @@ func Test_Default_GetRecruitmentsSortByCreateTime(t *testing.T) {
 	startTime := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
 	endTime := startTime.Add(time.Hour * 24 * 7)
 
-	test := []*test.GetRecruitmentsSortByCreateTimeCase{
+	tests := []*test.GetRecruitmentsSortByCreateTimeCase{
 		{ // success case
 			Start: 0,
 			Count: 10,
@@ -555,41 +555,6 @@ func Test_Default_GetRecruitmentsSortByCreateTime(t *testing.T) {
 				}}, nil},
 				"GetRecruitMembersWithRecruitmentUUIDs": {[][]*model.RecruitMember{{}}, errors.New("unexpected error")},
 				"Rollback":                              {&gorm.DB{}},
-			},
-			ExpectedStatus: http.StatusInternalServerError,
-		}, { // GetRecruitMembersWithRecruitmentUUIDs return abnormal length array
-			Name:  "SMS",
-			Field: "SW",
-			ExpectedMethods: map[test.Method]test.Returns{
-				"BeginTx": {},
-				"GetRecruitmentsSortByCreateTimeCase": {[]*model.ClubRecruitment{{
-					UUID:           "recruitment-555555555555",
-					ClubUUID:       "club-333333333333",
-					RecruitConcept: "첫 번째 상시 채용",
-				}}, nil},
-				"GetRecruitMembersWithRecruitmentUUIDs": {[][]*model.RecruitMember{
-					{
-						{
-							RecruitmentUUID: "recruitment-555555555555",
-							Grade:           "1",
-							Field:           "서버 개발자",
-							Number:          "1",
-						}, {
-							RecruitmentUUID: "recruitment-555555555555",
-							Grade:           "1",
-							Field:           "웹 프론트 개발자",
-							Number:          "1",
-						},
-					}, {
-						{
-							RecruitmentUUID: "recruitment-222222222222",
-							Grade:           "1",
-							Field:           "모든 분야",
-							Number:          "4",
-						},
-					},
-				}, nil},
-				"Rollback": {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
 		},
