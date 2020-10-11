@@ -321,7 +321,7 @@ func Test_Default_GetRecruitmentsSortByCreateTime(t *testing.T) {
 			Count: 10,
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx": {},
-				"GetRecruitmentsSortByCreateTimeCase": {[]*model.ClubRecruitment{{
+				"GetCurrentRecruitmentsSortByCreateTime": {[]*model.ClubRecruitment{{
 					UUID:           "recruitment-555555555555",
 					ClubUUID:       "club-333333333333",
 					RecruitConcept: "첫 번째 상시 채용",
@@ -387,7 +387,7 @@ func Test_Default_GetRecruitmentsSortByCreateTime(t *testing.T) {
 			Count: 10,
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx": {},
-				"GetRecruitmentsSortByCreateTimeCase": {[]*model.ClubRecruitment{{
+				"GetCurrentRecruitmentsSortByCreateTime": {[]*model.ClubRecruitment{{
 					UUID:           "recruitment-555555555555",
 					ClubUUID:       "club-333333333333",
 					RecruitConcept: "첫 번째 상시 채용",
@@ -453,7 +453,7 @@ func Test_Default_GetRecruitmentsSortByCreateTime(t *testing.T) {
 			Field: "SW",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx": {},
-				"GetRecruitmentsSortByCreateTimeCase": {[]*model.ClubRecruitment{{
+				"GetCurrentRecruitmentsSortByCreateTime": {[]*model.ClubRecruitment{{
 					UUID:           "recruitment-555555555555",
 					ClubUUID:       "club-333333333333",
 					RecruitConcept: "첫 번째 상시 채용",
@@ -509,18 +509,18 @@ func Test_Default_GetRecruitmentsSortByCreateTime(t *testing.T) {
 		}, { // forbidden (not student)
 			UUID:           "parent-111111111112",
 			ExpectedStatus: http.StatusForbidden,
-		}, { // GetRecruitmentsSortByCreateTimeCase record not found
+		}, { // GetCurrentRecruitmentsSortByCreateTime record not found
 			ExpectedMethods: map[test.Method]test.Returns{
-				"BeginTx":                             {},
-				"GetRecruitmentsSortByCreateTimeCase": {[]*model.ClubRecruitment{}, gorm.ErrRecordNotFound},
-				"Commit":                              {&gorm.DB{}},
+				"BeginTx":                                {},
+				"GetCurrentRecruitmentsSortByCreateTime": {[]*model.ClubRecruitment{}, gorm.ErrRecordNotFound},
+				"Commit":                                 {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusOK,
-		}, { // GetRecruitmentsSortByCreateTimeCase returns unexpected error
+		}, { // GetCurrentRecruitmentsSortByCreateTime returns unexpected error
 			ExpectedMethods: map[test.Method]test.Returns{
-				"BeginTx":                             {},
-				"GetRecruitmentsSortByCreateTimeCase": {[]*model.ClubInform{}, errors.New("db connect fail")},
-				"Rollback":                            {&gorm.DB{}},
+				"BeginTx":                                {},
+				"GetCurrentRecruitmentsSortByCreateTime": {[]*model.ClubRecruitment{}, errors.New("db connect fail")},
+				"Rollback":                               {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
 		}, { // GetRecruitMembersWithRecruitmentUUIDs returns RecordNotFound error
@@ -528,7 +528,7 @@ func Test_Default_GetRecruitmentsSortByCreateTime(t *testing.T) {
 			Field: "SW",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx": {},
-				"GetRecruitmentsSortByCreateTimeCase": {[]*model.ClubRecruitment{{
+				"GetCurrentRecruitmentsSortByCreateTime": {[]*model.ClubRecruitment{{
 					UUID:           "recruitment-555555555555",
 					ClubUUID:       "club-333333333333",
 					RecruitConcept: "첫 번째 상시 채용",
@@ -548,7 +548,7 @@ func Test_Default_GetRecruitmentsSortByCreateTime(t *testing.T) {
 			Field: "SW",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx": {},
-				"GetRecruitmentsSortByCreateTimeCase": {[]*model.ClubRecruitment{{
+				"GetCurrentRecruitmentsSortByCreateTime": {[]*model.ClubRecruitment{{
 					UUID:           "recruitment-555555555555",
 					ClubUUID:       "club-333333333333",
 					RecruitConcept: "첫 번째 상시 채용",
