@@ -2,3 +2,4 @@
 club-service
 .idea
 coverage.out
+*.DS_Store

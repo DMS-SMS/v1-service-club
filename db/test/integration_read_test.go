@@ -10,10 +10,7 @@ import (
 )
 
 func Test_Accessor_GetClubWithClubUUID(t *testing.T) {
-	access, err := manager.BeginTx()
-	if err != nil {
-		log.Fatal(err)
-	}
+	access := manager.BeginTx()
 	defer func() {
 		access.Rollback()
 	}()
@@ -57,10 +54,7 @@ func Test_Accessor_GetClubWithClubUUID(t *testing.T) {
 }
 
 func Test_Accessor_GetClubWithLeaderUUID(t *testing.T) {
-	access, err := manager.BeginTx()
-	if err != nil {
-		log.Fatal(err)
-	}
+	access := manager.BeginTx()
 	defer func() {
 		access.Rollback()
 	}()
@@ -104,10 +98,7 @@ func Test_Accessor_GetClubWithLeaderUUID(t *testing.T) {
 }
 
 func Test_Accessor_GetCurrentRecruitmentWithClubUUID(t *testing.T) {
-	access, err := manager.BeginTx()
-	if err != nil {
-		log.Fatal(err)
-	}
+	access := manager.BeginTx()
 	defer func() {
 		access.Rollback()
 	}()
@@ -202,10 +193,7 @@ func Test_Accessor_GetCurrentRecruitmentWithClubUUID(t *testing.T) {
 }
 
 func Test_Accessor_GetClubInformsSortByUpdateTime(t *testing.T) {
-	access, err := manager.BeginTx()
-	if err != nil {
-		log.Fatal(err)
-	}
+	access := manager.BeginTx()
 	defer func() {
 		access.Rollback()
 	}()
@@ -371,10 +359,7 @@ func Test_Accessor_GetClubInformsSortByUpdateTime(t *testing.T) {
 }
 
 func Test_Accessor_GetCurrentRecruitmentsSortByCreateTime(t *testing.T) {
-	access, err := manager.BeginTx()
-	if err != nil {
-		log.Fatal(err)
-	}
+	access := manager.BeginTx()
 	defer func() {
 		access.Rollback()
 	}()
@@ -586,11 +571,85 @@ func Test_Accessor_GetCurrentRecruitmentsSortByCreateTime(t *testing.T) {
 	}
 }
 
-func Test_Accessor_GetClubInformWithClubUUID(t *testing.T) {
-	access, err := manager.BeginTx()
-	if err != nil {
+func Test_Accessor_GetClubsWithClubUUIDs(t *testing.T) {
+	access := manager.BeginTx()
+	defer func() {
+		access.Rollback()
+	}()
+
+	for _, club := range []*model.Club {
+		{
+			UUID:       "club-111111111111",
+			LeaderUUID: "student-111111111111",
+		}, {
+			UUID:       "club-222222222222",
+			LeaderUUID: "student-222222222222",
+		}, {
+			UUID:       "club-333333333333",
+			LeaderUUID: "student-333333333333",
+		},
+	} {
+		if _, err := access.CreateClub(club); err != nil {
+			log.Fatal(err, club)
+		}
+	}
+
+	if err, _ := access.DeleteClub("club-222222222222"); err != nil {
 		log.Fatal(err)
 	}
+
+	for _, test := range []struct {
+		ClubUUIDs   []string
+		ExpectClubs []*model.Club
+		ExpectError error
+	} {
+		{
+			ClubUUIDs: []string{"club-111111111111", "club-333333333333"},
+			ExpectClubs: []*model.Club{
+				{
+					UUID:       "club-111111111111",
+					LeaderUUID: "student-111111111111",
+				}, {
+					UUID:       "club-333333333333",
+					LeaderUUID: "student-333333333333",
+				},
+			},
+			ExpectError: nil,
+		}, {
+			ClubUUIDs: []string{"club-111111111111", "club-222222222222", "club-111111111111", "club-333333333333"},
+			ExpectClubs: []*model.Club{
+				{
+					UUID:       "club-111111111111",
+					LeaderUUID: "student-111111111111",
+				}, {}, {
+					UUID:       "club-111111111111",
+					LeaderUUID: "student-111111111111",
+				}, {
+					UUID:       "club-333333333333",
+					LeaderUUID: "student-333333333333",
+				},
+			},
+			ExpectError: gorm.ErrRecordNotFound,
+		}, {
+			ClubUUIDs:   []string{"club-444444444444"},
+			ExpectClubs: []*model.Club{{}},
+			ExpectError: gorm.ErrRecordNotFound,
+		},
+	} {
+		selectedClubs, err := access.GetClubsWithClubUUIDs(test.ClubUUIDs)
+
+		exceptedClubs := make([]*model.Club, len(selectedClubs))
+		for index, clubs := range selectedClubs {
+			exceptedClubs[index] = clubs.ExceptGormModel()
+		}
+
+		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
+		assert.Equalf(t, test.ExpectClubs, exceptedClubs, "result clubs assertion error (test case: %v)", test)
+	}
+}
+
+func Test_Accessor_GetClubInformWithClubUUID(t *testing.T) {
+	access := manager.BeginTx()
 	defer func() {
 		access.Rollback()
 	}()
@@ -653,10 +712,7 @@ func Test_Accessor_GetClubInformWithClubUUID(t *testing.T) {
 }
 
 func Test_Accessor_GetRecruitmentWithRecruitmentUUID(t *testing.T) {
-	access, err := manager.BeginTx()
-	if err != nil {
-		log.Fatal(err)
-	}
+	access := manager.BeginTx()
 	defer func() {
 		access.Rollback()
 	}()
@@ -724,10 +780,7 @@ func Test_Accessor_GetRecruitmentWithRecruitmentUUID(t *testing.T) {
 }
 
 func Test_Accessor_GetClubMembersWithClubUUID(t *testing.T) {
-	access, err := manager.BeginTx()
-	if err != nil {
-		log.Fatal(err)
-	}
+	access := manager.BeginTx()
 	defer func() {
 		access.Rollback()
 	}()
@@ -813,10 +866,7 @@ func Test_Accessor_GetClubMembersWithClubUUID(t *testing.T) {
 }
 
 func Test_Accessor_GetRecruitMembersWithRecruitmentUUID(t *testing.T) {
-	access, err := manager.BeginTx()
-	if err != nil {
-		log.Fatal(err)
-	}
+	access := manager.BeginTx()
 	defer func() {
 		access.Rollback()
 	}()
@@ -945,10 +995,7 @@ func Test_Accessor_GetRecruitMembersWithRecruitmentUUID(t *testing.T) {
 }
 
 func Test_Accessor_GetAllClubInforms(t *testing.T) {
-	access, err := manager.BeginTx()
-	if err != nil {
-		log.Fatal(err)
-	}
+	access := manager.BeginTx()
 	defer func() {
 		access.Rollback()
 	}()
@@ -1063,10 +1110,7 @@ func Test_Accessor_GetAllClubInforms(t *testing.T) {
 }
 
 func Test_Accessor_GetAllCurrentRecruitments(t *testing.T) {
-	access, err := manager.BeginTx()
-	if err != nil {
-		log.Fatal(err)
-	}
+	access := manager.BeginTx()
 	defer func() {
 		access.Rollback()
 	}()

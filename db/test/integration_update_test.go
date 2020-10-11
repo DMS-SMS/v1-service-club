@@ -13,10 +13,7 @@ import (
 )
 
 func Test_Accessor_ChangeClubLeader(t *testing.T) {
-	access, err := manager.BeginTx()
-	if err != nil {
-		log.Fatal(err)
-	}
+	access := manager.BeginTx()
 	defer func() {
 		access.Rollback()
 	}()
@@ -82,10 +79,7 @@ func Test_Accessor_ChangeClubLeader(t *testing.T) {
 }
 
 func Test_Accessor_ModifyClubInform(t *testing.T) {
-	access, err := manager.BeginTx()
-	if err != nil {
-		log.Fatal(err)
-	}
+	access := manager.BeginTx()
 	defer func() {
 		access.Rollback()
 	}()
@@ -227,10 +221,7 @@ func Test_Accessor_ModifyClubInform(t *testing.T) {
 }
 
 func Test_Accessor_ModifyRecruitment(t *testing.T) {
-	access, err := manager.BeginTx()
-	if err != nil {
-		log.Fatal(err)
-	}
+	access := manager.BeginTx()
 	defer func() {
 		access.Rollback()
 	}()
