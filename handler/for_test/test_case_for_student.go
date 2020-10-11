@@ -183,3 +183,54 @@ type GetClubInformWithUUIDCase struct {
 	ExpectedCode      int32
 	ExpectInform      []*clubproto.ClubInform
 }
+
+func (test *GetClubInformWithUUIDCase) ChangeEmptyValueToValidValue() {
+	if test.UUID == EmptyString              { test.UUID = validStudentUUID }
+	if test.ClubUUID == EmptyString          { test.ClubUUID = validClubUUID }
+	if test.XRequestID == EmptyString        { test.XRequestID = validXRequestID }
+	if test.SpanContextString == EmptyString { test.SpanContextString = validSpanContextString }
+}
+
+func (test *GetClubInformWithUUIDCase) ChangeEmptyReplaceValueToEmptyValue() {
+	if test.UUID == EmptyReplaceValueForString              { test.UUID = "" }
+	if test.ClubUUID == EmptyReplaceValueForString          { test.ClubUUID = "" }
+	if test.XRequestID == EmptyReplaceValueForString        { test.XRequestID = "" }
+	if test.SpanContextString == EmptyReplaceValueForString { test.SpanContextString = "" }
+}
+
+func (test *GetClubInformWithUUIDCase) OnExpectMethodsTo(mock *mock.Mock) {
+	for method, returns := range test.ExpectedMethods {
+		test.onMethod(mock, method, returns)
+	}
+}
+
+func (test *GetClubInformWithUUIDCase) onMethod(mock *mock.Mock, method Method, returns Returns) {
+	switch method {
+	case "GetClubWithClubUUID":
+		mock.On(string(method), test.ClubUUID).Return(returns...)
+	case "GetClubInformWithClubUUID":
+		mock.On(string(method), test.ClubUUID).Return(returns...)
+	case "GetClubMembersWithClubUUID":
+		mock.On(string(method), test.ClubUUID).Return(returns...)
+	case "BeginTx":
+		mock.On(string(method)).Return(returns...)
+	case "Commit":
+		mock.On(string(method)).Return(returns...)
+	case "Rollback":
+		mock.On(string(method)).Return(returns...)
+	default:
+		log.Fatalf("this method cannot be registered, method name: %s", method)
+	}
+}
+
+func (test *GetClubInformWithUUIDCase) SetRequestContextOf(req *clubproto.GetClubInformWithUUIDRequest) {
+	req.UUID = test.UUID
+	req.ClubUUID = test.ClubUUID
+}
+
+func (test *GetClubInformWithUUIDCase) GetMetadataContext() (ctx context.Context) {
+	ctx = context.Background()
+	ctx = metadata.Set(ctx, "X-Request-Id", test.XRequestID)
+	ctx = metadata.Set(ctx, "Span-Context", test.SpanContextString)
+	return
+}
