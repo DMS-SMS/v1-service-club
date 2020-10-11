@@ -710,3 +710,130 @@ func Test_Default_GetRecruitmentsSortByCreateTime(t *testing.T) {
 		newMock.AssertExpectations(t)
 	}
 }
+
+func Test_Default_GetClubInformWithUUID(t *testing.T) {
+	tests := []test.GetClubInformWithUUIDCase{
+		{ // success case
+			UUID:     "student-222222222222",
+			ClubUUID: "club-222222222222",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetClubWithClubUUID": {&model.Club{
+					UUID:       "club-222222222222",
+					LeaderUUID: "student-222222222222",
+				}, nil},
+				"GetClubInformWithClubUUID": {&model.ClubInform{
+					ClubUUID:     "club-222222222222",
+					Name:         "SMS",
+					ClubConcept:  "DMS의 소속부서 SMS 입니다!",
+					Introduction: "School Management System 서비스를 개발 및 운영합니다",
+					Link:         "facebook.com/DMS-SMS",
+					Field:        "SW 개발",
+					Location:     "2-2반 교실",
+					Floor:        "3",
+					LogoURI:      "logo.com/club-222222222222",
+				}, nil},
+				"GetClubMembersWithClubUUID": {[]*model.ClubMember{
+					{
+						ClubUUID:    "club-222222222222",
+						StudentUUID: "student-222222222222",
+					}, {
+						ClubUUID:    "club-222222222222",
+						StudentUUID: "student-222222222223",
+					},
+				}, nil},
+				"Commit": {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusOK,
+			ExpectInform: &clubproto.ClubInform{
+				ClubUUID:     "club-222222222222",
+				LeaderUUID:   "student-222222222222",
+				MemberUUIDs:  []string{"student-222222222222", "student-222222222223"},
+				Name:         "SMS",
+				ClubConcept:  "DMS의 소속부서 SMS 입니다!",
+				Introduction: "School Management System 서비스를 개발 및 운영합니다",
+				Link:         "facebook.com/DMS-SMS",
+				Field:        "SW 개발",
+				Location:     "2-2반 교실",
+				Floor:        "3",
+				LogoURI:      "logo.com/club-222222222222",
+			},
+		}, { // no exist X-Request-ID -> Proxy Authorization Required
+			XRequestID:      test.EmptyReplaceValueForString,
+			ExpectedMethods: map[test.Method]test.Returns{},
+			ExpectedStatus:  http.StatusProxyAuthRequired,
+		}, { // invalid X-Request-ID -> Proxy Authorization Required
+			XRequestID:      "InvalidXRequestID",
+			ExpectedMethods: map[test.Method]test.Returns{},
+			ExpectedStatus:  http.StatusProxyAuthRequired,
+		}, { // no exist Span-Context -> Proxy Authorization Required
+			SpanContextString: test.EmptyReplaceValueForString,
+			ExpectedMethods:   map[test.Method]test.Returns{},
+			ExpectedStatus:    http.StatusProxyAuthRequired,
+		}, { // invalid Span-Context -> Proxy Authorization Required
+			SpanContextString: "InvalidSpanContext",
+			ExpectedMethods:   map[test.Method]test.Returns{},
+			ExpectedStatus:    http.StatusProxyAuthRequired,
+		}, { // not student or admin uuid
+			UUID:            "parent-111111111111",
+			ExpectedMethods: map[test.Method]test.Returns{},
+			ExpectedStatus:  http.StatusForbidden,
+		}, { // club uuid not exist
+			UUID:     "admin-222222222222",
+			ClubUUID: "club-333333333333",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetClubWithClubUUID": {&model.Club{}, gorm.ErrRecordNotFound},
+				"Rollback":            {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusNotFound,
+		}, { // GetClubWithClubUUID returns unexpected error
+			UUID:     "admin-222222222222",
+			ClubUUID: "club-333333333333",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx":             {},
+				"GetClubWithClubUUID": {&model.Club{}, errors.New("unexpected error")},
+				"Rollback":            {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // GetClubInformWithClubUUID returns unexpected error
+			UUID:     "student-222222222222",
+			ClubUUID: "club-222222222222",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetClubWithClubUUID": {&model.Club{
+					UUID:       "club-222222222222",
+					LeaderUUID: "student-222222222222",
+				}, nil},
+				"GetClubInformWithClubUUID": {&model.ClubInform{}, errors.New("unexpected error")},
+				"Rollback":                  {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // GetClubMembersWithClubUUID returns unexpected error
+			UUID:     "student-222222222222",
+			ClubUUID: "club-222222222222",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetClubWithClubUUID": {&model.Club{
+					UUID:       "club-222222222222",
+					LeaderUUID: "student-222222222222",
+				}, nil},
+				"GetClubInformWithClubUUID": {&model.ClubInform{
+					ClubUUID:     "club-222222222222",
+					Name:         "SMS",
+					ClubConcept:  "DMS의 소속부서 SMS 입니다!",
+					Introduction: "School Management System 서비스를 개발 및 운영합니다",
+					Link:         "facebook.com/DMS-SMS",
+					Field:        "SW 개발",
+					Location:     "2-2반 교실",
+					Floor:        "3",
+					LogoURI:      "logo.com/club-222222222222",
+				}, nil},
+				"GetClubMembersWithClubUUID": {[]*model.ClubMember{}, errors.New("unexpected error")},
+				"Rollback":                   {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		},
+	}
+
+}
