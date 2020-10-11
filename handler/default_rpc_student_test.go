@@ -407,7 +407,7 @@ func Test_Default_GetClubsSortByUpdateTime(t *testing.T) {
 					UUID:       "club-222222222222",
 					LeaderUUID: "student-222222222222",
 				}}, nil},
-				"GetClubMembersWithClubUUIDs": {[][]*model.ClubMember{}, errors.New("unexpected error")},
+				"GetClubMembersWithClubUUIDs": {[][]*model.ClubMember{{}}, errors.New("unexpected error")},
 				"Rollback":                   {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
