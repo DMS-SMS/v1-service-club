@@ -45,10 +45,11 @@ func (test *GetClubsSortByUpdateTimeCase) onMethod(mock *mock.Mock, method Metho
 	switch method {
 	case "GetClubInformsSortByUpdateTime":
 		const defaultCountValue = 10
-		if test.Count == 0 {
-			test.Count = defaultCountValue
+		var count = int(test.Count)
+		if count == 0 {
+			count = defaultCountValue
 		}
-		mock.On(string(method), int(test.Start), int(test.Count), test.Field, test.Name).Return(returns...)
+		mock.On(string(method), int(test.Start), count, test.Field, test.Name).Return(returns...)
 	case "GetClubsWithClubUUIDs":
 		const indexForClubInforms = 0
 		informs := test.ExpectedMethods["GetClubInformsSortByUpdateTime"][indexForClubInforms].([]*model.ClubInform)
@@ -119,10 +120,11 @@ func (test *GetRecruitmentsSortByCreateTimeCase) onMethod(mock *mock.Mock, metho
 	switch method {
 	case "GetCurrentRecruitmentsSortByCreateTime":
 		const defaultCountValue = 10
-		if test.Count == 0 {
-			test.Count = defaultCountValue
+		var count = int(test.Count)
+		if count == 0 {
+			count = defaultCountValue
 		}
-		mock.On(string(method), int(test.Start), int(test.Count), test.Field, test.Name).Return(returns...)
+		mock.On(string(method), int(test.Start), count, test.Field, test.Name).Return(returns...)
 	case "GetRecruitMembersWithRecruitmentUUIDs":
 		const indexForRecruitments = 0
 		const indexForRecruitMembersList = 0
