@@ -836,4 +836,40 @@ func Test_Default_GetClubInformWithUUID(t *testing.T) {
 		},
 	}
 
+	for _, testCase := range tests {
+		newMock := &mock.Mock{}
+		handler := newDefaultMockHandler(newMock)
+
+		testCase.ChangeEmptyValueToValidValue()
+		testCase.ChangeEmptyReplaceValueToEmptyValue()
+		testCase.OnExpectMethodsTo(newMock)
+
+		req := new(clubproto.GetClubInformWithUUIDRequest)
+		testCase.SetRequestContextOf(req)
+		ctx := testCase.GetMetadataContext()
+
+		resp := new(clubproto.GetClubInformWithUUIDResponse)
+		_ = handler.GetClubInformWithUUID(ctx, req, resp)
+		var respInform *clubproto.ClubInform
+		if testCase.ExpectedStatus == http.StatusOK {
+			respInform = &clubproto.ClubInform{
+				ClubUUID:     resp.ClubUUID,
+				LeaderUUID:   resp.LeaderUUID,
+				MemberUUIDs:  resp.MemberUUIDs,
+				Name:         resp.Name,
+				ClubConcept:  resp.ClubConcept,
+				Introduction: resp.Introduction,
+				Floor:        resp.Floor,
+				Location:     resp.Location,
+				Field:        resp.Field,
+				Link:         resp.Link,
+				LogoURI:      resp.LogoURI,
+			}
+		}
+		assert.Equalf(t, int(testCase.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", testCase, resp.Message)
+		assert.Equalf(t, testCase.ExpectInform, respInform, "club informs assertion error (test case: %v, message: %s)", testCase, resp.Message)
+		assert.Equalf(t, testCase.ExpectedCode, resp.Code, "code assertion error (test case: %v, message: %s)", testCase, resp.Message)
+
+		newMock.AssertExpectations(t)
+	}
 }
