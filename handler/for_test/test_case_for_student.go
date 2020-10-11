@@ -124,11 +124,11 @@ func (test *GetRecruitmentsSortByCreateTimeCase) onMethod(mock *mock.Mock, metho
 		mock.On(string(method), int(test.Start), int(test.Count), test.Field, test.Name).Return(returns...)
 	case "GetRecruitMembersWithRecruitmentUUIDs":
 		const indexForRecruitments = 0
-		const indexForRecruitMembers = 0
+		const indexForRecruitMembersList = 0
 		const indexForError = 1
 		recruitments := test.ExpectedMethods["GetRecruitmentsSortByCreateTimeCase"][indexForRecruitments].([]*model.ClubRecruitment)
 		for index, recruitment := range recruitments {
-			mock.On(string(method), string(recruitment.UUID)).Return(returns[indexForRecruitMembers].([]*model.RecruitMember)[index], returns[indexForError])
+			mock.On(string(method), string(recruitment.UUID)).Return(returns[indexForRecruitMembersList].([][]*model.RecruitMember)[index], returns[indexForError])
 		}
 	case "BeginTx":
 		mock.On(string(method)).Return(returns...)
