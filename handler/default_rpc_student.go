@@ -108,3 +108,50 @@ func (d *_default) GetClubsSortByUpdateTime(ctx context.Context, req *clubproto.
 
 	return
 }
+
+func (d *_default) GetRecruitmentsSortByCreateTime(ctx context.Context, req *clubproto.GetRecruitmentsSortByCreateTimeRequest, resp *clubproto.GetRecruitmentsSortByCreateTimeResponse) (_ error) {
+	ctx, proxyAuthenticated, reason := d.getContextFromMetadata(ctx)
+	if !proxyAuthenticated {
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, reason)
+		return
+	}
+
+	switch true {
+	case adminUUIDRegex.MatchString(req.UUID):
+		break
+	case studentUUIDRegex.MatchString(req.UUID):
+		break
+	default:
+		resp.Status = http.StatusForbidden
+		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "you are not student or admin")
+		return
+	}
+
+	reqID := ctx.Value("X-Request-Id").(string)
+	parentSpan := ctx.Value("Span-Context").(jaeger.SpanContext)
+
+	access := d.accessManage.BeginTx()
+
+	if req.Count == 0 { req.Count = defaultCountValue }
+	spanForDB := d.tracer.StartSpan("GetCurrentRecruitmentsSortByCreateTime", opentracing.ChildOf(parentSpan))
+	selectedRecruits, err := access.GetCurrentRecruitmentsSortByCreateTime(int(req.Start), int(req.Count), req.Field, req.Name)
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedRecruits", selectedRecruits), log.Error(err))
+	spanForDB.Finish()
+
+	switch err {
+	case nil:
+		break
+	case gorm.ErrRecordNotFound:
+		access.Commit()
+		resp.Status = http.StatusOK
+		resp.Message = "get recruitments success (result not exist)"
+		return
+	default:
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "GetCurrentRecruitmentsSortByCreateTime returns unexpected error, error: " + err.Error())
+		return
+	}
+
+}
