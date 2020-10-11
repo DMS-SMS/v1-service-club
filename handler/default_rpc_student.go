@@ -266,4 +266,49 @@ func (d *_default) GetClubInformWithUUID(ctx context.Context, req *clubproto.Get
 		resp.Message = fmt.Sprintf(internalServerMessageFormat, "GetClubWithClubUUID returns unexpected error, err: " + err.Error())
 		return
 	}
+
+	spanForDB = d.tracer.StartSpan("GetClubInformWithClubUUID", opentracing.ChildOf(parentSpan))
+	selectedInform, err := access.GetClubInformWithClubUUID(string(selectedClub.UUID))
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedInform", selectedInform), log.Error(err))
+	spanForDB.Finish()
+
+	if err != nil {
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "GetClubInformWithClubUUID returns unexpected error, err: " + err.Error())
+		return
+	}
+
+	spanForDB = d.tracer.StartSpan("GetClubMembersWithClubUUID", opentracing.ChildOf(parentSpan))
+	selectedMembers, err := access.GetClubMembersWithClubUUID(string(selectedClub.UUID))
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedMembers", selectedMembers), log.Error(err))
+	spanForDB.Finish()
+
+	if err != nil {
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "GetClubMembersWithClubUUID returns unexpected error, err: " + err.Error())
+		return
+	}
+
+	access.Commit()
+	membersForResp := make([]string, len(selectedMembers))
+	for index, selectedMember := range selectedMembers {
+		membersForResp[index] = string(selectedMember.StudentUUID)
+	}
+	resp.Status = http.StatusOK
+	resp.ClubUUID = string(selectedClub.UUID)
+	resp.LeaderUUID = string(selectedClub.LeaderUUID)
+	resp.MemberUUIDs = membersForResp
+	resp.Name = string(selectedInform.Name)
+	resp.ClubConcept = string(selectedInform.ClubConcept)
+	resp.Introduction = string(selectedInform.Introduction)
+	resp.Floor = string(selectedInform.Floor)
+	resp.Location = string(selectedInform.Location)
+	resp.Field = string(selectedInform.Field)
+	resp.Link = string(selectedInform.Link)
+	resp.LogoURI = string(selectedInform.LogoURI)
+	resp.Message = "get club inform success"
+
+	return
 }
