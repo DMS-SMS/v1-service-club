@@ -383,6 +383,7 @@ func Test_Default_GetRecruitmentsSortByCreateTime(t *testing.T) {
 				EndPeriod:   endTime.Format("2006-01-02"),
 			}},
 		}, { // Start, Count Set X -> default(0, 10)
+			UUID:  "admin-111111111111",
 			Start: 0,
 			Count: 10,
 			ExpectedMethods: map[test.Method]test.Returns{
