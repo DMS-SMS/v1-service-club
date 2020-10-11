@@ -154,4 +154,51 @@ func (d *_default) GetRecruitmentsSortByCreateTime(ctx context.Context, req *clu
 		return
 	}
 
+	recruitmentsForResp := make([]*clubproto.RecruitmentInform, len(selectedRecruits))
+	for index, selectedRecruit := range selectedRecruits {
+		recruit := &clubproto.RecruitmentInform{
+			RecruitmentUUID: string(selectedRecruit.UUID),
+			ClubUUID:        string(selectedRecruit.ClubUUID),
+			RecruitConcept:  string(selectedRecruit.RecruitConcept),
+		}
+		startTime, _ := selectedRecruit.StartPeriod.Value()
+		if timeString, ok := startTime.(string); ok {
+			recruit.StartPeriod = timeString
+		}
+		endTime, _ := selectedRecruit.EndPeriod.Value()
+		if timeString, ok := endTime.(string); ok {
+			recruit.EndPeriod = timeString
+		}
+		recruitmentsForResp[index] = recruit
+	}
+
+	for _, recruitmentForResp := range recruitmentsForResp {
+		spanForDB = d.tracer.StartSpan("GetRecruitMembersWithRecruitmentUUID", opentracing.ChildOf(parentSpan))
+		selectedMembers, err := access.GetRecruitMembersWithRecruitmentUUID(recruitmentForResp.RecruitmentUUID)
+		spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedMembers", selectedMembers), log.Error(err))
+		spanForDB.Finish()
+
+		if err != nil && err != gorm.ErrRecordNotFound {
+			access.Rollback()
+			resp.Status = http.StatusInternalServerError
+			resp.Message = fmt.Sprintf(internalServerMessageFormat, "GetRecruitMembersWithRecruitmentUUID returns unexpected error, err: " + err.Error())
+			return
+		}
+
+		membersForResp := make([]*clubproto.RecruitMember, len(selectedMembers))
+		for index, selectedMember := range selectedMembers {
+			membersForResp[index] = &clubproto.RecruitMember{
+				Grade:  string(selectedMember.Grade),
+				Field:  string(selectedMember.Field),
+				Number: string(selectedMember.Number),
+			}
+		}
+		recruitmentForResp.RecruitMembers = membersForResp
+	}
+
+	access.Commit()
+	resp.Status = http.StatusOK
+	resp.Message = fmt.Sprintf("get recruitments success (len: %d)", len(recruitmentsForResp))
+	resp.Recruitments = recruitmentsForResp
+	return
 }
