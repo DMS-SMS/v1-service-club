@@ -145,7 +145,7 @@ func (test *GetRecruitmentsSortByCreateTimeCase) onMethod(mock *mock.Mock, metho
 	}
 }
 
-func (test *GetRecruitmentsSortByCreateTimeCase) SetRequestContextOf(req *clubproto.GetClubsSortByUpdateTimeRequest) {
+func (test *GetRecruitmentsSortByCreateTimeCase) SetRequestContextOf(req *clubproto.GetRecruitmentsSortByCreateTimeRequest) {
 	req.UUID = test.UUID
 	req.Start = test.Start
 	req.Count = test.Count
