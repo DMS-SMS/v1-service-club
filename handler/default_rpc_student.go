@@ -405,4 +405,37 @@ func (d *_default) GetClubInformsWithUUIDs(ctx context.Context, req *clubproto.G
 		resp.Message = fmt.Sprintf(internalServerMessageFormat, "GetClubInformsWithClubUUIDs returns unexepcted error, err: " + err.Error())
 		return
 	}
+
+	selectedMembersList := make([][]*model.ClubMember, len(req.ClubUUIDs))
+	spanForDB = d.tracer.StartSpan("GetClubMembersListWithClubUUIDs", opentracing.ChildOf(parentSpan))
+	for index, clubUUID := range req.ClubUUIDs {
+		selectedMembers, queryErr := access.GetClubMembersWithClubUUID(clubUUID)
+		if queryErr == gorm.ErrRecordNotFound {
+			err = queryErr
+		} else if queryErr != nil {
+			err = queryErr
+			break
+		}
+		membersForResp := make([]string, len(selectedMembers))
+		for index, selectedMember := range selectedMembers {
+			membersForResp[index] = string(selectedMember.StudentUUID)
+		}
+		informsForResp[index].MemberUUIDs = membersForResp
+		selectedMembersList[index] = selectedMembers
+	}
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedMembersList", selectedMembersList), log.Error(err))
+	spanForDB.Finish()
+
+	if err != nil && err != gorm.ErrRecordNotFound {
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "GetClubMembersListWithClubUUIDs returns unexepcted error, err: " + err.Error())
+		return
+	}
+
+	access.Commit()
+	resp.Status = http.StatusOK
+	resp.Informs = informsForResp
+	resp.Message = fmt.Sprintf("get club informs success")
+	return
 }
