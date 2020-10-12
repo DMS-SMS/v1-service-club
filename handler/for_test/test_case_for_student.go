@@ -6,7 +6,6 @@ import (
 	"context"
 	"github.com/micro/go-micro/v2/metadata"
 	"github.com/stretchr/testify/mock"
-	"gorm.io/gorm"
 	"log"
 )
 
@@ -57,9 +56,6 @@ func (test *GetClubsSortByUpdateTimeCase) onMethod(mock *mock.Mock, method Metho
 		informs := test.ExpectedMethods["GetClubInformsSortByUpdateTime"][indexForClubInforms].([]*model.ClubInform)
 		for index, inform := range informs {
 			mock.On("GetClubWithClubUUID", string(inform.ClubUUID)).Return(returns[indexForClubs].([]*model.Club)[index], returns[indexForError])
-			if returns[indexForError] != nil && returns[indexForError] != gorm.ErrRecordNotFound {
-				break
-			}
 		}
 	case "GetClubMembersWithClubUUIDs":
 		const indexForClubInforms = 0
@@ -68,9 +64,6 @@ func (test *GetClubsSortByUpdateTimeCase) onMethod(mock *mock.Mock, method Metho
 		informs := test.ExpectedMethods["GetClubInformsSortByUpdateTime"][indexForClubInforms].([]*model.ClubInform)
 		for index, inform := range informs {
 			mock.On("GetClubMembersWithClubUUID", string(inform.ClubUUID)).Return(returns[indexForCLubMembers].([][]*model.ClubMember)[index], returns[indexForError])
-			if returns[indexForError] != nil && returns[indexForError] != gorm.ErrRecordNotFound {
-				break
-			}
 		}
 	case "BeginTx":
 		mock.On(string(method)).Return(returns...)
