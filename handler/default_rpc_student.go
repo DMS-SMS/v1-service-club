@@ -101,8 +101,11 @@ func (d *_default) GetClubsSortByUpdateTime(ctx context.Context, req *clubproto.
 	selectedMembersList := make([][]*model.ClubMember, len(informsForResp))
 	for index, informForResp := range informsForResp {
 		selectedMembers, queryErr := access.GetClubMembersWithClubUUID(informForResp.ClubUUID)
-		if queryErr != nil {
+		if queryErr == gorm.ErrRecordNotFound {
 			err = queryErr
+		} else if queryErr != nil {
+			err = queryErr
+			break
 		}
 		membersForResp := make([]string, len(selectedMembers))
 		for index, selectedMember := range selectedMembers {
@@ -196,8 +199,11 @@ func (d *_default) GetRecruitmentsSortByCreateTime(ctx context.Context, req *clu
 	selectedMembersList := make([][]*model.RecruitMember, len(recruitmentsForResp))
 	for index, recruitmentForResp := range recruitmentsForResp {
 		selectedMembers, queryErr := access.GetRecruitMembersWithRecruitmentUUID(recruitmentForResp.RecruitmentUUID)
-		if queryErr != nil {
+		if queryErr == gorm.ErrRecordNotFound {
 			err = queryErr
+		} else if queryErr != nil {
+			err = queryErr
+			break
 		}
 		membersForResp := make([]*clubproto.RecruitMember, len(selectedMembers))
 		for index, selectedMember := range selectedMembers {
