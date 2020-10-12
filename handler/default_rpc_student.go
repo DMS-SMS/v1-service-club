@@ -95,7 +95,7 @@ func (d *_default) GetClubsSortByUpdateTime(ctx context.Context, req *clubproto.
 		return
 	}
 
-	spanForDB = d.tracer.StartSpan("GetClubMembersWithClubUUID", opentracing.ChildOf(parentSpan))
+	spanForDB = d.tracer.StartSpan("GetClubMembersListWithClubUUIDs", opentracing.ChildOf(parentSpan))
 	selectedMembersList := make([][]*model.ClubMember, len(informsForResp))
 	for index, informForResp := range informsForResp {
 		selectedMembers, queryErr := access.GetClubMembersWithClubUUID(informForResp.ClubUUID)
