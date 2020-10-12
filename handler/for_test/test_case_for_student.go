@@ -6,6 +6,7 @@ import (
 	"context"
 	"github.com/micro/go-micro/v2/metadata"
 	"github.com/stretchr/testify/mock"
+	"gorm.io/gorm"
 	"log"
 )
 
@@ -56,6 +57,9 @@ func (test *GetClubsSortByUpdateTimeCase) onMethod(mock *mock.Mock, method Metho
 		informs := test.ExpectedMethods["GetClubInformsSortByUpdateTime"][indexForClubInforms].([]*model.ClubInform)
 		for index, inform := range informs {
 			mock.On("GetClubWithClubUUID", string(inform.ClubUUID)).Return(returns[indexForClubs].([]*model.Club)[index], returns[indexForError])
+			if returns[indexForError] != nil {
+				break
+			}
 		}
 	case "GetClubMembersWithClubUUIDs":
 		const indexForClubInforms = 0
@@ -64,6 +68,9 @@ func (test *GetClubsSortByUpdateTimeCase) onMethod(mock *mock.Mock, method Metho
 		informs := test.ExpectedMethods["GetClubInformsSortByUpdateTime"][indexForClubInforms].([]*model.ClubInform)
 		for index, inform := range informs {
 			mock.On("GetClubMembersWithClubUUID", string(inform.ClubUUID)).Return(returns[indexForCLubMembers].([][]*model.ClubMember)[index], returns[indexForError])
+			if returns[indexForError] != nil && returns[indexForError] != gorm.ErrRecordNotFound {
+				break
+			}
 		}
 	case "BeginTx":
 		mock.On(string(method)).Return(returns...)
@@ -138,6 +145,9 @@ func (test *GetRecruitmentsSortByCreateTimeCase) onMethod(mock *mock.Mock, metho
 		recruitments := test.ExpectedMethods["GetCurrentRecruitmentsSortByCreateTime"][indexForRecruitments].([]*model.ClubRecruitment)
 		for index, recruitment := range recruitments {
 			mock.On("GetRecruitMembersWithRecruitmentUUID", string(recruitment.UUID)).Return(returns[indexForRecruitMembersList].([][]*model.RecruitMember)[index], returns[indexForError])
+			if returns[indexForError] != nil && returns[indexForError] != gorm.ErrRecordNotFound {
+				break
+			}
 		}
 	case "BeginTx":
 		mock.On(string(method)).Return(returns...)
@@ -271,12 +281,18 @@ func (test *GetClubInformsWithUUIDsCase) onMethod(mock *mock.Mock, method Method
 		const indexForError = 1
 		for index, clubUUID := range test.ClubUUIDs {
 			mock.On("GetClubInformWithClubUUID", clubUUID).Return(returns[indexForClubInforms].([]*model.ClubInform)[index], returns[indexForError])
+			if returns[indexForError] != nil {
+				break
+			}
 		}
 	case "GetClubMembersWithClubUUIDs":
 		const indexForClubMembersList = 0
 		const indexForError = 1
 		for index, clubUUID := range test.ClubUUIDs {
 			mock.On("GetClubMembersWithClubUUID", clubUUID).Return(returns[indexForClubMembersList].([][]*model.ClubMember)[index], returns[indexForError])
+			if returns[indexForError] != nil && returns[indexForError] != gorm.ErrRecordNotFound {
+				break
+			}
 		}
 	case "BeginTx":
 		mock.On(string(method)).Return(returns...)
