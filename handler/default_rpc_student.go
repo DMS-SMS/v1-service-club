@@ -377,4 +377,32 @@ func (d *_default) GetClubInformsWithUUIDs(ctx context.Context, req *clubproto.G
 		resp.Message = fmt.Sprintf(internalServerMessageFormat, "GetClubWithClubUUID returns unexpected error, err: " + err.Error())
 		return
 	}
+
+	selectedInforms := make([]*model.ClubInform, len(req.ClubUUIDs))
+	spanForDB = d.tracer.StartSpan("GetClubInformsWithClubUUIDs", opentracing.ChildOf(parentSpan))
+	for index, clubUUID := range req.ClubUUIDs {
+		selectedInform, queryErr := access.GetClubInformWithClubUUID(clubUUID)
+		if queryErr != nil {
+			err = queryErr
+			break
+		}
+		informsForResp[index].Name = string(selectedInform.Name)
+		informsForResp[index].ClubConcept = string(selectedInform.ClubConcept)
+		informsForResp[index].Introduction = string(selectedInform.Introduction)
+		informsForResp[index].Floor = string(selectedInform.Floor)
+		informsForResp[index].Location = string(selectedInform.Location)
+		informsForResp[index].Field = string(selectedInform.Field)
+		informsForResp[index].Link = string(selectedInform.Link)
+		informsForResp[index].LogoURI = string(selectedInform.LogoURI)
+		selectedInforms[index] = selectedInform
+	}
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedInforms", selectedInforms), log.Error(err))
+	spanForDB.Finish()
+
+	if err != nil {
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "GetClubInformsWithClubUUIDs returns unexepcted error, err: " + err.Error())
+		return
+	}
 }
