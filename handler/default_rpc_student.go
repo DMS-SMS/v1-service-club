@@ -97,24 +97,28 @@ func (d *_default) GetClubsSortByUpdateTime(ctx context.Context, req *clubproto.
 		informsForResp[index].LeaderUUID = string(club.LeaderUUID)
 	}
 
+	spanForDB = d.tracer.StartSpan("GetClubMembersWithClubUUID", opentracing.ChildOf(parentSpan))
+	selectedMembersList := make([][]*model.ClubMember, len(informsForResp))
 	for index, informForResp := range informsForResp {
-		spanForDB = d.tracer.StartSpan("GetClubMembersWithClubUUID", opentracing.ChildOf(parentSpan))
-		selectedMembers, err := access.GetClubMembersWithClubUUID(informForResp.ClubUUID)
-		spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedMembers", selectedMembers), log.Error(err))
-		spanForDB.Finish()
-
-		if err != nil && err != gorm.ErrRecordNotFound {
-			access.Rollback()
-			resp.Status = http.StatusInternalServerError
-			resp.Message = fmt.Sprintf(internalServerMessageFormat, "GetClubMembersWithClubUUID returns unexpected error, err: " + err.Error())
-			return
+		selectedMembers, queryErr := access.GetClubMembersWithClubUUID(informForResp.ClubUUID)
+		if queryErr != nil {
+			err = queryErr
 		}
-
 		membersForResp := make([]string, len(selectedMembers))
 		for index, selectedMember := range selectedMembers {
 			membersForResp[index] = string(selectedMember.StudentUUID)
 		}
 		informsForResp[index].MemberUUIDs = membersForResp
+		selectedMembersList[index] = selectedMembers
+	}
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedMembersList", selectedMembersList), log.Error(err))
+	spanForDB.Finish()
+
+	if err != nil && err != gorm.ErrRecordNotFound {
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "GetClubMembersWithClubUUID returns unexpected error, err: " + err.Error())
+		return
 	}
 
 	access.Commit()
