@@ -262,6 +262,9 @@ func (test *GetClubInformsWithUUIDsCase) onMethod(mock *mock.Mock, method Method
 		const indexForError = 1
 		for index, clubUUID := range test.ClubUUIDs {
 			mock.On("GetClubWithClubUUID", clubUUID).Return(returns[indexForClubs].([]*model.Club)[index], returns[indexForError])
+			if returns[indexForError] != nil {
+				break
+			}
 		}
 	case "GetClubInformWithClubUUIDs":
 		const indexForClubInforms = 0
