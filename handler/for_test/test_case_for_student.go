@@ -145,9 +145,6 @@ func (test *GetRecruitmentsSortByCreateTimeCase) onMethod(mock *mock.Mock, metho
 		recruitments := test.ExpectedMethods["GetCurrentRecruitmentsSortByCreateTime"][indexForRecruitments].([]*model.ClubRecruitment)
 		for index, recruitment := range recruitments {
 			mock.On("GetRecruitMembersWithRecruitmentUUID", string(recruitment.UUID)).Return(returns[indexForRecruitMembersList].([][]*model.RecruitMember)[index], returns[indexForError])
-			if returns[indexForError] != nil && returns[indexForError] != gorm.ErrRecordNotFound {
-				break
-			}
 		}
 	case "BeginTx":
 		mock.On(string(method)).Return(returns...)
