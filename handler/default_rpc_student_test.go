@@ -862,7 +862,7 @@ func Test_Default_GetClubInformWithUUID(t *testing.T) {
 		newMock.AssertExpectations(t)
 	}
 }
-/*
+
 func Test_Default_GetClubInformsWithUUIDs(t *testing.T) {
 	tests := []test.GetClubInformsWithUUIDsCase{
 		{ // success case
@@ -1060,14 +1060,24 @@ func Test_Default_GetClubInformsWithUUIDs(t *testing.T) {
 			ExpectedStatus: http.StatusInternalServerError,
 		}, { // GetClubMembersWithClubUUID returns not found error
 			UUID:     "student-222222222222",
-			ClubUUIDs: []string{"club-222222222222"},
+			ClubUUIDs: []string{"club-111111111111", "club-222222222222"},
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx": {},
 				"GetClubWithClubUUIDs": {[]*model.Club{{
+					UUID:       "club-111111111111",
+					LeaderUUID: "student-111111111111",
+				}, {
 					UUID:       "club-222222222222",
 					LeaderUUID: "student-222222222222",
 				}}, nil},
 				"GetClubInformWithClubUUIDs": {[]*model.ClubInform{{
+					ClubUUID: "club-111111111111",
+					Name:     "DMS",
+					Field:    "SW 개발",
+					Location: "2-1반 교실",
+					Floor:    "3",
+					LogoURI:  "logo.com/club-111111111111",
+				}, {
 					ClubUUID:     "club-222222222222",
 					Name:         "SMS",
 					ClubConcept:  "DMS의 소속부서 SMS 입니다!",
@@ -1078,13 +1088,23 @@ func Test_Default_GetClubInformsWithUUIDs(t *testing.T) {
 					Floor:        "3",
 					LogoURI:      "logo.com/club-222222222222",
 				}}, nil},
-				"GetClubMembersWithClubUUIDs": {[][]*model.ClubMember{{}}, gorm.ErrRecordNotFound},
+				"GetClubMembersWithClubUUIDs": {[][]*model.ClubMember{{}, {}}, gorm.ErrRecordNotFound},
 				"Commit":                      {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusOK,
 			ExpectInforms: []*clubproto.ClubInform{{
+				ClubUUID:    "club-111111111111",
+				LeaderUUID:  "student-111111111111",
+				MemberUUIDs: []string{},
+				Name:        "DMS",
+				Field:       "SW 개발",
+				Location:    "2-1반 교실",
+				Floor:       "3",
+				LogoURI:     "logo.com/club-111111111111",
+			}, {
 				ClubUUID:     "club-222222222222",
 				LeaderUUID:   "student-222222222222",
+				MemberUUIDs:  []string{},
 				Name:         "SMS",
 				ClubConcept:  "DMS의 소속부서 SMS 입니다!",
 				Introduction: "School Management System 서비스를 개발 및 운영합니다",
@@ -1118,4 +1138,3 @@ func Test_Default_GetClubInformsWithUUIDs(t *testing.T) {
 		newMock.AssertExpectations(t)
 	}
 }
-*/
