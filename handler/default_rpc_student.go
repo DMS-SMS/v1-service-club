@@ -320,3 +320,61 @@ func (d *_default) GetClubInformWithUUID(ctx context.Context, req *clubproto.Get
 
 	return
 }
+
+func (d *_default) GetClubInformsWithUUIDs(ctx context.Context, req *clubproto.GetClubInformsWithUUIDsRequest, resp *clubproto.GetClubInformsWithUUIDsResponse) (_ error) {
+	ctx, proxyAuthenticated, reason := d.getContextFromMetadata(ctx)
+	if !proxyAuthenticated {
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, reason)
+		return
+	}
+
+	switch true {
+	case adminUUIDRegex.MatchString(req.UUID):
+		break
+	case studentUUIDRegex.MatchString(req.UUID):
+		break
+	default:
+		resp.Status = http.StatusForbidden
+		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "you are not student or admin")
+		return
+	}
+
+	reqID := ctx.Value("X-Request-Id").(string)
+	parentSpan := ctx.Value("Span-Context").(jaeger.SpanContext)
+
+	access := d.accessManage.BeginTx()
+	informsForResp := make([]*clubproto.ClubInform, len(req.ClubUUIDs))
+
+	var err error
+	selectedClubs := make([]*model.Club, len(req.ClubUUIDs))
+	spanForDB := d.tracer.StartSpan("GetClubsWithClubUUIDs", opentracing.ChildOf(parentSpan))
+	for index, clubUUID := range req.ClubUUIDs {
+		selectedClub, queryErr := access.GetClubWithClubUUID(clubUUID)
+		if queryErr != nil {
+			err = queryErr
+			break
+		}
+		informsForResp[index] = new(clubproto.ClubInform)
+		informsForResp[index].ClubUUID = string(selectedClub.UUID)
+		informsForResp[index].LeaderUUID = string(selectedClub.LeaderUUID)
+		selectedClubs[index] = selectedClub
+	}
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedClubs", selectedClubs), log.Error(err))
+	spanForDB.Finish()
+
+	switch err {
+	case nil:
+		break
+	case gorm.ErrRecordNotFound:
+		access.Rollback()
+		resp.Status = http.StatusNotFound
+		resp.Message = fmt.Sprintf(notFoundMessageFormat, "club uuid list include not exist uuid")
+		return
+	default:
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "GetClubWithClubUUID returns unexpected error, err: " + err.Error())
+		return
+	}
+}
