@@ -188,19 +188,13 @@ func (d *_default) GetRecruitmentsSortByCreateTime(ctx context.Context, req *clu
 		recruitmentsForResp[index] = recruit
 	}
 
-	for _, recruitmentForResp := range recruitmentsForResp {
-		spanForDB = d.tracer.StartSpan("GetRecruitMembersWithRecruitmentUUID", opentracing.ChildOf(parentSpan))
-		selectedMembers, err := access.GetRecruitMembersWithRecruitmentUUID(recruitmentForResp.RecruitmentUUID)
-		spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedMembers", selectedMembers), log.Error(err))
-		spanForDB.Finish()
-
-		if err != nil && err != gorm.ErrRecordNotFound {
-			access.Rollback()
-			resp.Status = http.StatusInternalServerError
-			resp.Message = fmt.Sprintf(internalServerMessageFormat, "GetRecruitMembersWithRecruitmentUUID returns unexpected error, err: " + err.Error())
-			return
+	spanForDB = d.tracer.StartSpan("GetRecruitMembersListWithRecruitmentUUIDs", opentracing.ChildOf(parentSpan))
+	selectedMembersList := make([][]*model.RecruitMember, len(recruitmentsForResp))
+	for index, recruitmentForResp := range recruitmentsForResp {
+		selectedMembers, queryErr := access.GetRecruitMembersWithRecruitmentUUID(recruitmentForResp.RecruitmentUUID)
+		if queryErr != nil {
+			err = queryErr
 		}
-
 		membersForResp := make([]*clubproto.RecruitMember, len(selectedMembers))
 		for index, selectedMember := range selectedMembers {
 			membersForResp[index] = &clubproto.RecruitMember{
@@ -209,7 +203,17 @@ func (d *_default) GetRecruitmentsSortByCreateTime(ctx context.Context, req *clu
 				Number: string(selectedMember.Number),
 			}
 		}
-		recruitmentForResp.RecruitMembers = membersForResp
+		recruitmentsForResp[index].RecruitMembers = membersForResp
+		selectedMembersList[index] = selectedMembers
+	}
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedMembersList", selectedMembersList), log.Error(err))
+	spanForDB.Finish()
+
+	if err != nil && err != gorm.ErrRecordNotFound {
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "GetRecruitMembersWithRecruitmentUUID returns unexpected error, err: " + err.Error())
+		return
 	}
 
 	access.Commit()
