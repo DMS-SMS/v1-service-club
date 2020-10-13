@@ -683,3 +683,54 @@ func (d *_default) GetRecruitmentUUIDsWithClubUUIDs(ctx context.Context, req *cl
 	resp.Message = "get recruitment list in progress success"
 	return
 }
+
+func (d *_default) GetAllClubFields(ctx context.Context, req *clubproto.GetAllClubFieldsRequest, resp *clubproto.GetAllClubFieldsResponse) (_ error) {
+	ctx, proxyAuthenticated, reason := d.getContextFromMetadata(ctx)
+	if !proxyAuthenticated {
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, reason)
+		return
+	}
+
+	switch true {
+	case adminUUIDRegex.MatchString(req.UUID):
+		break
+	case studentUUIDRegex.MatchString(req.UUID):
+		break
+	default:
+		resp.Status = http.StatusForbidden
+		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "you are not student or admin")
+		return
+	}
+
+	reqID := ctx.Value("X-Request-Id").(string)
+	parentSpan := ctx.Value("Span-Context").(jaeger.SpanContext)
+
+	access := d.accessManage.BeginTx()
+
+	spanForDB := d.tracer.StartSpan("GetAllClubInforms", opentracing.ChildOf(parentSpan))
+	allInforms, err := access.GetAllClubInforms()
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("AllInforms", allInforms), log.Error(err))
+	spanForDB.Finish()
+
+	if err != nil && err != gorm.ErrRecordNotFound {
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "GetAllClubInforms returns unexpected error, err: " + err.Error())
+		return
+	}
+
+	fieldsForResp := make([]string, 0, 5)
+	for _, inform := range allInforms {
+		if contains(fieldsForResp, string(inform.Field)) {
+			continue
+		}
+		fieldsForResp = append(fieldsForResp, string(inform.Field))
+	}
+
+	access.Commit()
+	resp.Status = http.StatusOK
+	resp.Fields = fieldsForResp
+	resp.Message = fmt.Sprintf("get all club field success")
+	return
+}
