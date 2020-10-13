@@ -1587,3 +1587,86 @@ func Test_Default_GetRecruitmentUUIDsWithClubUUIDs(t *testing.T) {
 		newMock.AssertExpectations(t)
 	}
 }
+
+func Test_Default_GetAllClubFields(t *testing.T) {
+	tests := []test.GetAllClubFieldsCase{
+		{ // success case
+			UUID: "student-111111111111",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetAllClubInforms": {[]*model.ClubInform{{
+					ClubUUID: "club-111111111111",
+					Name:     "DMS",
+					Field:    "SW 개발",
+					Location: "2-1반 교실",
+					Floor:    "3",
+					LogoURI:  "logo.com/club-111111111111",
+				}, {
+					ClubUUID:     "club-222222222222",
+					Name:         "SMS",
+					ClubConcept:  "DMS의 소속부서 SMS 입니다!",
+					Introduction: "School Management System 서비스를 개발 및 운영합니다",
+					Link:         "facebook.com/DMS-SMS",
+					Field:        "SW 개발",
+					Location:     "2-2반 교실",
+					Floor:        "3",
+					LogoURI:      "logo.com/club-222222222222",
+				}, {
+					ClubUUID: "club-333333333333",
+					Name:     "ESC",
+					Field:    "임베디드 SW 개발",
+					Location: "세미나실 어딘가",
+					Floor:    "3",
+					LogoURI:  "logo.com/club-333333333333",
+				}, {
+					ClubUUID: "club-444444444444",
+					Name:     "PMS",
+					Field:    "SW 개발",
+					Location: "2-3반 교실",
+					Floor:    "3",
+					LogoURI:  "logo.com/club-444444444444",
+				}}},
+				"Commit": {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusOK,
+			ExpectedFields: []string{"SW 개발", "임베디드 SW 개발"},
+		}, { // no exist X-Request-ID -> Proxy Authorization Required
+			XRequestID:      test.EmptyReplaceValueForString,
+			ExpectedMethods: map[test.Method]test.Returns{},
+			ExpectedStatus:  http.StatusProxyAuthRequired,
+		}, { // invalid X-Request-ID -> Proxy Authorization Required
+			XRequestID:      "InvalidXRequestID",
+			ExpectedMethods: map[test.Method]test.Returns{},
+			ExpectedStatus:  http.StatusProxyAuthRequired,
+		}, { // no exist Span-Context -> Proxy Authorization Required
+			SpanContextString: test.EmptyReplaceValueForString,
+			ExpectedMethods:   map[test.Method]test.Returns{},
+			ExpectedStatus:    http.StatusProxyAuthRequired,
+		}, { // invalid Span-Context -> Proxy Authorization Required
+			SpanContextString: "InvalidSpanContext",
+			ExpectedMethods:   map[test.Method]test.Returns{},
+			ExpectedStatus:    http.StatusProxyAuthRequired,
+		}, { // forbidden (not student)
+			UUID:            "parent-111111111111",
+			ExpectedMethods: map[test.Method]test.Returns{},
+			ExpectedStatus:  http.StatusForbidden,
+		}, { // GetAllClubInforms returns not found error
+			UUID: "admin-111111111111",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx":           {},
+				"GetAllClubInforms": {[]*model.ClubInform{}, gorm.ErrRecordNotFound},
+				"Commit":            {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusOK,
+			ExpectedFields: []string{},
+		}, { // GetAllClubInforms returns unexpected error
+			UUID: "admin-111111111111",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx":           {},
+				"GetAllClubInforms": {[]*model.ClubInform{}, errors.New("unexpected error")},
+				"Rollback":          {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		},
+	}
+}
