@@ -600,7 +600,7 @@ func (test *GetTotalCountOfClubsCase) onMethod(mock *mock.Mock, method Method, r
 	}
 }
 
-func (test *GetTotalCountOfClubsCase) SetRequestContextOf(req *clubproto.GetAllClubFieldsRequest) {
+func (test *GetTotalCountOfClubsCase) SetRequestContextOf(req *clubproto.GetTotalCountOfClubsRequest) {
 	req.UUID = test.UUID
 }
 
