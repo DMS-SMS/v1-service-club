@@ -1243,6 +1243,10 @@ func Test_Default_GetRecruitmentInformWithUUID(t *testing.T) {
 			SpanContextString: "InvalidSpanContext",
 			ExpectedMethods:   map[test.Method]test.Returns{},
 			ExpectedStatus:    http.StatusProxyAuthRequired,
+		}, { // not student or admin uuid
+			UUID:            "parent-111111111111",
+			ExpectedMethods: map[test.Method]test.Returns{},
+			ExpectedStatus:  http.StatusForbidden,
 		}, { // club uuid not exist
 			UUID:            "admin-222222222222",
 			RecruitmentUUID: "recruitment-333333333333",
@@ -1273,7 +1277,7 @@ func Test_Default_GetRecruitmentInformWithUUID(t *testing.T) {
 					StartPeriod:    model.StartPeriod(startTime),
 					EndPeriod:      model.EndPeriod(endTime),
 				}, nil},
-				"GetRecruitMembersWithRecruitmentUUID": {[]*model.ClubMember{}, gorm.ErrRecordNotFound},
+				"GetRecruitMembersWithRecruitmentUUID": {[]*model.RecruitMember{}, gorm.ErrRecordNotFound},
 				"Commit":                               {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusOK,
@@ -1297,7 +1301,7 @@ func Test_Default_GetRecruitmentInformWithUUID(t *testing.T) {
 					StartPeriod:    model.StartPeriod(startTime),
 					EndPeriod:      model.EndPeriod(endTime),
 				}, nil},
-				"GetRecruitMembersWithRecruitmentUUID": {[]*model.ClubMember{}, errors.New("unexpected error")},
+				"GetRecruitMembersWithRecruitmentUUID": {[]*model.RecruitMember{}, errors.New("unexpected error")},
 				"Rollback":                             {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
