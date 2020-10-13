@@ -662,3 +662,13 @@ func (test *GetTotalCountOfCurrentRecruitmentsCase) GetMetadataContext() (ctx co
 	ctx = metadata.Set(ctx, "Span-Context", test.SpanContextString)
 	return
 }
+
+type CheckIfIsClubLeaderCase struct {
+	UUID, StudentUUID string
+	XRequestID        string
+	SpanContextString string
+	ExpectedMethods   map[Method]Returns
+	ExpectedStatus    uint32
+	ExpectedCode      int32
+	ExpectedClubUUID  string
+}
