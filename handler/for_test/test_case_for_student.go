@@ -410,6 +410,8 @@ func (test *GetRecruitmentUUIDWithClubUUIDCase) OnExpectMethodsTo(mock *mock.Moc
 
 func (test *GetRecruitmentUUIDWithClubUUIDCase) onMethod(mock *mock.Mock, method Method, returns Returns) {
 	switch method {
+	case "GetClubWithClubUUID":
+		mock.On(string(method), test.ClubUUID).Return(returns...)
 	case "GetCurrentRecruitmentWithClubUUID":
 		mock.On(string(method), test.ClubUUID).Return(returns...)
 	case "BeginTx":
