@@ -387,3 +387,50 @@ type GetRecruitmentUUIDWithClubUUIDCase struct {
 	ExpectedCode            int32
 	ExpectedRecruitmentUUID string
 }
+
+func (test *GetRecruitmentUUIDWithClubUUIDCase) ChangeEmptyValueToValidValue() {
+	if test.UUID == EmptyString              { test.UUID = validStudentUUID }
+	if test.ClubUUID == EmptyString          { test.ClubUUID = validClubUUID }
+	if test.XRequestID == EmptyString        { test.XRequestID = validXRequestID }
+	if test.SpanContextString == EmptyString { test.SpanContextString = validSpanContextString }
+}
+
+func (test *GetRecruitmentUUIDWithClubUUIDCase) ChangeEmptyReplaceValueToEmptyValue() {
+	if test.UUID == EmptyReplaceValueForString              { test.UUID = "" }
+	if test.ClubUUID == EmptyReplaceValueForString          { test.ClubUUID = "" }
+	if test.XRequestID == EmptyReplaceValueForString        { test.XRequestID = "" }
+	if test.SpanContextString == EmptyReplaceValueForString { test.SpanContextString = "" }
+}
+
+func (test *GetRecruitmentUUIDWithClubUUIDCase) OnExpectMethodsTo(mock *mock.Mock) {
+	for method, returns := range test.ExpectedMethods {
+		test.onMethod(mock, method, returns)
+	}
+}
+
+func (test *GetRecruitmentUUIDWithClubUUIDCase) onMethod(mock *mock.Mock, method Method, returns Returns) {
+	switch method {
+	case "GetCurrentRecruitmentWithClubUUID":
+		mock.On(string(method), test.ClubUUID).Return(returns...)
+	case "BeginTx":
+		mock.On(string(method)).Return(returns...)
+	case "Commit":
+		mock.On(string(method)).Return(returns...)
+	case "Rollback":
+		mock.On(string(method)).Return(returns...)
+	default:
+		log.Fatalf("this method cannot be registered, method name: %s", method)
+	}
+}
+
+func (test *GetRecruitmentUUIDWithClubUUIDCase) SetRequestContextOf(req *clubproto.GetRecruitmentUUIDWithClubUUIDRequest) {
+	req.UUID = test.UUID
+	req.ClubUUID = test.ClubUUID
+}
+
+func (test *GetRecruitmentUUIDWithClubUUIDCase) GetMetadataContext() (ctx context.Context) {
+	ctx = context.Background()
+	ctx = metadata.Set(ctx, "X-Request-Id", test.XRequestID)
+	ctx = metadata.Set(ctx, "Span-Context", test.SpanContextString)
+	return
+}
