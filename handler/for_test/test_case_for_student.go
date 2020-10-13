@@ -436,3 +436,14 @@ func (test *GetRecruitmentUUIDWithClubUUIDCase) GetMetadataContext() (ctx contex
 	ctx = metadata.Set(ctx, "Span-Context", test.SpanContextString)
 	return
 }
+
+type GetRecruitmentUUIDsWithClubUUIDsCase struct {
+	UUID                     string
+	ClubUUIDs                []string
+	XRequestID               string
+	SpanContextString        string
+	ExpectedMethods          map[Method]Returns
+	ExpectedStatus           uint32
+	ExpectedCode             int32
+	ExpectedRecruitmentUUIDs []string
+}
