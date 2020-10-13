@@ -1942,9 +1942,30 @@ func Test_Default_GetClubUUIDWithLeaderUUID(t *testing.T) {
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":               {},
 				"GetClubWithLeaderUUID": {&model.Club{}, errors.New("unexpected error")},
-				"Commit":                {&gorm.DB{}},
+				"Rollback":              {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
 		},
+	}
+
+	for _, testCase := range tests {
+		newMock := &mock.Mock{}
+		handler := newDefaultMockHandler(newMock)
+
+		testCase.ChangeEmptyValueToValidValue()
+		testCase.ChangeEmptyReplaceValueToEmptyValue()
+		testCase.OnExpectMethodsTo(newMock)
+
+		req := new(clubproto.GetClubUUIDWithLeaderUUIDRequest)
+		testCase.SetRequestContextOf(req)
+		ctx := testCase.GetMetadataContext()
+
+		resp := new(clubproto.GetClubUUIDWithLeaderUUIDResponse)
+		_ = handler.GetClubUUIDWithLeaderUUID(ctx, req, resp)
+		assert.Equalf(t, int(testCase.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", testCase, resp.Message)
+		assert.Equalf(t, testCase.ExpectedClubUUID, resp.ClubUUID, "club uuid assertion error (test case: %v, message: %s)", testCase, resp.Message)
+		assert.Equalf(t, testCase.ExpectedCode, resp.Code, "code assertion error (test case: %v, message: %s)", testCase, resp.Message)
+
+		newMock.AssertExpectations(t)
 	}
 }
