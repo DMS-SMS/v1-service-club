@@ -4,6 +4,7 @@ import (
 	test "club/handler/for_test"
 	"club/model"
 	clubproto "club/proto/golang/club"
+	code "club/utils/code/golang"
 	"errors"
 	"fmt"
 	"github.com/stretchr/testify/assert"
@@ -1227,7 +1228,7 @@ func Test_Default_GetRecruitmentInformWithUUID(t *testing.T) {
 				StartPeriod: fmt.Sprintf("%04d-%02d-%02d", startTime.Year(), startTime.Month(), startTime.Day()),
 				EndPeriod:   fmt.Sprintf("%04d-%02d-%02d", endTime.Year(), endTime.Month(), endTime.Day()),
 			},
-		},  { // no exist X-Request-ID -> Proxy Authorization Required
+		}, { // no exist X-Request-ID -> Proxy Authorization Required
 			XRequestID:      test.EmptyReplaceValueForString,
 			ExpectedMethods: map[test.Method]test.Returns{},
 			ExpectedStatus:  http.StatusProxyAuthRequired,
@@ -1338,5 +1339,100 @@ func Test_Default_GetRecruitmentInformWithUUID(t *testing.T) {
 		assert.Equalf(t, testCase.ExpectedCode, resp.Code, "code assertion error (test case: %v, message: %s)", testCase, resp.Message)
 
 		newMock.AssertExpectations(t)
+	}
+}
+
+func Test_Default_GetRecruitmentUUIDWithClubUUID(t *testing.T) {
+	now := time.Now()
+	startTime := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
+	endTime := startTime.Add(time.Hour * 24 * 7)
+
+	test := []test.GetRecruitmentUUIDWithClubUUIDCase{
+		{ // success case
+			UUID:     "student-111111111111",
+			ClubUUID: "club-111111111111",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetClubWithClubUUID": {&model.Club{
+					UUID:       "club-111111111111",
+					LeaderUUID: "student-222222222222",
+				}, nil},
+				"GetCurrentRecruitmentWithClubUUID": {&model.ClubRecruitment{
+					UUID:           "recruitment-222222222222",
+					ClubUUID:       "club-111111111111",
+					RecruitConcept: "두 번째 공채",
+					StartPeriod:    model.StartPeriod(startTime),
+					EndPeriod:      model.EndPeriod(endTime),
+				}, nil},
+				"Commit": {&gorm.DB{}},
+			},
+			ExpectedStatus:          http.StatusOK,
+			ExpectedRecruitmentUUID: "recruitment-222222222222",
+		}, { // no exist X-Request-ID -> Proxy Authorization Required
+			XRequestID:      test.EmptyReplaceValueForString,
+			ExpectedMethods: map[test.Method]test.Returns{},
+			ExpectedStatus:  http.StatusProxyAuthRequired,
+		}, { // invalid X-Request-ID -> Proxy Authorization Required
+			XRequestID:      "InvalidXRequestID",
+			ExpectedMethods: map[test.Method]test.Returns{},
+			ExpectedStatus:  http.StatusProxyAuthRequired,
+		}, { // no exist Span-Context -> Proxy Authorization Required
+			SpanContextString: test.EmptyReplaceValueForString,
+			ExpectedMethods:   map[test.Method]test.Returns{},
+			ExpectedStatus:    http.StatusProxyAuthRequired,
+		}, { // invalid Span-Context -> Proxy Authorization Required
+			SpanContextString: "InvalidSpanContext",
+			ExpectedMethods:   map[test.Method]test.Returns{},
+			ExpectedStatus:    http.StatusProxyAuthRequired,
+		}, { // not student or admin uuid
+			UUID:            "parent-111111111111",
+			ExpectedMethods: map[test.Method]test.Returns{},
+			ExpectedStatus:  http.StatusForbidden,
+		}, { // GetClubWithClubUUID returns not found error
+			UUID:     "admin-111111111111",
+			ClubUUID: "club-444444444444",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx":             {},
+				"GetClubWithClubUUID": {&model.Club{}, gorm.ErrRecordNotFound},
+				"Rollback":            {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusNotFound,
+		}, { // GetClubWithClubUUID returns unexpected error
+			UUID:     "student-111111111111",
+			ClubUUID: "club-111111111111",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx":             {},
+				"GetClubWithClubUUID": {&model.Club{}, errors.New("unexpected error")},
+				"Rollback":            {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // GetCurrentRecruitmentWithClubUUID returns not found error
+			UUID:     "admin-111111111111",
+			ClubUUID: "club-111111111111",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetClubWithClubUUID": {&model.Club{
+					UUID:       "club-111111111111",
+					LeaderUUID: "student-222222222222",
+				}, nil},
+				"GetCurrentRecruitmentWithClubUUID": {&model.ClubRecruitment{}, gorm.ErrRecordNotFound},
+				"Rollback":                          {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusConflict,
+			ExpectedCode:   code.ThereIsNoCurrentRecruitment,
+		}, { // GetCurrentRecruitmentWithClubUUID returns unexpected error
+			UUID:     "admin-111111111111",
+			ClubUUID: "club-111111111111",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetClubWithClubUUID": {&model.Club{
+					UUID:       "club-111111111111",
+					LeaderUUID: "student-222222222222",
+				}, nil},
+				"GetCurrentRecruitmentWithClubUUID": {&model.ClubRecruitment{}, errors.New("unexpected error")},
+				"Rollback":                          {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		},
 	}
 }
