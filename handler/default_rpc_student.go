@@ -439,3 +439,48 @@ func (d *_default) GetClubInformsWithUUIDs(ctx context.Context, req *clubproto.G
 	resp.Message = fmt.Sprintf("get club informs success")
 	return
 }
+
+func (d *_default) GetRecruitmentInformWithUUID(ctx context.Context, req *clubproto.GetRecruitmentInformWithUUIDRequest, resp *clubproto.GetRecruitmentInformWithUUIDResponse) (_ error) {
+	ctx, proxyAuthenticated, reason := d.getContextFromMetadata(ctx)
+	if !proxyAuthenticated {
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, reason)
+		return
+	}
+
+	switch true {
+	case adminUUIDRegex.MatchString(req.UUID):
+		break
+	case studentUUIDRegex.MatchString(req.UUID):
+		break
+	default:
+		resp.Status = http.StatusForbidden
+		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "you are not student or admin")
+		return
+	}
+
+	reqID := ctx.Value("X-Request-Id").(string)
+	parentSpan := ctx.Value("Span-Context").(jaeger.SpanContext)
+
+	access := d.accessManage.BeginTx()
+
+	spanForDB := d.tracer.StartSpan("GetRecruitmentWithRecruitmentUUID", opentracing.ChildOf(parentSpan))
+	selectedRecruitment, err := access.GetRecruitmentWithRecruitmentUUID(req.RecruitmentUUID)
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedRecruitment", selectedRecruitment), log.Error(err))
+	spanForDB.Finish()
+
+	switch err {
+	case nil:
+		break
+	case gorm.ErrRecordNotFound:
+		access.Rollback()
+		resp.Status = http.StatusNotFound
+		resp.Message = fmt.Sprintf(notFoundMessageFormat, "that recruitment uuid is not exist")
+		return
+	default:
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "GetRecruitmentWithRecruitmentUUID returns unexpected error, err: " + err.Error())
+		return
+	}
+}
