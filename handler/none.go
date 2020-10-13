@@ -28,4 +28,4 @@ func (n None) GetRecruitmentUUIDsWithClubUUIDs(context.Context, *proto.GetRecrui
 func (n None) GetAllClubFields(context.Context, *proto.GetAllClubFieldsRequest, *proto.GetAllClubFieldsResponse) (err error) { return }
 func (n None) GetTotalCountOfClubs(context.Context, *proto.GetTotalCountOfClubsRequest, *proto.GetTotalCountOfClubsResponse) (err error) { return }
 func (n None) GetTotalCountOfCurrentRecruitments(context.Context, *proto.GetTotalCountOfCurrentRecruitmentsRequest, *proto.GetTotalCountOfCurrentRecruitmentsResponse) (err error) { return }
-func (n None) CheckIfIsClubLeader(context.Context, *proto.CheckIfIsClubLeaderRequest, *proto.CheckIfIsClubLeaderResponse) (err error) { return }
+func (n None) GetClubUUIDWithLeaderUUID(context.Context, *proto.GetClubUUIDWithLeaderUUIDRequest, *proto.GetClubUUIDWithLeaderUUIDResponse) (err error) { return }
