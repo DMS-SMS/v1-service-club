@@ -566,7 +566,7 @@ type GetTotalCountOfClubsCase struct {
 	ExpectedMethods   map[Method]Returns
 	ExpectedStatus    uint32
 	ExpectedCode      int32
-	ExpectedCount     uint32
+	ExpectedCount     int64
 }
 
 func (test *GetTotalCountOfClubsCase) ChangeEmptyValueToValidValue() {
