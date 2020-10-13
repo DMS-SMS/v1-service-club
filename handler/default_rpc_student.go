@@ -774,6 +774,49 @@ func (d *_default) GetTotalCountOfClubs(ctx context.Context, req *clubproto.GetT
 	access.Commit()
 	resp.Status = http.StatusOK
 	resp.Count = int64(len(allInforms))
-	resp.Message = fmt.Sprintf("get all club field success")
+	resp.Message = fmt.Sprintf("get total count of club success")
+	return
+}
+
+func (d *_default) GetTotalCountOfCurrentRecruitments(ctx context.Context, req *clubproto.GetTotalCountOfCurrentRecruitmentsRequest, resp *clubproto.GetTotalCountOfCurrentRecruitmentsResponse) (_ error) {
+	ctx, proxyAuthenticated, reason := d.getContextFromMetadata(ctx)
+	if !proxyAuthenticated {
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, reason)
+		return
+	}
+
+	switch true {
+	case adminUUIDRegex.MatchString(req.UUID):
+		break
+	case studentUUIDRegex.MatchString(req.UUID):
+		break
+	default:
+		resp.Status = http.StatusForbidden
+		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "you are not student or admin")
+		return
+	}
+
+	reqID := ctx.Value("X-Request-Id").(string)
+	parentSpan := ctx.Value("Span-Context").(jaeger.SpanContext)
+
+	access := d.accessManage.BeginTx()
+
+	spanForDB := d.tracer.StartSpan("GetAllCurrentRecruitments", opentracing.ChildOf(parentSpan))
+	allRecruitments, err := access.GetAllCurrentRecruitments()
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("AllRecruitments", allRecruitments), log.Error(err))
+	spanForDB.Finish()
+
+	if err != nil && err != gorm.ErrRecordNotFound {
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "GetAllCurrentRecruitments returns unexpected error, err: " + err.Error())
+		return
+	}
+
+	access.Commit()
+	resp.Status = http.StatusOK
+	resp.Count = int64(len(allRecruitments))
+	resp.Message = fmt.Sprintf("get total count of current recruitment success")
 	return
 }
