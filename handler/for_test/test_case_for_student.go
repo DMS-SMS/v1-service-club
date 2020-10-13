@@ -514,7 +514,7 @@ type GetAllClubFieldsCase struct {
 	ExpectedMethods   map[Method]Returns
 	ExpectedStatus    uint32
 	ExpectedCode      int32
-	Fields            []string
+	ExpectedFields    []string
 }
 
 func (test *GetAllClubFieldsCase) ChangeEmptyValueToValidValue() {
