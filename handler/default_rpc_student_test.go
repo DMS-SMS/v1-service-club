@@ -1303,4 +1303,36 @@ func Test_Default_GetRecruitmentInformWithUUID(t *testing.T) {
 			ExpectedStatus: http.StatusInternalServerError,
 		},
 	}
+
+	for _, testCase := range tests {
+		newMock := &mock.Mock{}
+		handler := newDefaultMockHandler(newMock)
+
+		testCase.ChangeEmptyValueToValidValue()
+		testCase.ChangeEmptyReplaceValueToEmptyValue()
+		testCase.OnExpectMethodsTo(newMock)
+
+		req := new(clubproto.GetRecruitmentInformWithUUIDRequest)
+		testCase.SetRequestContextOf(req)
+		ctx := testCase.GetMetadataContext()
+
+		resp := new(clubproto.GetRecruitmentInformWithUUIDResponse)
+		_ = handler.GetRecruitmentInformWithUUID(ctx, req, resp)
+		var respRecruit *clubproto.RecruitmentInform
+		if testCase.ExpectedStatus == http.StatusOK {
+			respRecruit = &clubproto.RecruitmentInform{
+				RecruitmentUUID: resp.RecruitmentUUID,
+				ClubUUID:        resp.ClubUUID,
+				RecruitConcept:  resp.RecruitConcept,
+				RecruitMembers:  resp.RecruitMembers,
+				StartPeriod:     resp.StartPeriod,
+				EndPeriod:       resp.EndPeriod,
+			}
+		}
+		assert.Equalf(t, int(testCase.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", testCase, resp.Message)
+		assert.Equalf(t, testCase.ExpectedRecruit, respRecruit, "recruitment assertion error (test case: %v, message: %s)", testCase, resp.Message)
+		assert.Equalf(t, testCase.ExpectedCode, resp.Code, "code assertion error (test case: %v, message: %s)", testCase, resp.Message)
+
+		newMock.AssertExpectations(t)
+	}
 }
