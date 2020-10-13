@@ -17,6 +17,7 @@ const (
 	validLeaderUUID = "student-111111111111"
 	validStudentUUID = "student-111111111111"
 	validClubUUID = "club-111111111111"
+	validRecruitmentUUID = "recruitment-111111111111"
 
 	validClubName = "DMS"
 	validField = "SW 개발"
