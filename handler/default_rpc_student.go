@@ -483,4 +483,43 @@ func (d *_default) GetRecruitmentInformWithUUID(ctx context.Context, req *clubpr
 		resp.Message = fmt.Sprintf(internalServerMessageFormat, "GetRecruitmentWithRecruitmentUUID returns unexpected error, err: " + err.Error())
 		return
 	}
+
+	spanForDB = d.tracer.StartSpan("GetClubMembersWithClubUUID", opentracing.ChildOf(parentSpan))
+	selectedMembers, err := access.GetRecruitMembersWithRecruitmentUUID(req.RecruitmentUUID)
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedMembers", selectedMembers), log.Error(err))
+	spanForDB.Finish()
+
+	if err != nil && err != gorm.ErrRecordNotFound {
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "GetClubMembersWithClubUUID returns unexpected error, err: " + err.Error())
+		return
+	}
+
+	membersForResp := make([]*clubproto.RecruitMember, len(selectedMembers))
+	for index, selectedMember := range selectedMembers {
+		memberForResp := &clubproto.RecruitMember{
+			Grade:  string(selectedMember.Grade),
+			Field:  string(selectedMember.Field),
+			Number: string(selectedMember.Number),
+		}
+		membersForResp[index] = memberForResp
+	}
+
+	access.Commit()
+	resp.Status = http.StatusOK
+	resp.RecruitmentUUID = string(selectedRecruitment.UUID)
+	resp.ClubUUID = string(selectedRecruitment.ClubUUID)
+	resp.RecruitConcept = string(selectedRecruitment.RecruitConcept)
+	resp.RecruitMembers = membersForResp
+	startTime, _ := selectedRecruitment.StartPeriod.Value()
+	if timeString, ok := startTime.(string); ok {
+		resp.StartPeriod = timeString
+	}
+	endTime, _ := selectedRecruitment.EndPeriod.Value()
+	if timeString, ok := endTime.(string); ok {
+		resp.EndPeriod = timeString
+	}
+	resp.Message = "get club inform success"
+	return
 }
