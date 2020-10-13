@@ -516,3 +516,45 @@ type GetAllClubFieldsCase struct {
 	ExpectedCode      int32
 	Fields            []string
 }
+
+func (test *GetAllClubFieldsCase) ChangeEmptyValueToValidValue() {
+	if test.XRequestID == EmptyString        { test.XRequestID = validXRequestID }
+	if test.SpanContextString == EmptyString { test.SpanContextString = validSpanContextString }
+}
+
+func (test *GetAllClubFieldsCase) ChangeEmptyReplaceValueToEmptyValue() {
+	if test.XRequestID == EmptyReplaceValueForString        { test.XRequestID = "" }
+	if test.SpanContextString == EmptyReplaceValueForString { test.SpanContextString = "" }
+}
+
+func (test *GetAllClubFieldsCase) OnExpectMethodsTo(mock *mock.Mock) {
+	for method, returns := range test.ExpectedMethods {
+		test.onMethod(mock, method, returns)
+	}
+}
+
+func (test *GetAllClubFieldsCase) onMethod(mock *mock.Mock, method Method, returns Returns) {
+	switch method {
+	case "GetAllClubInforms":
+		mock.On(string(method)).Return(returns...)
+	case "BeginTx":
+		mock.On(string(method)).Return(returns...)
+	case "Commit":
+		mock.On(string(method)).Return(returns...)
+	case "Rollback":
+		mock.On(string(method)).Return(returns...)
+	default:
+		log.Fatalf("this method cannot be registered, method name: %s", method)
+	}
+}
+
+func (test *GetAllClubFieldsCase) SetRequestContextOf(req *clubproto.GetAllClubFieldsRequest) {
+	req.UUID = test.UUID
+}
+
+func (test *GetAllClubFieldsCase) GetMetadataContext() (ctx context.Context) {
+	ctx = context.Background()
+	ctx = metadata.Set(ctx, "X-Request-Id", test.XRequestID)
+	ctx = metadata.Set(ctx, "Span-Context", test.SpanContextString)
+	return
+}
