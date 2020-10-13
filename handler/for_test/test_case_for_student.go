@@ -327,3 +327,52 @@ type GetRecruitmentInformWithUUIDCase struct {
 	ExpectedCode      int32
 	ExpectedRecruit   *clubproto.RecruitmentInform
 }
+
+func (test *GetRecruitmentInformWithUUIDCase) ChangeEmptyValueToValidValue() {
+	if test.UUID == EmptyString              { test.UUID = validStudentUUID }
+	if test.RecruitmentUUID == EmptyString   { test.RecruitmentUUID = validRecruitmentUUID }
+	if test.XRequestID == EmptyString        { test.XRequestID = validXRequestID }
+	if test.SpanContextString == EmptyString { test.SpanContextString = validSpanContextString }
+}
+
+func (test *GetRecruitmentInformWithUUIDCase) ChangeEmptyReplaceValueToEmptyValue() {
+	if test.UUID == EmptyReplaceValueForString              { test.UUID = "" }
+	if test.RecruitmentUUID == EmptyReplaceValueForString   { test.RecruitmentUUID = "" }
+	if test.XRequestID == EmptyReplaceValueForString        { test.XRequestID = "" }
+	if test.SpanContextString == EmptyReplaceValueForString { test.SpanContextString = "" }
+}
+
+func (test *GetRecruitmentInformWithUUIDCase) OnExpectMethodsTo(mock *mock.Mock) {
+	for method, returns := range test.ExpectedMethods {
+		test.onMethod(mock, method, returns)
+	}
+}
+
+func (test *GetRecruitmentInformWithUUIDCase) onMethod(mock *mock.Mock, method Method, returns Returns) {
+	switch method {
+	case "GetRecruitmentWithRecruitmentUUID":
+		mock.On(string(method), test.RecruitmentUUID).Return(returns...)
+	case "GetRecruitMembersWithRecruitmentUUID":
+		mock.On(string(method), test.RecruitmentUUID).Return(returns...)
+	case "BeginTx":
+		mock.On(string(method)).Return(returns...)
+	case "Commit":
+		mock.On(string(method)).Return(returns...)
+	case "Rollback":
+		mock.On(string(method)).Return(returns...)
+	default:
+		log.Fatalf("this method cannot be registered, method name: %s", method)
+	}
+}
+
+func (test *GetRecruitmentInformWithUUIDCase) SetRequestContextOf(req *clubproto.GetRecruitmentInformWithUUIDRequest) {
+	req.UUID = test.UUID
+	req.RecruitmentUUID = test.RecruitmentUUID
+}
+
+func (test *GetRecruitmentInformWithUUIDCase) GetMetadataContext() (ctx context.Context) {
+	ctx = context.Background()
+	ctx = metadata.Set(ctx, "X-Request-Id", test.XRequestID)
+	ctx = metadata.Set(ctx, "Span-Context", test.SpanContextString)
+	return
+}
