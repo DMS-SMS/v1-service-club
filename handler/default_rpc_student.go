@@ -3,6 +3,7 @@ package handler
 import (
 	"club/model"
 	clubproto "club/proto/golang/club"
+	code "club/utils/code/golang"
 	"context"
 	"fmt"
 	"github.com/opentracing/opentracing-go"
@@ -522,4 +523,49 @@ func (d *_default) GetRecruitmentInformWithUUID(ctx context.Context, req *clubpr
 	}
 	resp.Message = "get club inform success"
 	return
+}
+
+func (d *_default) GetRecruitmentUUIDWithClubUUID(ctx context.Context, req *clubproto.GetRecruitmentUUIDWithClubUUIDRequest, resp *clubproto.GetRecruitmentUUIDWithClubUUIDResponse) (_ error) {
+	ctx, proxyAuthenticated, reason := d.getContextFromMetadata(ctx)
+	if !proxyAuthenticated {
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, reason)
+		return
+	}
+
+	switch true {
+	case adminUUIDRegex.MatchString(req.UUID):
+		break
+	case studentUUIDRegex.MatchString(req.UUID):
+		break
+	default:
+		resp.Status = http.StatusForbidden
+		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "you are not student or admin")
+		return
+	}
+
+	reqID := ctx.Value("X-Request-Id").(string)
+	parentSpan := ctx.Value("Span-Context").(jaeger.SpanContext)
+
+	access := d.accessManage.BeginTx()
+
+	spanForDB := d.tracer.StartSpan("GetClubWithClubUUID", opentracing.ChildOf(parentSpan))
+	selectedClub, err := access.GetClubWithClubUUID(req.ClubUUID)
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedClub", selectedClub), log.Error(err))
+	spanForDB.Finish()
+
+	switch err {
+	case nil:
+		break
+	case gorm.ErrRecordNotFound:
+		access.Rollback()
+		resp.Status = http.StatusNotFound
+		resp.Message = fmt.Sprintf(notFoundMessageFormat, "that club uuid is not exist")
+		return
+	default:
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "GetClubWithClubUUID returns unexpected error, err: " + err.Error())
+		return
+	}
 }
