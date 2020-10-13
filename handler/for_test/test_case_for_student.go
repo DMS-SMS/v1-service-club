@@ -447,3 +447,62 @@ type GetRecruitmentUUIDsWithClubUUIDsCase struct {
 	ExpectedCode             int32
 	ExpectedRecruitmentUUIDs []string
 }
+
+func (test *GetRecruitmentUUIDsWithClubUUIDsCase) ChangeEmptyValueToValidValue() {
+	if test.XRequestID == EmptyString        { test.XRequestID = validXRequestID }
+	if test.SpanContextString == EmptyString { test.SpanContextString = validSpanContextString }
+}
+
+func (test *GetRecruitmentUUIDsWithClubUUIDsCase) ChangeEmptyReplaceValueToEmptyValue() {
+	if test.XRequestID == EmptyReplaceValueForString        { test.XRequestID = "" }
+	if test.SpanContextString == EmptyReplaceValueForString { test.SpanContextString = "" }
+}
+
+func (test *GetRecruitmentUUIDsWithClubUUIDsCase) OnExpectMethodsTo(mock *mock.Mock) {
+	for method, returns := range test.ExpectedMethods {
+		test.onMethod(mock, method, returns)
+	}
+}
+
+func (test *GetRecruitmentUUIDsWithClubUUIDsCase) onMethod(mock *mock.Mock, method Method, returns Returns) {
+	switch method {
+	case "GetClubsWithClubUUIDs":
+		const indexForClubs = 0
+		const indexForError = 1
+		for index, clubUUID := range test.ClubUUIDs {
+			mock.On("GetClubWithClubUUID", clubUUID).Return(returns[indexForClubs].([]*model.Club)[index], returns[indexForError])
+			if returns[indexForError] != nil {
+				break
+			}
+		}
+	case "GetCurrentRecruitmentsWithClubUUIDs":
+		const indexForRecruitments = 0
+		const indexForError = 1
+		for index, clubUUID := range test.ClubUUIDs {
+			mock.On("GetCurrentRecruitmentWithClubUUID", clubUUID).Return(returns[indexForRecruitments].([]*model.ClubRecruitment)[index], returns[indexForError])
+			if !(returns[indexForError] == nil || returns[indexForError] == gorm.ErrRecordNotFound) {
+				break
+			}
+		}
+	case "BeginTx":
+		mock.On(string(method)).Return(returns...)
+	case "Commit":
+		mock.On(string(method)).Return(returns...)
+	case "Rollback":
+		mock.On(string(method)).Return(returns...)
+	default:
+		log.Fatalf("this method cannot be registered, method name: %s", method)
+	}
+}
+
+func (test *GetRecruitmentUUIDsWithClubUUIDsCase) SetRequestContextOf(req *clubproto.GetRecruitmentUUIDsWithClubUUIDsRequest) {
+	req.UUID = test.UUID
+	req.ClubUUIDs = test.ClubUUIDs
+}
+
+func (test *GetRecruitmentUUIDsWithClubUUIDsCase) GetMetadataContext() (ctx context.Context) {
+	ctx = context.Background()
+	ctx = metadata.Set(ctx, "X-Request-Id", test.XRequestID)
+	ctx = metadata.Set(ctx, "Span-Context", test.SpanContextString)
+	return
+}
