@@ -692,7 +692,7 @@ func (test *GetClubUUIDWithLeaderUUIDCase) OnExpectMethodsTo(mock *mock.Mock) {
 func (test *GetClubUUIDWithLeaderUUIDCase) onMethod(mock *mock.Mock, method Method, returns Returns) {
 	switch method {
 	case "GetClubWithLeaderUUID":
-		mock.On(string(method)).Return(returns...)
+		mock.On(string(method), test.LeaderUUID).Return(returns...)
 	case "BeginTx":
 		mock.On(string(method)).Return(returns...)
 	case "Commit":
