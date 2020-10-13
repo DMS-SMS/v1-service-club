@@ -292,7 +292,7 @@ func (d *_default) GetClubInformWithUUID(ctx context.Context, req *clubproto.Get
 	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedMembers", selectedMembers), log.Error(err))
 	spanForDB.Finish()
 
-	if err != nil {
+	if err != nil && err != gorm.ErrRecordNotFound {
 		access.Rollback()
 		resp.Status = http.StatusInternalServerError
 		resp.Message = fmt.Sprintf(internalServerMessageFormat, "GetClubMembersWithClubUUID returns unexpected error, err: " + err.Error())
