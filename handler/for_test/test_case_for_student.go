@@ -663,8 +663,8 @@ func (test *GetTotalCountOfCurrentRecruitmentsCase) GetMetadataContext() (ctx co
 	return
 }
 
-type CheckIfIsClubLeaderCase struct {
-	UUID, StudentUUID string
+type GetClubUUIDWithLeaderUUIDCase struct {
+	UUID, LeaderUUID  string
 	XRequestID        string
 	SpanContextString string
 	ExpectedMethods   map[Method]Returns
@@ -673,23 +673,23 @@ type CheckIfIsClubLeaderCase struct {
 	ExpectedClubUUID  string
 }
 
-func (test *CheckIfIsClubLeaderCase) ChangeEmptyValueToValidValue() {
+func (test *GetClubUUIDWithLeaderUUIDCase) ChangeEmptyValueToValidValue() {
 	if test.XRequestID == EmptyString        { test.XRequestID = validXRequestID }
 	if test.SpanContextString == EmptyString { test.SpanContextString = validSpanContextString }
 }
 
-func (test *CheckIfIsClubLeaderCase) ChangeEmptyReplaceValueToEmptyValue() {
+func (test *GetClubUUIDWithLeaderUUIDCase) ChangeEmptyReplaceValueToEmptyValue() {
 	if test.XRequestID == EmptyReplaceValueForString        { test.XRequestID = "" }
 	if test.SpanContextString == EmptyReplaceValueForString { test.SpanContextString = "" }
 }
 
-func (test *CheckIfIsClubLeaderCase) OnExpectMethodsTo(mock *mock.Mock) {
+func (test *GetClubUUIDWithLeaderUUIDCase) OnExpectMethodsTo(mock *mock.Mock) {
 	for method, returns := range test.ExpectedMethods {
 		test.onMethod(mock, method, returns)
 	}
 }
 
-func (test *CheckIfIsClubLeaderCase) onMethod(mock *mock.Mock, method Method, returns Returns) {
+func (test *GetClubUUIDWithLeaderUUIDCase) onMethod(mock *mock.Mock, method Method, returns Returns) {
 	switch method {
 	case "GetClubWithLeaderUUID":
 		mock.On(string(method)).Return(returns...)
@@ -704,11 +704,12 @@ func (test *CheckIfIsClubLeaderCase) onMethod(mock *mock.Mock, method Method, re
 	}
 }
 
-func (test *CheckIfIsClubLeaderCase) SetRequestContextOf(req *clubproto.GetTotalCountOfCurrentRecruitmentsRequest) {
+func (test *GetClubUUIDWithLeaderUUIDCase) SetRequestContextOf(req *clubproto.GetClubUUIDWithLeaderUUIDRequest) {
 	req.UUID = test.UUID
+	req.LeaderUUID = test.LeaderUUID
 }
 
-func (test *CheckIfIsClubLeaderCase) GetMetadataContext() (ctx context.Context) {
+func (test *GetClubUUIDWithLeaderUUIDCase) GetMetadataContext() (ctx context.Context) {
 	ctx = context.Background()
 	ctx = metadata.Set(ctx, "X-Request-Id", test.XRequestID)
 	ctx = metadata.Set(ctx, "Span-Context", test.SpanContextString)
