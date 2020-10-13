@@ -1868,4 +1868,25 @@ func Test_Default_GetTotalCountOfCurrentRecruitments(t *testing.T) {
 			ExpectedStatus: http.StatusInternalServerError,
 		},
 	}
+
+	for _, testCase := range tests {
+		newMock := &mock.Mock{}
+		handler := newDefaultMockHandler(newMock)
+
+		testCase.ChangeEmptyValueToValidValue()
+		testCase.ChangeEmptyReplaceValueToEmptyValue()
+		testCase.OnExpectMethodsTo(newMock)
+
+		req := new(clubproto.GetTotalCountOfCurrentRecruitmentsRequest)
+		testCase.SetRequestContextOf(req)
+		ctx := testCase.GetMetadataContext()
+
+		resp := new(clubproto.GetTotalCountOfCurrentRecruitmentsResponse)
+		_ = handler.GetTotalCountOfCurrentRecruitments(ctx, req, resp)
+		assert.Equalf(t, int(testCase.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", testCase, resp.Message)
+		assert.Equalf(t, testCase.ExpectedCount, resp.Count, "count assertion error (test case: %v, message: %s)", testCase, resp.Message)
+		assert.Equalf(t, testCase.ExpectedCode, resp.Code, "code assertion error (test case: %v, message: %s)", testCase, resp.Message)
+
+		newMock.AssertExpectations(t)
+	}
 }
