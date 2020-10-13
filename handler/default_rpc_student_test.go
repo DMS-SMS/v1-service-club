@@ -1625,7 +1625,7 @@ func Test_Default_GetAllClubFields(t *testing.T) {
 					Location: "2-3반 교실",
 					Floor:    "3",
 					LogoURI:  "logo.com/club-444444444444",
-				}}},
+				}}, nil},
 				"Commit": {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusOK,
@@ -1669,7 +1669,7 @@ func Test_Default_GetAllClubFields(t *testing.T) {
 			ExpectedStatus: http.StatusInternalServerError,
 		},
 	}
-	
+
 	for _, testCase := range tests {
 		newMock := &mock.Mock{}
 		handler := newDefaultMockHandler(newMock)
