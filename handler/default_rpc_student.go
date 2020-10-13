@@ -649,4 +649,37 @@ func (d *_default) GetRecruitmentUUIDsWithClubUUIDs(ctx context.Context, req *cl
 		resp.Message = fmt.Sprintf(internalServerMessageFormat, "GetClubsWithClubUUIDs returns unexpected error, err: " + err.Error())
 		return
 	}
+
+	recruitmentUUIDsForResp := make([]string, len(req.ClubUUIDs))
+	selectedRecruits := make([]*model.ClubRecruitment, len(req.ClubUUIDs))
+	spanForDB = d.tracer.StartSpan("GetCurrentRecruitmentsWithClubUUIDs", opentracing.ChildOf(parentSpan))
+	for index, clubUUID := range req.ClubUUIDs {
+		selectedRecruit, queryErr := access.GetCurrentRecruitmentWithClubUUID(clubUUID)
+		if queryErr == gorm.ErrRecordNotFound {
+			err = queryErr
+		} else if queryErr != nil {
+			err = queryErr
+			break
+		}
+		selectedRecruits[index] = selectedRecruit
+		if selectedRecruit == nil {
+			selectedRecruit = &model.ClubRecruitment{}
+		}
+		recruitmentUUIDsForResp[index] = string(selectedRecruit.UUID)
+	}
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedRecruits", selectedRecruits), log.Error(err))
+	spanForDB.Finish()
+
+	if err != nil && err != gorm.ErrRecordNotFound {
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "GetCurrentRecruitmentsWithClubUUIDs returns unexpected error, err:" + err.Error())
+		return
+	}
+
+	access.Commit()
+	resp.Status = http.StatusOK
+	resp.RecruitmentUUIDs = recruitmentUUIDsForResp
+	resp.Message = "get recruitment list in progress success"
+	return
 }
