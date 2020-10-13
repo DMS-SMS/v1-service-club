@@ -1795,3 +1795,77 @@ func Test_Default_GetTotalCountOfClubs(t *testing.T) {
 		newMock.AssertExpectations(t)
 	}
 }
+
+func Test_Default_GetTotalCountOfCurrentRecruitments(t *testing.T) {
+	now := time.Now()
+	startTime := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
+	endTime := startTime.Add(time.Hour * 24 * 7)
+
+	tests := []test.GetTotalCountOfCurrentRecruitmentsCase{
+		{ // success case
+			UUID: "student-111111111111",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetAllCurrentRecruitments": {[]*model.ClubRecruitment{{
+					UUID:           "recruitment-222222222222",
+					ClubUUID:       "club-111111111111",
+					RecruitConcept: "두 번째 공채",
+					StartPeriod:    model.StartPeriod(startTime),
+					EndPeriod:      model.EndPeriod(endTime),
+				}, {
+					UUID:           "recruitment-555555555555",
+					ClubUUID:       "club-333333333333",
+					RecruitConcept: "첫 번째 상시 채용",
+				}, {
+					UUID:           "recruitment-666666666666",
+					ClubUUID:       "club-555555555555",
+					RecruitConcept: "어서 오십쇼~",
+				}, {
+					UUID:           "recruitment-888888888888",
+					ClubUUID:       "club-666666666666",
+					RecruitConcept: "선배들이 착합니다~",
+				}}, nil},
+				"Commit": {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusOK,
+			ExpectedCount:  4,
+		}, { // no exist X-Request-ID -> Proxy Authorization Required
+			XRequestID:      test.EmptyReplaceValueForString,
+			ExpectedMethods: map[test.Method]test.Returns{},
+			ExpectedStatus:  http.StatusProxyAuthRequired,
+		}, { // invalid X-Request-ID -> Proxy Authorization Required
+			XRequestID:      "InvalidXRequestID",
+			ExpectedMethods: map[test.Method]test.Returns{},
+			ExpectedStatus:  http.StatusProxyAuthRequired,
+		}, { // no exist Span-Context -> Proxy Authorization Required
+			SpanContextString: test.EmptyReplaceValueForString,
+			ExpectedMethods:   map[test.Method]test.Returns{},
+			ExpectedStatus:    http.StatusProxyAuthRequired,
+		}, { // invalid Span-Context -> Proxy Authorization Required
+			SpanContextString: "InvalidSpanContext",
+			ExpectedMethods:   map[test.Method]test.Returns{},
+			ExpectedStatus:    http.StatusProxyAuthRequired,
+		}, { // forbidden (not student)
+			UUID:            "parent-111111111111",
+			ExpectedMethods: map[test.Method]test.Returns{},
+			ExpectedStatus:  http.StatusForbidden,
+		}, { // GetAllCurrentRecruitments returns not found error
+			UUID: "admin-111111111111",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx":                   {},
+				"GetAllCurrentRecruitments": {[]*model.ClubRecruitment{}, gorm.ErrRecordNotFound},
+				"Commit":                    {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusOK,
+			ExpectedCount:  0,
+		}, { // GetAllCurrentRecruitments returns unexpected error
+			UUID: "admin-111111111111",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx":                   {},
+				"GetAllCurrentRecruitments": {[]*model.ClubRecruitment{}, errors.New("unexpected error")},
+				"Rollback":                  {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		},
+	}
+}
