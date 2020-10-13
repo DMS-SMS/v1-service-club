@@ -568,4 +568,31 @@ func (d *_default) GetRecruitmentUUIDWithClubUUID(ctx context.Context, req *club
 		resp.Message = fmt.Sprintf(internalServerMessageFormat, "GetClubWithClubUUID returns unexpected error, err: " + err.Error())
 		return
 	}
+
+	spanForDB = d.tracer.StartSpan("GetCurrentRecruitmentWithClubUUID", opentracing.ChildOf(parentSpan))
+	selectedRecruitment, err := access.GetCurrentRecruitmentWithClubUUID(req.ClubUUID)
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedRecruitment", selectedRecruitment), log.Error(err))
+	spanForDB.Finish()
+
+	switch err {
+	case nil:
+		break
+	case gorm.ErrRecordNotFound:
+		access.Rollback()
+		resp.Status = http.StatusConflict
+		resp.Code = code.ThereIsNoCurrentRecruitment
+		resp.Message = fmt.Sprintf(conflictMessageFormat, "no recruitment is currently in progress with that club uuid")
+		return
+	default:
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "GetCurrentRecruitmentWithClubUUID returns unexpected error, err: " + err.Error())
+		return
+	}
+
+	access.Commit()
+	resp.Status = http.StatusOK
+	resp.RecruitmentUUID = string(selectedRecruitment.UUID)
+	resp.Message = "get recruitment in progress success"
+	return
 }
