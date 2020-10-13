@@ -596,3 +596,57 @@ func (d *_default) GetRecruitmentUUIDWithClubUUID(ctx context.Context, req *club
 	resp.Message = "get recruitment in progress success"
 	return
 }
+
+func (d *_default) GetRecruitmentUUIDsWithClubUUIDs(ctx context.Context, req *clubproto.GetRecruitmentUUIDsWithClubUUIDsRequest, resp *clubproto.GetRecruitmentUUIDsWithClubUUIDsResponse) (_ error) {
+	ctx, proxyAuthenticated, reason := d.getContextFromMetadata(ctx)
+	if !proxyAuthenticated {
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, reason)
+		return
+	}
+
+	switch true {
+	case adminUUIDRegex.MatchString(req.UUID):
+		break
+	case studentUUIDRegex.MatchString(req.UUID):
+		break
+	default:
+		resp.Status = http.StatusForbidden
+		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "you are not student or admin")
+		return
+	}
+
+	reqID := ctx.Value("X-Request-Id").(string)
+	parentSpan := ctx.Value("Span-Context").(jaeger.SpanContext)
+
+	access := d.accessManage.BeginTx()
+
+	var err error
+	selectedClubs := make([]*model.Club, len(req.ClubUUIDs))
+	spanForDB := d.tracer.StartSpan("GetClubsWithClubUUIDs", opentracing.ChildOf(parentSpan))
+	for index, clubUUID := range req.ClubUUIDs {
+		selectedClub, queryErr := access.GetClubWithClubUUID(clubUUID)
+		if queryErr != nil {
+			err = queryErr
+			break
+		}
+		selectedClubs[index] = selectedClub
+	}
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedClubs", selectedClubs), log.Error(err))
+	spanForDB.Finish()
+
+	switch err {
+	case nil:
+		break
+	case gorm.ErrRecordNotFound:
+		access.Rollback()
+		resp.Status = http.StatusNotFound
+		resp.Message = fmt.Sprintf(notFoundMessageFormat, "club uuid list include not exist club")
+		return
+	default:
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "GetClubsWithClubUUIDs returns unexpected error, err: " + err.Error())
+		return
+	}
+}
