@@ -1347,7 +1347,7 @@ func Test_Default_GetRecruitmentUUIDWithClubUUID(t *testing.T) {
 	startTime := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
 	endTime := startTime.Add(time.Hour * 24 * 7)
 
-	test := []test.GetRecruitmentUUIDWithClubUUIDCase{
+	tests := []test.GetRecruitmentUUIDWithClubUUIDCase{
 		{ // success case
 			UUID:     "student-111111111111",
 			ClubUUID: "club-111111111111",
@@ -1434,5 +1434,26 @@ func Test_Default_GetRecruitmentUUIDWithClubUUID(t *testing.T) {
 			},
 			ExpectedStatus: http.StatusInternalServerError,
 		},
+	}
+
+	for _, testCase := range tests {
+		newMock := &mock.Mock{}
+		handler := newDefaultMockHandler(newMock)
+
+		testCase.ChangeEmptyValueToValidValue()
+		testCase.ChangeEmptyReplaceValueToEmptyValue()
+		testCase.OnExpectMethodsTo(newMock)
+
+		req := new(clubproto.GetRecruitmentUUIDWithClubUUIDRequest)
+		testCase.SetRequestContextOf(req)
+		ctx := testCase.GetMetadataContext()
+
+		resp := new(clubproto.GetRecruitmentUUIDWithClubUUIDResponse)
+		_ = handler.GetRecruitmentUUIDWithClubUUID(ctx, req, resp)
+		assert.Equalf(t, int(testCase.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", testCase, resp.Message)
+		assert.Equalf(t, testCase.ExpectedRecruitmentUUID, resp.RecruitmentUUID,"recruitment uuid assertion error (test case: %v, message: %s)", testCase, resp.Message)
+		assert.Equalf(t, testCase.ExpectedCode, resp.Code, "code assertion error (test case: %v, message: %s)", testCase, resp.Message)
+
+		newMock.AssertExpectations(t)
 	}
 }
