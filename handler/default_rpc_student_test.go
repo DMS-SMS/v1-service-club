@@ -1468,6 +1468,7 @@ func Test_Default_GetRecruitmentUUIDsWithClubUUIDs(t *testing.T) {
 			UUID:      "student-111111111111",
 			ClubUUIDs: []string{"club-222222222222", "club-333333333333"},
 			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
 				"GetClubsWithClubUUIDs": {[]*model.Club{{
 					UUID:       "club-222222222222",
 					LeaderUUID: "student-222222222222",
@@ -1514,6 +1515,7 @@ func Test_Default_GetRecruitmentUUIDsWithClubUUIDs(t *testing.T) {
 			UUID:      "admin-111111111111",
 			ClubUUIDs: []string{"club-222222222222", "club-333333333333"},
 			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx":               {},
 				"GetClubsWithClubUUIDs": {[]*model.Club{{}}, gorm.ErrRecordNotFound},
 				"Rollback":              {&gorm.DB{}},
 			},
@@ -1522,6 +1524,7 @@ func Test_Default_GetRecruitmentUUIDsWithClubUUIDs(t *testing.T) {
 			UUID:      "student-111111111111",
 			ClubUUIDs: []string{"club-222222222222", "club-333333333333"},
 			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx":               {},
 				"GetClubsWithClubUUIDs": {[]*model.Club{{}}, errors.New("unexpected error")},
 				"Rollback":              {&gorm.DB{}},
 			},
@@ -1530,6 +1533,7 @@ func Test_Default_GetRecruitmentUUIDsWithClubUUIDs(t *testing.T) {
 			UUID:      "student-111111111111",
 			ClubUUIDs: []string{"club-222222222222", "club-333333333333"},
 			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
 				"GetClubsWithClubUUIDs": {[]*model.Club{{
 					UUID:       "club-222222222222",
 					LeaderUUID: "student-222222222222",
@@ -1546,6 +1550,7 @@ func Test_Default_GetRecruitmentUUIDsWithClubUUIDs(t *testing.T) {
 			UUID:      "student-111111111111",
 			ClubUUIDs: []string{"club-222222222222", "club-333333333333"},
 			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
 				"GetClubsWithClubUUIDs": {[]*model.Club{{
 					UUID:       "club-222222222222",
 					LeaderUUID: "student-222222222222",
