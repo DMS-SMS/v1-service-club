@@ -1890,3 +1890,61 @@ func Test_Default_GetTotalCountOfCurrentRecruitments(t *testing.T) {
 		newMock.AssertExpectations(t)
 	}
 }
+
+func Test_Default_GetClubUUIDWithLeaderUUID(t *testing.T) {
+	tests := []test.GetClubUUIDWithLeaderUUIDCase{
+		{ // success case
+			UUID:        "student-111111111111",
+			LeaderUUID:  "student-111111111111",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetClubWithLeaderUUID": {&model.Club{
+					UUID:       "club-111111111111",
+					LeaderUUID: "student-111111111111",
+				}, nil},
+				"Commit": {&gorm.DB{}},
+			},
+			ExpectedStatus:   http.StatusOK,
+			ExpectedClubUUID: "club-111111111111",
+		}, { // no exist X-Request-ID -> Proxy Authorization Required
+			XRequestID:      test.EmptyReplaceValueForString,
+			ExpectedMethods: map[test.Method]test.Returns{},
+			ExpectedStatus:  http.StatusProxyAuthRequired,
+		}, { // invalid X-Request-ID -> Proxy Authorization Required
+			XRequestID:      "InvalidXRequestID",
+			ExpectedMethods: map[test.Method]test.Returns{},
+			ExpectedStatus:  http.StatusProxyAuthRequired,
+		}, { // no exist Span-Context -> Proxy Authorization Required
+			SpanContextString: test.EmptyReplaceValueForString,
+			ExpectedMethods:   map[test.Method]test.Returns{},
+			ExpectedStatus:    http.StatusProxyAuthRequired,
+		}, { // invalid Span-Context -> Proxy Authorization Required
+			SpanContextString: "InvalidSpanContext",
+			ExpectedMethods:   map[test.Method]test.Returns{},
+			ExpectedStatus:    http.StatusProxyAuthRequired,
+		}, { // forbidden (not student)
+			UUID:            "parent-111111111111",
+			ExpectedMethods: map[test.Method]test.Returns{},
+			ExpectedStatus:  http.StatusForbidden,
+		}, { // GetClubWithLeaderUUID returns not found error
+			UUID:       "admin-111111111111",
+			LeaderUUID: "student-222222222222",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx":               {},
+				"GetClubWithLeaderUUID": {&model.Club{}, gorm.ErrRecordNotFound},
+				"Rollback":              {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusConflict,
+			ExpectedCode:   code.ThereIsNoClubWithThatLeaderUUID,
+		}, { // GetClubWithLeaderUUID returns unexpected error
+			UUID:       "student-111111111111",
+			LeaderUUID: "student-111111111111",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx":               {},
+				"GetClubWithLeaderUUID": {&model.Club{}, errors.New("unexpected error")},
+				"Commit":                {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		},
+	}
+}
