@@ -1,13 +1,17 @@
 package handler
 
 import (
+	"club/model"
 	authproto "club/proto/golang/auth"
 	clubproto "club/proto/golang/club"
 	consulagent "club/tool/consul/agent"
+	"club/tool/mysqlerr"
 	code "club/utils/code/golang"
 	topic "club/utils/topic/golang"
 	"context"
 	"fmt"
+	mysqlcode "github.com/VividCortex/mysqlerr"
+	"github.com/go-sql-driver/mysql"
 	microerrors "github.com/micro/go-micro/v2/errors"
 	"github.com/micro/go-micro/v2/metadata"
 	"github.com/opentracing/opentracing-go"
@@ -140,4 +144,53 @@ func (d *_default) AddClubMember(ctx context.Context, req *clubproto.AddClubMemb
 		resp.Message = fmt.Sprintf("GetStudentInformWithUUID unexpected status returned, message: %s", respOfReq.Message)
 		return
 	}
+
+	spanForDB = d.tracer.StartSpan("CreateClubMember", opentracing.ChildOf(parentSpan))
+	createdMember, err := access.CreateClubMember(&model.ClubMember{
+		ClubUUID:    model.ClubUUID(req.ClubUUID),
+		StudentUUID: model.StudentUUID(req.StudentUUID),
+	})
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("CreatedMember", createdMember), log.Error(err))
+	spanForDB.Finish()
+
+	switch assertedError := err.(type) {
+	case nil:
+		break
+	case *mysql.MySQLError:
+		access.Rollback()
+		switch assertedError.Number {
+		case mysqlcode.ER_DUP_ENTRY:
+			key, entry, err := mysqlerr.ParseDuplicateEntryErrorFrom(assertedError)
+			if err != nil {
+				resp.Status = http.StatusInternalServerError
+				resp.Message = fmt.Sprintf(internalServerMessageFormat, "unable to parse MySQL duplicate error, err: " + err.Error())
+				return
+			}
+			switch key {
+			case model.ClubMemberInstance.StudentUUID.KeyName():
+				resp.Status = http.StatusConflict
+				resp.Code = code.ThatUUIDAlreadyExistsAsMember
+				resp.Message = fmt.Sprintf(conflictMessageFormat, "alreay exists as member, entry: " + entry)
+				return
+			default:
+				resp.Status = http.StatusInternalServerError
+				resp.Message = fmt.Sprintf(internalServerMessageFormat, "unexpected duplicate entry, key: " + key)
+				return
+			}
+		default:
+			resp.Status = http.StatusInternalServerError
+			resp.Message = fmt.Sprintf(internalServerMessageFormat, "unexpected CreateClubMember MySQL error code, err: " + assertedError.Error())
+			return
+		}
+	default:
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "unexpected type of CreateClubMember errors, err: " + assertedError.Error())
+		return
+	}
+
+	access.Commit()
+	resp.Status = http.StatusCreated
+	resp.Message = "success to create new club member"
+	return
 }
