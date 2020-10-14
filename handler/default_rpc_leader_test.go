@@ -8,6 +8,8 @@ import (
 	consulagent "club/tool/consul/agent"
 	"club/tool/mysqlerr"
 	code "club/utils/code/golang"
+	mysqlcode "github.com/VividCortex/mysqlerr"
+	"github.com/go-sql-driver/mysql"
 	microerrors "github.com/micro/go-micro/v2/errors"
 	"github.com/micro/go-micro/v2/registry"
 	"github.com/pkg/errors"
@@ -33,7 +35,7 @@ func Test_Default_AddClubMember(t *testing.T) {
 				"GetNextServiceNode": {&registry.Node{
 					Id:      "DMS.SMS.v1.service.auth-6b37b034-5f0b-4c9f-a03a-decbcb3799ef",
 					Address: "127.0.0.1:10101",
-				}},
+				}, nil},
 				"GetStudentInformWithUUID": {&authproto.GetStudentInformWithUUIDResponse{
 					Status:        http.StatusOK,
 					Message:       "get student inform success",
@@ -64,7 +66,7 @@ func Test_Default_AddClubMember(t *testing.T) {
 				"GetNextServiceNode": {&registry.Node{
 					Id:      "DMS.SMS.v1.service.auth-6b37b034-5f0b-4c9f-a03a-decbcb3799ef",
 					Address: "127.0.0.1:10101",
-				}},
+				}, nil},
 				"GetStudentInformWithUUID": {&authproto.GetStudentInformWithUUIDResponse{
 					Status:        http.StatusOK,
 					Message:       "get student inform success",
@@ -179,7 +181,7 @@ func Test_Default_AddClubMember(t *testing.T) {
 				"GetNextServiceNode": {&registry.Node{
 					Id:      "DMS.SMS.v1.service.auth-6b37b034-5f0b-4c9f-a03a-decbcb3799ef",
 					Address: "127.0.0.1:10101",
-				}},
+				}, nil},
 				"GetStudentInformWithUUID": {&authproto.GetStudentInformWithUUIDResponse{
 					Status:  http.StatusNotFound,
 					Message: "student uuid not exist",
@@ -201,7 +203,7 @@ func Test_Default_AddClubMember(t *testing.T) {
 				"GetNextServiceNode": {&registry.Node{
 					Id:      "DMS.SMS.v1.service.auth-6b37b034-5f0b-4c9f-a03a-decbcb3799ef",
 					Address: "127.0.0.1:10101",
-				}},
+				}, nil},
 				"GetStudentInformWithUUID": {&authproto.GetStudentInformWithUUIDResponse{
 					Status:  http.StatusNetworkAuthenticationRequired,
 					Message: "I don't know about this error",
@@ -222,7 +224,7 @@ func Test_Default_AddClubMember(t *testing.T) {
 				"GetNextServiceNode": {&registry.Node{
 					Id:      "DMS.SMS.v1.service.auth-6b37b034-5f0b-4c9f-a03a-decbcb3799ef",
 					Address: "127.0.0.1:10101",
-				}},
+				}, nil},
 				"GetStudentInformWithUUID": {&authproto.GetStudentInformWithUUIDResponse{
 					Status:  http.StatusNetworkAuthenticationRequired,
 					Message: "I don't know about this error",
@@ -243,7 +245,7 @@ func Test_Default_AddClubMember(t *testing.T) {
 				"GetNextServiceNode": {&registry.Node{
 					Id:      "DMS.SMS.v1.service.auth-6b37b034-5f0b-4c9f-a03a-decbcb3799ef",
 					Address: "127.0.0.1:10101",
-				}},
+				}, nil},
 				"GetStudentInformWithUUID": {&authproto.GetStudentInformWithUUIDResponse{}, &microerrors.Error{
 					Code:   http.StatusRequestTimeout,
 					Detail: "request time out",
@@ -264,7 +266,7 @@ func Test_Default_AddClubMember(t *testing.T) {
 				"GetNextServiceNode": {&registry.Node{
 					Id:      "DMS.SMS.v1.service.auth-6b37b034-5f0b-4c9f-a03a-decbcb3799ef",
 					Address: "127.0.0.1:10101",
-				}},
+				}, nil},
 				"GetStudentInformWithUUID": {&authproto.GetStudentInformWithUUIDResponse{}, &microerrors.Error{
 					Code:   http.StatusNetworkAuthenticationRequired,
 					Detail: "I don't know about this error",
@@ -285,7 +287,7 @@ func Test_Default_AddClubMember(t *testing.T) {
 				"GetNextServiceNode": {&registry.Node{
 					Id:      "DMS.SMS.v1.service.auth-6b37b034-5f0b-4c9f-a03a-decbcb3799ef",
 					Address: "127.0.0.1:10101",
-				}},
+				}, nil},
 				"GetStudentInformWithUUID": {&authproto.GetStudentInformWithUUIDResponse{}, errors.New("unexpected error")},
 				"Rollback":                 {&gorm.DB{}},
 			},
@@ -303,7 +305,7 @@ func Test_Default_AddClubMember(t *testing.T) {
 				"GetNextServiceNode": {&registry.Node{
 					Id:      "DMS.SMS.v1.service.auth-6b37b034-5f0b-4c9f-a03a-decbcb3799ef",
 					Address: "127.0.0.1:10101",
-				}},
+				}, nil},
 				"GetStudentInformWithUUID": {&authproto.GetStudentInformWithUUIDResponse{
 					Status:        http.StatusOK,
 					Message:       "get student inform success",
@@ -319,7 +321,7 @@ func Test_Default_AddClubMember(t *testing.T) {
 			},
 			ExpectedStatus: http.StatusConflict,
 			ExpectedCode:   code.ThatUUIDAlreadyExistsAsMember,
-		}, { // CreateClubMember returns unexpected error
+		}, { // CreateClubMember returns unexpected duplicate entry error
 			UUID:        "student-111111111111",
 			ClubUUID:    "club-111111111111",
 			StudentUUID: "student-222222222222",
@@ -332,7 +334,7 @@ func Test_Default_AddClubMember(t *testing.T) {
 				"GetNextServiceNode": {&registry.Node{
 					Id:      "DMS.SMS.v1.service.auth-6b37b034-5f0b-4c9f-a03a-decbcb3799ef",
 					Address: "127.0.0.1:10101",
-				}},
+				}, nil},
 				"GetStudentInformWithUUID": {&authproto.GetStudentInformWithUUIDResponse{
 					Status:        http.StatusOK,
 					Message:       "get student inform success",
@@ -343,7 +345,7 @@ func Test_Default_AddClubMember(t *testing.T) {
 					PhoneNumber:   "01088378347",
 					ImageURI:      "profiles/student-111111111111",
 				}, nil},
-				"CreateClubMember": {&model.ClubMember{}, errors.New("unexpected error")},
+				"CreateClubMember": {&model.ClubMember{}, mysqlerr.DuplicateEntry(model.ClubMemberInstance.ClubUUID.KeyName(), "club-111111111111")},
 				"Rollback":         {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
