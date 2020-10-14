@@ -4,12 +4,15 @@ import (
 	test "club/handler/for_test"
 	"club/model"
 	authproto "club/proto/golang/auth"
+	clubproto "club/proto/golang/club"
 	consulagent "club/tool/consul/agent"
 	"club/tool/mysqlerr"
 	code "club/utils/code/golang"
 	microerrors "github.com/micro/go-micro/v2/errors"
 	"github.com/micro/go-micro/v2/registry"
 	"github.com/pkg/errors"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"gorm.io/gorm"
 	"net/http"
 	"testing"
@@ -345,5 +348,26 @@ func Test_Default_AddClubMember(t *testing.T) {
 			},
 			ExpectedStatus: http.StatusInternalServerError,
 		},
+	}
+
+	for _, testCase := range tests {
+		newMock := &mock.Mock{}
+		handler := newDefaultMockHandler(newMock)
+
+		testCase.ChangeEmptyValueToValidValue()
+		testCase.ChangeEmptyReplaceValueToEmptyValue()
+		testCase.OnExpectMethodsTo(newMock)
+
+		req := new(clubproto.AddClubMemberRequest)
+		testCase.SetRequestContextOf(req)
+		ctx := testCase.GetMetadataContext()
+
+		resp := new(clubproto.AddClubMemberResponse)
+		_ = handler.AddClubMember(ctx, req, resp)
+
+		assert.Equalf(t, int(testCase.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", testCase, resp.Message)
+		assert.Equalf(t, testCase.ExpectedCode, resp.Code, "code assertion error (test case: %v, message: %s)", testCase, resp.Message)
+
+		newMock.AssertExpectations(t)
 	}
 }
