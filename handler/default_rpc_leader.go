@@ -1,12 +1,15 @@
 package handler
 
 import (
+	authproto "club/proto/golang/auth"
 	clubproto "club/proto/golang/club"
 	consulagent "club/tool/consul/agent"
 	code "club/utils/code/golang"
 	topic "club/utils/topic/golang"
 	"context"
 	"fmt"
+	microerrors "github.com/micro/go-micro/v2/errors"
+	"github.com/micro/go-micro/v2/metadata"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/uber/jaeger-client-go"
@@ -85,6 +88,56 @@ func (d *_default) AddClubMember(ctx context.Context, req *clubproto.AddClubMemb
 		access.Rollback()
 		resp.Status = http.StatusInternalServerError
 		resp.Message = fmt.Sprintf(internalServerMessageFormat, "unable to query in consul agent, err: " + err.Error())
+		return
+	}
+
+	spanForReq := d.tracer.StartSpan("GetStudentInformWithUUID", opentracing.ChildOf(parentSpan))
+	md := metadata.Set(context.Background(), "X-Request-Id", reqID)
+	md = metadata.Set(md, "Span-Context", spanForReq.Context().(jaeger.SpanContext).String())
+	authReq := &authproto.GetStudentInformWithUUIDRequest{
+		UUID:        req.UUID,
+		StudentUUID: req.StudentUUID,
+	}
+	respOfReq, err := d.authStudent.GetStudentInformWithUUID(md, authReq)
+	spanForReq.SetTag("X-Request-Id", reqID).LogFields(log.Object("request", authReq), log.Object("response", respOfReq), log.Error(err))
+	spanForReq.Finish()
+
+	switch assertedError := err.(type) {
+	case nil:
+		break
+	case *microerrors.Error:
+		switch assertedError.Code {
+		case http.StatusRequestTimeout:
+			access.Rollback()
+			resp.Status = http.StatusRequestTimeout
+			resp.Message = fmt.Sprintf(requestTimeoutMessageFormat, assertedError.Detail)
+			return
+		default:
+			access.Rollback()
+			resp.Status = http.StatusInternalServerError
+			resp.Message = fmt.Sprintf(internalServerMessageFormat, assertedError.Detail)
+			return
+		}
+	default:
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, assertedError.Error())
+		return
+	}
+
+	switch respOfReq.Status {
+	case http.StatusOK:
+		break
+	case http.StatusNotFound:
+		access.Rollback()
+		resp.Status = http.StatusNotFound
+		resp.Code = code.NotFoundStudentNotExist
+		resp.Message = fmt.Sprintf(notFoundMessageFormat, "student with that uuid not eixst")
+		return
+	default:
+		access.Rollback()
+		resp.Status = respOfReq.Status
+		resp.Message = fmt.Sprintf("GetStudentInformWithUUID unexpected status returned, message: %s", respOfReq.Message)
 		return
 	}
 }
