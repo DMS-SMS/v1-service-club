@@ -40,7 +40,7 @@ func (test *AddClubMemberCase) OnExpectMethodsTo(mock *mock.Mock) {
 func (test *AddClubMemberCase) onMethod(mock *mock.Mock, method Method, returns Returns) {
 	switch method {
 	case "GetClubWithClubUUID":
-		mock.On(string(method), test.UUID).Return(returns...)
+		mock.On(string(method), test.ClubUUID).Return(returns...)
 	case "GetNextServiceNode":
 		mock.On(string(method), topic.AuthServiceName).Return(returns...)
 	case "GetStudentInformWithUUID":
