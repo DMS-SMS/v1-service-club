@@ -153,3 +153,49 @@ type ChangeClubLeaderCase struct {
 	ExpectedStatus    uint32
 	ExpectedCode      int32
 }
+
+func (test *ChangeClubLeaderCase) ChangeEmptyValueToValidValue() {
+	if test.XRequestID == EmptyString        { test.XRequestID = validXRequestID }
+	if test.SpanContextString == EmptyString { test.SpanContextString = validSpanContextString }
+}
+
+func (test *ChangeClubLeaderCase) ChangeEmptyReplaceValueToEmptyValue() {
+	if test.XRequestID == EmptyReplaceValueForString        { test.XRequestID = "" }
+	if test.SpanContextString == EmptyReplaceValueForString { test.SpanContextString = "" }
+}
+
+func (test *ChangeClubLeaderCase) OnExpectMethodsTo(mock *mock.Mock) {
+	for method, returns := range test.ExpectedMethods {
+		test.onMethod(mock, method, returns)
+	}
+}
+
+func (test *ChangeClubLeaderCase) onMethod(mock *mock.Mock, method Method, returns Returns) {
+	switch method {
+	case "GetClubWithClubUUID":
+		mock.On(string(method), test.ClubUUID).Return(returns...)
+	case "ChangeClubLeader":
+		mock.On(string(method), test.ClubUUID, test.NewLeaderUUID).Return(returns...)
+	case "BeginTx":
+		mock.On(string(method)).Return(returns...)
+	case "Commit":
+		mock.On(string(method)).Return(returns...)
+	case "Rollback":
+		mock.On(string(method)).Return(returns...)
+	default:
+		log.Fatalf("this method cannot be registered, method name: %s", method)
+	}
+}
+
+func (test *ChangeClubLeaderCase) SetRequestContextOf(req *clubproto.ChangeClubLeaderRequest) {
+	req.UUID = test.UUID
+	req.ClubUUID = test.ClubUUID
+	req.NewLeaderUUID = test.NewLeaderUUID
+}
+
+func (test *ChangeClubLeaderCase) GetMetadataContext() (ctx context.Context) {
+	ctx = context.Background()
+	ctx = metadata.Set(ctx, "X-Request-Id", test.XRequestID)
+	ctx = metadata.Set(ctx, "Span-Context", test.SpanContextString)
+	return
+}
