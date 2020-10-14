@@ -540,7 +540,7 @@ func Test_Default_DeleteClubMember(t *testing.T) {
 			},
 			ExpectedStatus: http.StatusNotFound,
 			ExpectedCode:   code.NotFoundClubNoExist,
-		}, { // GetClubWithClubUUID returns not found error
+		}, { // GetClubWithClubUUID returns unexpected error
 			UUID:        "student-111111111111",
 			ClubUUID:    "club-111111111111",
 			StudentUUID: "student-222222222222",
@@ -580,5 +580,26 @@ func Test_Default_DeleteClubMember(t *testing.T) {
 			},
 			ExpectedStatus: http.StatusInternalServerError,
 		},
+	}
+
+	for _, testCase := range tests {
+		newMock := &mock.Mock{}
+		handler := newDefaultMockHandler(newMock)
+
+		testCase.ChangeEmptyValueToValidValue()
+		testCase.ChangeEmptyReplaceValueToEmptyValue()
+		testCase.OnExpectMethodsTo(newMock)
+
+		req := new(clubproto.DeleteClubMemberRequest)
+		testCase.SetRequestContextOf(req)
+		ctx := testCase.GetMetadataContext()
+
+		resp := new(clubproto.DeleteClubMemberResponse)
+		_ = handler.DeleteClubMember(ctx, req, resp)
+
+		assert.Equalf(t, int(testCase.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", testCase, resp.Message)
+		assert.Equalf(t, testCase.ExpectedCode, resp.Code, "code assertion error (test case: %v, message: %s)", testCase, resp.Message)
+
+		newMock.AssertExpectations(t)
 	}
 }
