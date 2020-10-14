@@ -57,7 +57,7 @@ func (d *_default) AddClubMember(ctx context.Context, req *clubproto.AddClubMemb
 	case gorm.ErrRecordNotFound:
 		access.Rollback()
 		resp.Status = http.StatusNotFound
-		resp.Code = code.NotFoundClubNotExists
+		resp.Code = code.NotFoundClubNoExist
 		resp.Message = fmt.Sprintf(notFoundMessageFormat, "club with that uuid not exist")
 		return
 	default:
@@ -135,7 +135,7 @@ func (d *_default) AddClubMember(ctx context.Context, req *clubproto.AddClubMemb
 	case http.StatusNotFound:
 		access.Rollback()
 		resp.Status = http.StatusNotFound
-		resp.Code = code.NotFoundStudentNotExist
+		resp.Code = code.NotFoundStudentNoExist
 		resp.Message = fmt.Sprintf(notFoundMessageFormat, "student with that uuid not eixst")
 		return
 	default:
@@ -169,7 +169,7 @@ func (d *_default) AddClubMember(ctx context.Context, req *clubproto.AddClubMemb
 			switch key {
 			case model.ClubMemberInstance.StudentUUID.KeyName():
 				resp.Status = http.StatusConflict
-				resp.Code = code.ThatUUIDAlreadyExistsAsMember
+				resp.Code = code.ClubMemberAlreadyExist
 				resp.Message = fmt.Sprintf(conflictMessageFormat, "alreay exists as member, entry: " + entry)
 				return
 			default:
