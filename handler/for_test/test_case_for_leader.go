@@ -85,6 +85,15 @@ func (test *AddClubMemberCase) GetMetadataContext() (ctx context.Context) {
 	ctx = context.Background()
 	ctx = metadata.Set(ctx, "X-Request-Id", test.XRequestID)
 	ctx = metadata.Set(ctx, "Span-Context", test.SpanContextString)
-	ctx = metadata.Set(ctx, "ClubUUID", test.ClubUUID)
 	return
+}
+
+type DeleteClubMember struct {
+	UUID                  string
+	ClubUUID, StudentUUID string
+	XRequestID            string
+	SpanContextString     string
+	ExpectedMethods       map[Method]Returns
+	ExpectedStatus        uint32
+	ExpectedCode          int32
 }
