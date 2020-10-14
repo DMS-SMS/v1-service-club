@@ -131,13 +131,6 @@ func (test *DeleteClubMemberCase) onMethod(mock *mock.Mock, method Method, retur
 	}
 }
 
-func (test *DeleteClubMemberCase) getClubMember() *model.ClubMember {
-	return &model.ClubMember{
-		ClubUUID:    model.ClubUUID(test.ClubUUID),
-		StudentUUID: model.StudentUUID(test.StudentUUID),
-	}
-}
-
 func (test *DeleteClubMemberCase) SetRequestContextOf(req *clubproto.DeleteClubMemberRequest) {
 	req.UUID = test.UUID
 	req.ClubUUID = test.ClubUUID
@@ -149,4 +142,14 @@ func (test *DeleteClubMemberCase) GetMetadataContext() (ctx context.Context) {
 	ctx = metadata.Set(ctx, "X-Request-Id", test.XRequestID)
 	ctx = metadata.Set(ctx, "Span-Context", test.SpanContextString)
 	return
+}
+
+type ChangeClubLeaderCase struct {
+	UUID, ClubUUID    string
+	NewLeaderUUID     string
+	XRequestID        string
+	SpanContextString string
+	ExpectedMethods   map[Method]Returns
+	ExpectedStatus    uint32
+	ExpectedCode      int32
 }
