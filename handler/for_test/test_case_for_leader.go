@@ -3,7 +3,10 @@ package test
 import (
 	"club/model"
 	authproto "club/proto/golang/auth"
+	clubproto "club/proto/golang/club"
 	topic "club/utils/topic/golang"
+	"context"
+	"github.com/micro/go-micro/v2/metadata"
 	"github.com/stretchr/testify/mock"
 	"log"
 )
@@ -17,6 +20,17 @@ type AddClubMemberCase struct {
 	ExpectedStatus        uint32
 	ExpectedCode          int32
 }
+
+func (test *AddClubMemberCase) ChangeEmptyValueToValidValue() {
+	if test.XRequestID == EmptyString        { test.XRequestID = validXRequestID }
+	if test.SpanContextString == EmptyString { test.SpanContextString = validSpanContextString }
+}
+
+func (test *AddClubMemberCase) ChangeEmptyReplaceValueToEmptyValue() {
+	if test.XRequestID == EmptyReplaceValueForString        { test.XRequestID = "" }
+	if test.SpanContextString == EmptyReplaceValueForString { test.SpanContextString = "" }
+}
+
 func (test *AddClubMemberCase) OnExpectMethodsTo(mock *mock.Mock) {
 	for method, returns := range test.ExpectedMethods {
 		test.onMethod(mock, method, returns)
@@ -61,3 +75,16 @@ func (test *AddClubMemberCase) getClubMember() *model.ClubMember {
 	}
 }
 
+func (test *AddClubMemberCase) SetRequestContextOf(req *clubproto.AddClubMemberRequest) {
+	req.UUID = test.UUID
+	req.ClubUUID = test.ClubUUID
+	req.StudentUUID = test.StudentUUID
+}
+
+func (test *AddClubMemberCase) GetMetadataContext() (ctx context.Context) {
+	ctx = context.Background()
+	ctx = metadata.Set(ctx, "X-Request-Id", test.XRequestID)
+	ctx = metadata.Set(ctx, "Span-Context", test.SpanContextString)
+	ctx = metadata.Set(ctx, "ClubUUID", test.ClubUUID)
+	return
+}
