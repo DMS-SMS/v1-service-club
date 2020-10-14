@@ -463,3 +463,122 @@ func Test_Default_AddClubMember(t *testing.T) {
 		newMock.AssertExpectations(t)
 	}
 }
+
+func Test_Default_DeleteClubMember(t *testing.T) {
+	tests := []test.DeleteClubMemberCase{
+		{ // success case (student uuid)
+			UUID:            "student-111111111111",
+			ClubUUID:        "club-111111111111",
+			StudentUUID:     "student-222222222222",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetClubWithClubUUID": {&model.Club{
+					UUID:       "club-111111111111",
+					LeaderUUID: "student-111111111111",
+				}, nil},
+				"DeleteClubMember": {nil, 1},
+				"Commit":           {&gorm.DB{}},
+			},
+			ExpectedStatus:  http.StatusOK,
+		}, { // success case (admin uuid)
+			UUID:            "admin-111111111111",
+			ClubUUID:        "club-111111111111",
+			StudentUUID:     "student-222222222222",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetClubWithClubUUID": {&model.Club{
+					UUID:       "club-111111111111",
+					LeaderUUID: "student-111111111111",
+				}, nil},
+				"DeleteClubMember": {nil, 1},
+				"Commit":           {&gorm.DB{}},
+			},
+			ExpectedStatus:  http.StatusOK,
+		}, { // no exist X-Request-ID -> Proxy Authorization Required
+			XRequestID:      test.EmptyReplaceValueForString,
+			ExpectedMethods: map[test.Method]test.Returns{},
+			ExpectedStatus:  http.StatusProxyAuthRequired,
+		}, { // invalid X-Request-ID -> Proxy Authorization Required
+			XRequestID:      "InvalidXRequestID",
+			ExpectedMethods: map[test.Method]test.Returns{},
+			ExpectedStatus:  http.StatusProxyAuthRequired,
+		}, { // no exist Span-Context -> Proxy Authorization Required
+			SpanContextString: test.EmptyReplaceValueForString,
+			ExpectedMethods:   map[test.Method]test.Returns{},
+			ExpectedStatus:    http.StatusProxyAuthRequired,
+		}, { // invalid Span-Context -> Proxy Authorization Required
+			SpanContextString: "InvalidSpanContext",
+			ExpectedMethods:   map[test.Method]test.Returns{},
+			ExpectedStatus:    http.StatusProxyAuthRequired,
+		}, { // not student or admin uuid
+			UUID:            "parent-111111111111",
+			ExpectedMethods: map[test.Method]test.Returns{},
+			ExpectedStatus:  http.StatusForbidden,
+			ExpectedCode:    code.ForbiddenNotStudentOrAdminUUID,
+		}, { // not club leader
+			UUID:        "student-333333333333",
+			ClubUUID:    "club-111111111111",
+			StudentUUID: "student-222222222222",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetClubWithClubUUID": {&model.Club{
+					UUID:       "club-111111111111",
+					LeaderUUID: "student-111111111111",
+				}, nil},
+				"Rollback": {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusForbidden,
+			ExpectedCode:   code.ForbiddenNotClubLeader,
+		}, { // GetClubWithClubUUID returns not found error
+			UUID:        "student-111111111111",
+			ClubUUID:    "club-111111111111",
+			StudentUUID: "student-222222222222",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx":             {},
+				"GetClubWithClubUUID": {&model.Club{}, gorm.ErrRecordNotFound},
+				"Rollback":            {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusNotFound,
+			ExpectedCode:   code.NotFoundClubNoExist,
+		}, { // GetClubWithClubUUID returns not found error
+			UUID:        "student-111111111111",
+			ClubUUID:    "club-111111111111",
+			StudentUUID: "student-222222222222",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx":             {},
+				"GetClubWithClubUUID": {&model.Club{}, errors.New("unexpected error")},
+				"Rollback":            {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // DeleteClubMember returns 0 row affected
+			UUID:        "student-111111111111",
+			ClubUUID:    "club-111111111111",
+			StudentUUID: "student-222222222222",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetClubWithClubUUID": {&model.Club{
+					UUID:       "club-111111111111",
+					LeaderUUID: "student-111111111111",
+				}, nil},
+				"DeleteClubMember": {nil, 0},
+				"Rollback":         {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusNotFound,
+			ExpectedCode:   code.NotFoundClubMemberNoExist,
+		}, { // DeleteClubMember returns unexpected error
+			UUID:        "student-111111111111",
+			ClubUUID:    "club-111111111111",
+			StudentUUID: "student-222222222222",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetClubWithClubUUID": {&model.Club{
+					UUID:       "club-111111111111",
+					LeaderUUID: "student-111111111111",
+				}, nil},
+				"DeleteClubMember": {errors.New("unexpected error"), 0},
+				"Rollback":         {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		},
+	}
+}
