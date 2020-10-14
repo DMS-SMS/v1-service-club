@@ -349,6 +349,96 @@ func Test_Default_AddClubMember(t *testing.T) {
 				"Rollback":         {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
+		}, { // CreateClubMember returns invalid message in duplicate entry error
+			UUID:        "student-111111111111",
+			ClubUUID:    "club-111111111111",
+			StudentUUID: "student-222222222222",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetClubWithClubUUID": {&model.Club{
+					UUID:       "club-111111111111",
+					LeaderUUID: "student-111111111111",
+				}, nil},
+				"GetNextServiceNode": {&registry.Node{
+					Id:      "DMS.SMS.v1.service.auth-6b37b034-5f0b-4c9f-a03a-decbcb3799ef",
+					Address: "127.0.0.1:10101",
+				}, nil},
+				"GetStudentInformWithUUID": {&authproto.GetStudentInformWithUUIDResponse{
+					Status:        http.StatusOK,
+					Message:       "get student inform success",
+					Grade:         2,
+					Group:         2,
+					StudentNumber: 7,
+					Name:          "박진홍",
+					PhoneNumber:   "01088378347",
+					ImageURI:      "profiles/student-111111111111",
+				}, nil},
+				"CreateClubMember": {&model.ClubMember{}, &mysql.MySQLError{
+					Number:  mysqlcode.ER_DUP_ENTRY,
+					Message: "invalid message",
+				}},
+				"Rollback": {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // CreateClubMember returns unexpected MySQL error number
+			UUID:        "student-111111111111",
+			ClubUUID:    "club-111111111111",
+			StudentUUID: "student-222222222222",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetClubWithClubUUID": {&model.Club{
+					UUID:       "club-111111111111",
+					LeaderUUID: "student-111111111111",
+				}, nil},
+				"GetNextServiceNode": {&registry.Node{
+					Id:      "DMS.SMS.v1.service.auth-6b37b034-5f0b-4c9f-a03a-decbcb3799ef",
+					Address: "127.0.0.1:10101",
+				}, nil},
+				"GetStudentInformWithUUID": {&authproto.GetStudentInformWithUUIDResponse{
+					Status:        http.StatusOK,
+					Message:       "get student inform success",
+					Grade:         2,
+					Group:         2,
+					StudentNumber: 7,
+					Name:          "박진홍",
+					PhoneNumber:   "01088378347",
+					ImageURI:      "profiles/student-111111111111",
+				}, nil},
+				"CreateClubMember": {&model.ClubMember{}, &mysql.MySQLError{
+					Number:  mysqlcode.ER_BAD_NULL_ERROR,
+					Message: "unexpected number",
+				}},
+				"Rollback": {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // CreateClubMember returns unexpected type of error
+			UUID:        "student-111111111111",
+			ClubUUID:    "club-111111111111",
+			StudentUUID: "student-222222222222",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetClubWithClubUUID": {&model.Club{
+					UUID:       "club-111111111111",
+					LeaderUUID: "student-111111111111",
+				}, nil},
+				"GetNextServiceNode": {&registry.Node{
+					Id:      "DMS.SMS.v1.service.auth-6b37b034-5f0b-4c9f-a03a-decbcb3799ef",
+					Address: "127.0.0.1:10101",
+				}, nil},
+				"GetStudentInformWithUUID": {&authproto.GetStudentInformWithUUIDResponse{
+					Status:        http.StatusOK,
+					Message:       "get student inform success",
+					Grade:         2,
+					Group:         2,
+					StudentNumber: 7,
+					Name:          "박진홍",
+					PhoneNumber:   "01088378347",
+					ImageURI:      "profiles/student-111111111111",
+				}, nil},
+				"CreateClubMember": {&model.ClubMember{}, errors.New("unexpected error")},
+				"Rollback":         {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
 		},
 	}
 
