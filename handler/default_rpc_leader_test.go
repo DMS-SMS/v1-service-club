@@ -129,7 +129,7 @@ func Test_Default_AddClubMember(t *testing.T) {
 				"Rollback":            {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusNotFound,
-			ExpectedCode:   code.NotFoundClubNotExists,
+			ExpectedCode:   code.NotFoundClubNoExist,
 		}, { // GetClubWithClubUUID returns unexpected error
 			UUID:        "student-111111111111",
 			ClubUUID:    "club-111111111111",
@@ -189,7 +189,7 @@ func Test_Default_AddClubMember(t *testing.T) {
 				"Rollback": {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusNotFound,
-			ExpectedCode:   code.NotFoundStudentNotExist,
+			ExpectedCode:   code.NotFoundStudentNoExist,
 		}, { // GetStudentInformWithUUID response not 200 or 404
 			UUID:        "student-111111111111",
 			ClubUUID:    "club-111111111111",
@@ -320,7 +320,7 @@ func Test_Default_AddClubMember(t *testing.T) {
 				"Rollback":         {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusConflict,
-			ExpectedCode:   code.ThatUUIDAlreadyExistsAsMember,
+			ExpectedCode:   code.ClubMemberAlreadyExist,
 		}, { // CreateClubMember returns unexpected duplicate entry error
 			UUID:        "student-111111111111",
 			ClubUUID:    "club-111111111111",
