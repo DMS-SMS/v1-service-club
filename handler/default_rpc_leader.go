@@ -248,4 +248,29 @@ func (d *_default) DeleteClubMember(ctx context.Context, req *clubproto.DeleteCl
 		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "you're not admin and not club leader")
 		return
 	}
+
+	spanForDB = d.tracer.StartSpan("DeleteClubMember", opentracing.ChildOf(parentSpan))
+	err, rowAffected := access.DeleteClubMember(req.ClubUUID, req.StudentUUID)
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Int("RowAffected", int(rowAffected)), log.Error(err))
+	spanForDB.Finish()
+
+	if err != nil {
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "DeleteClubMember returns unexpected error, err: " + err.Error())
+		return
+	}
+
+	if rowAffected == 0 {
+		access.Rollback()
+		resp.Status = http.StatusNotFound
+		resp.Code = code.NotFoundClubMemberNoExist
+		resp.Message = fmt.Sprintf("club member with that student uuid not exist")
+		return
+	}
+
+	access.Commit()
+	resp.Status = http.StatusOK
+	resp.Message = "success delete club member"
+	return
 }
