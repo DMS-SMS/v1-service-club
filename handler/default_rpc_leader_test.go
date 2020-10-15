@@ -1064,7 +1064,7 @@ func Test_Default_DeleteClubWithUUID(t *testing.T) {
 			ClubUUID: "club-111111111111",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx": {},
-				"GetClubUUIDWithClubUUID": {&model.Club{
+				"GetClubWithClubUUID": {&model.Club{
 					UUID:       "club-111111111111",
 					LeaderUUID: "student-111111111111",
 				}, nil},
@@ -1080,7 +1080,7 @@ func Test_Default_DeleteClubWithUUID(t *testing.T) {
 			ClubUUID: "club-111111111111",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx": {},
-				"GetClubUUIDWithClubUUID": {&model.Club{
+				"GetClubWithClubUUID": {&model.Club{
 					UUID:       "club-111111111111",
 					LeaderUUID: "student-111111111111",
 				}, nil},
@@ -1149,7 +1149,7 @@ func Test_Default_DeleteClubWithUUID(t *testing.T) {
 			ClubUUID: "club-111111111111",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx": {},
-				"GetClubUUIDWithClubUUID": {&model.Club{
+				"GetClubWithClubUUID": {&model.Club{
 					UUID:       "club-111111111111",
 					LeaderUUID: "student-111111111111",
 				}, nil},
@@ -1167,7 +1167,7 @@ func Test_Default_DeleteClubWithUUID(t *testing.T) {
 			ClubUUID: "club-111111111111",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx": {},
-				"GetClubUUIDWithClubUUID": {&model.Club{
+				"GetClubWithClubUUID": {&model.Club{
 					UUID:       "club-111111111111",
 					LeaderUUID: "student-111111111111",
 				}, nil},
@@ -1180,7 +1180,7 @@ func Test_Default_DeleteClubWithUUID(t *testing.T) {
 			ClubUUID: "club-111111111111",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx": {},
-				"GetClubUUIDWithClubUUID": {&model.Club{
+				"GetClubWithClubUUID": {&model.Club{
 					UUID:       "club-111111111111",
 					LeaderUUID: "student-111111111111",
 				}, nil},
@@ -1194,7 +1194,7 @@ func Test_Default_DeleteClubWithUUID(t *testing.T) {
 			ClubUUID: "club-111111111111",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx": {},
-				"GetClubUUIDWithClubUUID": {&model.Club{
+				"GetClubWithClubUUID": {&model.Club{
 					UUID:       "club-111111111111",
 					LeaderUUID: "student-111111111111",
 				}, nil},
@@ -1208,7 +1208,7 @@ func Test_Default_DeleteClubWithUUID(t *testing.T) {
 			ClubUUID: "club-111111111111",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx": {},
-				"GetClubUUIDWithClubUUID": {&model.Club{
+				"GetClubWithClubUUID": {&model.Club{
 					UUID:       "club-111111111111",
 					LeaderUUID: "student-111111111111",
 				}, nil},
@@ -1223,7 +1223,7 @@ func Test_Default_DeleteClubWithUUID(t *testing.T) {
 			ClubUUID: "club-111111111111",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx": {},
-				"GetClubUUIDWithClubUUID": {&model.Club{
+				"GetClubWithClubUUID": {&model.Club{
 					UUID:       "club-111111111111",
 					LeaderUUID: "student-111111111111",
 				}, nil},
@@ -1238,7 +1238,7 @@ func Test_Default_DeleteClubWithUUID(t *testing.T) {
 			ClubUUID: "club-111111111111",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx": {},
-				"GetClubUUIDWithClubUUID": {&model.Club{
+				"GetClubWithClubUUID": {&model.Club{
 					UUID:       "club-111111111111",
 					LeaderUUID: "student-111111111111",
 				}, nil},
@@ -1254,7 +1254,7 @@ func Test_Default_DeleteClubWithUUID(t *testing.T) {
 			ClubUUID: "club-111111111111",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx": {},
-				"GetClubUUIDWithClubUUID": {&model.Club{
+				"GetClubWithClubUUID": {&model.Club{
 					UUID:       "club-111111111111",
 					LeaderUUID: "student-111111111111",
 				}, nil},
@@ -1266,5 +1266,26 @@ func Test_Default_DeleteClubWithUUID(t *testing.T) {
 			},
 			ExpectedStatus: http.StatusInternalServerError,
 		},
+	}
+
+	for _, testCase := range tests {
+		newMock := &mock.Mock{}
+		handler := newDefaultMockHandler(newMock)
+
+		testCase.ChangeEmptyValueToValidValue()
+		testCase.ChangeEmptyReplaceValueToEmptyValue()
+		testCase.OnExpectMethodsTo(newMock)
+
+		req := new(clubproto.DeleteClubWithUUIDRequest)
+		testCase.SetRequestContextOf(req)
+		ctx := testCase.GetMetadataContext()
+
+		resp := new(clubproto.DeleteClubWithUUIDResponse)
+		_ = handler.DeleteClubWithUUID(ctx, req, resp)
+
+		assert.Equalf(t, int(testCase.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", testCase, resp.Message)
+		assert.Equalf(t, testCase.ExpectedCode, resp.Code, "code assertion error (test case: %v, message: %s)", testCase, resp.Message)
+
+		newMock.AssertExpectations(t)
 	}
 }
