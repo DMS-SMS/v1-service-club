@@ -359,7 +359,7 @@ func (test *RegisterRecruitmentCase) ChangeEmptyValueToValidValue() {
 	if test.UUID == EmptyString               { test.UUID = validStudentUUID }
 	if test.ClubUUID == EmptyString           { test.ClubUUID = validClubUUID }
 	if test.RecruitmentUUID == EmptyString    { test.RecruitmentUUID = validRecruitmentUUID }
-	if test.RecruitmentConcept == EmptyString { test.UUID = validRecruitConcept }
+	if test.RecruitmentConcept == EmptyString { test.RecruitmentConcept = validRecruitConcept }
 	if test.EndPeriod == EmptyString          { test.EndPeriod = validEndPeriod }
 	if len(test.RecruitMembers) == EmptyInt   { test.RecruitMembers = validRecruitMembers }
 	if test.XRequestID == EmptyString         { test.XRequestID = validXRequestID }
@@ -370,7 +370,7 @@ func (test *RegisterRecruitmentCase) ChangeEmptyReplaceValueToEmptyValue() {
 	if test.UUID == EmptyReplaceValueForString               { test.UUID = "" }
 	if test.ClubUUID == EmptyReplaceValueForString           { test.ClubUUID = "" }
 	if test.RecruitmentUUID == EmptyReplaceValueForString    { test.RecruitmentUUID = "" }
-	if test.RecruitmentConcept == EmptyReplaceValueForString { test.UUID = "" }
+	if test.RecruitmentConcept == EmptyReplaceValueForString { test.RecruitmentConcept = "" }
 	if test.EndPeriod == EmptyReplaceValueForString          { test.EndPeriod = "" }
 	if len(test.RecruitMembers) == emptyReplaceValueForRecruitMembersLen {
 		test.RecruitMembers = []*clubproto.RecruitMember{}
