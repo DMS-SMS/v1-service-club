@@ -1294,6 +1294,7 @@ func Test_Default_RegisterRecruitment(t *testing.T) {
 			ExpectedStatus:          http.StatusCreated,
 			ExpectedRecruitmentUUID: recruitmentUUIDRegexString,
 		}, { // success case (admin uuid)
+			EndPeriod: "2020-10-15",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx": {},
 				"GetClubWithClubUUID": {&model.Club{
@@ -1417,6 +1418,46 @@ func Test_Default_RegisterRecruitment(t *testing.T) {
 				"Rollback":                          {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusProxyAuthRequired,
+		}, { // invalid EndPeriod value (1)
+			EndPeriod: "InvalidPeriod",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetClubWithClubUUID": {&model.Club{
+					UUID:       "club-111111111111",
+					LeaderUUID: "student-111111111111",
+				}, nil},
+				"GetCurrentRecruitmentWithClubUUID": {&model.ClubRecruitment{}, gorm.ErrRecordNotFound},
+				"GetRecruitmentWithRecruitmentUUID": {&model.ClubRecruitment{}, gorm.ErrRecordNotFound},
+				"Rollback":                          {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusProxyAuthRequired,
+		}, { // invalid EndPeriod value (2)
+			EndPeriod: "01021-132-sad",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetClubWithClubUUID": {&model.Club{
+					UUID:       "club-111111111111",
+					LeaderUUID: "student-111111111111",
+				}, nil},
+				"GetCurrentRecruitmentWithClubUUID": {&model.ClubRecruitment{}, gorm.ErrRecordNotFound},
+				"GetRecruitmentWithRecruitmentUUID": {&model.ClubRecruitment{}, gorm.ErrRecordNotFound},
+				"Rollback":                          {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusProxyAuthRequired,
+		}, { // EndPeriod past from now
+			EndPeriod: "2020-10-14",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetClubWithClubUUID": {&model.Club{
+					UUID:       "club-111111111111",
+					LeaderUUID: "student-111111111111",
+				}, nil},
+				"GetCurrentRecruitmentWithClubUUID": {&model.ClubRecruitment{}, gorm.ErrRecordNotFound},
+				"GetRecruitmentWithRecruitmentUUID": {&model.ClubRecruitment{}, gorm.ErrRecordNotFound},
+				"Rollback":                          {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusConflict,
+			ExpectedCode:   code.EndPeriodOlderThanNow,
 		}, { // CreateRecruitment returns unexpected error
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx": {},
