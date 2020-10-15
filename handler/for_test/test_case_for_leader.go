@@ -214,3 +214,66 @@ type ModifyClubInformCase struct {
 	ExpectedStatus    uint32
 	ExpectedCode      int32
 }
+
+func (test *ModifyClubInformCase) ChangeEmptyValueToValidValue() {
+	if test.UUID == EmptyString              { test.UUID = validLeaderUUID }
+	if test.ClubConcept == EmptyString       { test.ClubConcept = validClubConcept }
+	if test.Introduction == EmptyString      { test.Introduction = validIntroduction }
+	if test.Link == EmptyString              { test.Link = validLink }
+	if string(test.Logo) == EmptyString      { test.Logo = validImageByteArr }
+	if test.XRequestID == EmptyString        { test.XRequestID = validXRequestID }
+	if test.SpanContextString == EmptyString { test.SpanContextString = validSpanContextString }
+}
+
+func (test *ModifyClubInformCase) ChangeEmptyReplaceValueToEmptyValue() {
+	if test.UUID == EmptyReplaceValueForString              { test.UUID = "" }
+	if test.ClubConcept == EmptyReplaceValueForString       { test.ClubConcept = "" }
+	if test.Introduction == EmptyReplaceValueForString      { test.Introduction = "" }
+	if test.Link == EmptyReplaceValueForString              { test.Link = "" }
+	if string(test.Logo) == EmptyReplaceValueForString      { test.Logo = []byte{} }
+	if test.XRequestID == EmptyReplaceValueForString        { test.XRequestID = "" }
+	if test.SpanContextString == EmptyReplaceValueForString { test.SpanContextString = "" }
+}
+
+func (test *ModifyClubInformCase) OnExpectMethodsTo(mock *mock.Mock) {
+	for method, returns := range test.ExpectedMethods {
+		test.onMethod(mock, method, returns)
+	}
+}
+
+func (test *ModifyClubInformCase) onMethod(mock *mock.Mock, method Method, returns Returns) {
+	switch method {
+	case "GetClubWithClubUUID":
+		mock.On(string(method), test.ClubUUID).Return(returns...)
+	case "ModifyClubInform":
+		mock.On(string(method), test.ClubUUID, &model.ClubInform{
+			ClubConcept:  model.ClubConcept(test.ClubConcept),
+			Introduction: model.Introduction(test.Introduction),
+			Link:         model.Link(test.Link),
+		}).Return(returns...)
+	case "BeginTx":
+		mock.On(string(method)).Return(returns...)
+	case "Commit":
+		mock.On(string(method)).Return(returns...)
+	case "Rollback":
+		mock.On(string(method)).Return(returns...)
+	default:
+		log.Fatalf("this method cannot be registered, method name: %s", method)
+	}
+}
+
+func (test *ModifyClubInformCase) SetRequestContextOf(req *clubproto.ModifyClubInformRequest) {
+	req.UUID = test.UUID
+	req.ClubUUID = test.ClubUUID
+	req.ClubConcept = test.ClubConcept
+	req.Introduction = test.Introduction
+	req.Link = test.Link
+	req.Logo = test.Logo
+}
+
+func (test *ModifyClubInformCase) GetMetadataContext() (ctx context.Context) {
+	ctx = context.Background()
+	ctx = metadata.Set(ctx, "X-Request-Id", test.XRequestID)
+	ctx = metadata.Set(ctx, "Span-Context", test.SpanContextString)
+	return
+}
