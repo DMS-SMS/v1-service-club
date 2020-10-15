@@ -2,6 +2,7 @@ package test
 
 import (
 	"bufio"
+	clubproto "club/proto/golang/club"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
@@ -36,6 +37,11 @@ var (
 	validSpanContextString string
 	validXRequestID string
 	validMemberUUIDs = []string{validLeaderUUID}
+	validRecruitMembers = []*clubproto.RecruitMember{{
+		Grade:  "1",
+		Field:  "서버",
+		Number: "2",
+	}}
 )
 
 func init() {
