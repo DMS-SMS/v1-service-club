@@ -1275,6 +1275,8 @@ func Test_Default_DeleteClubWithUUID(t *testing.T) {
 }
 
 func Test_Default_RegisterRecruitment(t *testing.T) {
+	const recruitmentUUIDRegexString = "^recruitment-\\d{12}"
+
 	tests := []test.RegisterRecruitmentCase{
 		{ // success case (student uuid)
 			ExpectedMethods: map[test.Method]test.Returns{
@@ -1289,7 +1291,8 @@ func Test_Default_RegisterRecruitment(t *testing.T) {
 				"CreateRecruitMembers":              {[]*model.ClubRecruitment{}, nil},
 				"Commit":                            {&gorm.DB{}},
 			},
-			ExpectedStatus: http.StatusCreated,
+			ExpectedStatus:          http.StatusCreated,
+			ExpectedRecruitmentUUID: recruitmentUUIDRegexString,
 		}, { // success case (admin uuid)
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx": {},
@@ -1303,7 +1306,8 @@ func Test_Default_RegisterRecruitment(t *testing.T) {
 				"CreateRecruitMembers":              {[]*model.ClubRecruitment{}, nil},
 				"Commit":                            {&gorm.DB{}},
 			},
-			ExpectedStatus: http.StatusCreated,
+			ExpectedStatus:          http.StatusCreated,
+			ExpectedRecruitmentUUID: recruitmentUUIDRegexString,
 		},  { // no exist X-Request-ID -> Proxy Authorization Required
 			XRequestID:      test.EmptyReplaceValueForString,
 			ExpectedMethods: map[test.Method]test.Returns{},
