@@ -23,6 +23,13 @@ func (d *_default) DeleteClubMember(clubUUID, studentUUID string) (err error, ro
 	return
 }
 
+func (d *_default) DeleteAllClubMembers(clubUUID string) (err error, rowsAffected int64) {
+	deleteResult := d.tx.Where("club_uuid = ?", clubUUID).Delete(&model.ClubMember{})
+	err = deleteResult.Error
+	rowsAffected = deleteResult.RowsAffected
+	return
+}
+
 func (d *_default) DeleteRecruitment(recruitUUID string) (err error, rowsAffected int64) {
 	deleteResult := d.tx.Where("uuid = ?", recruitUUID).Delete(&model.ClubRecruitment{})
 	err = deleteResult.Error

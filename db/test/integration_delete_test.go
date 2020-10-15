@@ -104,6 +104,7 @@ func Test_Accessor_DeleteXXX(t *testing.T) {
 	_, _ = access.DeleteClub("club-111111111111") // nil, 1
 	_, _ = access.DeleteClubInform("club-111111111111") // nil, 1
 	_, _ = access.DeleteClubMember("club-111111111111", "student-111111111111") // nil, 1
+	_, _ = access.DeleteAllClubMembers("club-111111111111") // nil, 2
 	_, _ = access.DeleteRecruitment("recruitment-111111111111") // nil, 1
 	_, _ = access.DeleteAllRecruitMember("recruitment-111111111111") // nil, 5
 

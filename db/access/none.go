@@ -19,7 +19,6 @@ func (n None) GetClubWithLeaderUUID(leaderUUID string) (_ *model.Club, _ error) 
 func (n None) GetCurrentRecruitmentWithClubUUID(clubUUID string) (_ *model.ClubRecruitment, _ error) { return }
 func (n None) GetClubInformsSortByUpdateTime(offset, limit int, field, name string) (_ []*model.ClubInform, _ error) { return }
 func (n None) GetCurrentRecruitmentsSortByCreateTime(offset, limit int, field, name string) (_ []*model.ClubRecruitment, _ error) { return }
-func (n None) GetClubsWithClubUUIDs(clubUUIDs []string) (_ []*model.Club, _ error) { return }
 func (n None) GetClubInformWithClubUUID(clubUUID string) (_ *model.ClubInform, _ error) { return }
 func (n None) GetRecruitmentWithRecruitmentUUID(recruitUUID string) (_ *model.ClubRecruitment, _ error) { return }
 func (n None) GetClubMembersWithClubUUID(clubUUID string) (_ []*model.ClubMember, _ error) { return }
@@ -34,6 +33,7 @@ func (n None) ModifyRecruitment(recruitUUID string, revisionRecruit *model.ClubR
 func (n None) DeleteClub(clubUUID string) (_ error, _ int64) { return }
 func (n None) DeleteClubInform(clubUUID string) (_ error, _ int64) { return }
 func (n None) DeleteClubMember(clubUUID, studentUUID string) (_ error, _ int64) { return }
+func (n None) DeleteAllClubMembers(clubUUID string) (err error, rowsAffected int64) { return }
 func (n None) DeleteRecruitment(recruitUUID string) (_ error, _ int64) { return }
 func (n None) DeleteAllRecruitMember(recruitUUID string) (_ error, _ int64) { return }
 
