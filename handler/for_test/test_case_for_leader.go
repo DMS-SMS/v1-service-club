@@ -201,3 +201,16 @@ func (test *ChangeClubLeaderCase) GetMetadataContext() (ctx context.Context) {
 	ctx = metadata.Set(ctx, "Span-Context", test.SpanContextString)
 	return
 }
+
+type ModifyClubInformCase struct {
+	UUID, ClubUUID    string
+	ClubConcept       string
+	Introduction      string
+	Link              string
+	Logo              []byte
+	XRequestID        string
+	SpanContextString string
+	ExpectedMethods   map[Method]Returns
+	ExpectedStatus    uint32
+	ExpectedCode      int32
+}
