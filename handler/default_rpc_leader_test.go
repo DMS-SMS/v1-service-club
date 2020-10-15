@@ -603,3 +603,279 @@ func Test_Default_DeleteClubMember(t *testing.T) {
 		newMock.AssertExpectations(t)
 	}
 }
+
+func Test_Default_ChangeClubLeader(t *testing.T) {
+	tests := []test.ChangeClubLeaderCase{
+		{ // success case (for student)
+			UUID:          "student-111111111111",
+			ClubUUID:      "club-111111111111",
+			NewLeaderUUID: "student-222222222222",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetClubWithClubUUID": {&model.Club{
+					UUID:       "club-111111111111",
+					LeaderUUID: "student-111111111111",
+				}, nil},
+				"GetClubMembersWithClubUUID": {[]*model.ClubMember{{
+					ClubUUID:    "club-111111111111",
+					StudentUUID: "student-111111111111",
+				}, {
+					ClubUUID:    "club-111111111111",
+					StudentUUID: "student-222222222222",
+				}}, nil},
+				"ChangeClubLeader": {nil, 1},
+				"Commit":           {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusOK,
+		}, { // success case (for admin)
+			UUID:          "admin-111111111111",
+			ClubUUID:      "club-111111111111",
+			NewLeaderUUID: "student-222222222222",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetClubWithClubUUID": {&model.Club{
+					UUID:       "club-111111111111",
+					LeaderUUID: "student-111111111111",
+				}, nil},
+				"GetClubMembersWithClubUUID": {[]*model.ClubMember{{
+					ClubUUID:    "club-111111111111",
+					StudentUUID: "student-111111111111",
+				}, {
+					ClubUUID:    "club-111111111111",
+					StudentUUID: "student-222222222222",
+				}}, nil},
+				"ChangeClubLeader": {nil, 1},
+				"Commit":           {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusOK,
+		}, { // no exist X-Request-ID -> Proxy Authorization Required
+			XRequestID:      test.EmptyReplaceValueForString,
+			ExpectedMethods: map[test.Method]test.Returns{},
+			ExpectedStatus:  http.StatusProxyAuthRequired,
+		}, { // invalid X-Request-ID -> Proxy Authorization Required
+			XRequestID:      "InvalidXRequestID",
+			ExpectedMethods: map[test.Method]test.Returns{},
+			ExpectedStatus:  http.StatusProxyAuthRequired,
+		}, { // no exist Span-Context -> Proxy Authorization Required
+			SpanContextString: test.EmptyReplaceValueForString,
+			ExpectedMethods:   map[test.Method]test.Returns{},
+			ExpectedStatus:    http.StatusProxyAuthRequired,
+		}, { // invalid Span-Context -> Proxy Authorization Required
+			SpanContextString: "InvalidSpanContext",
+			ExpectedMethods:   map[test.Method]test.Returns{},
+			ExpectedStatus:    http.StatusProxyAuthRequired,
+		}, { // not student or admin uuid
+			UUID:            "parent-111111111111",
+			ExpectedMethods: map[test.Method]test.Returns{},
+			ExpectedStatus:  http.StatusForbidden,
+			ExpectedCode:    code.ForbiddenNotStudentOrAdminUUID,
+		}, { // success case (for student)
+			UUID:          "student-333333333333",
+			ClubUUID:      "club-111111111111",
+			NewLeaderUUID: "student-222222222222",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetClubWithClubUUID": {&model.Club{
+					UUID:       "club-111111111111",
+					LeaderUUID: "student-111111111111",
+				}, nil},
+				"Rollback": {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusForbidden,
+			ExpectedCode:   code.ForbiddenNotClubLeader,
+		}, { // GetClubWithClubUUID returns not found error
+			UUID:          "student-111111111111",
+			ClubUUID:      "club-111111111111",
+			NewLeaderUUID: "student-222222222222",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx":             {},
+				"GetClubWithClubUUID": {&model.Club{}, gorm.ErrRecordNotFound},
+				"Rollback":            {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusNotFound,
+			ExpectedCode:   code.NotFoundClubNoExist,
+		}, { // current leader uuid == new leader uuid
+			UUID:          "student-111111111111",
+			ClubUUID:      "club-111111111111",
+			NewLeaderUUID: "student-111111111111",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetClubWithClubUUID": {&model.Club{
+					UUID:       "club-111111111111",
+					LeaderUUID: "student-111111111111",
+				}, nil},
+				"Rollback": {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusConflict,
+			ExpectedCode:   code.AlreadyClubLeader,
+		}, { // member uuid list not include new leader uuid
+			UUID:          "student-111111111111",
+			ClubUUID:      "club-111111111111",
+			NewLeaderUUID: "student-333333333333",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetClubWithClubUUID": {&model.Club{
+					UUID:       "club-111111111111",
+					LeaderUUID: "student-111111111111",
+				}, nil},
+				"GetClubMembersWithClubUUID": {[]*model.ClubMember{{
+					ClubUUID:    "club-111111111111",
+					StudentUUID: "student-111111111111",
+				}, {
+					ClubUUID:    "club-111111111111",
+					StudentUUID: "student-222222222222",
+				}}, nil},
+				"Rollback": {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusNotFound,
+			ExpectedCode:   code.NotFoundClubMemberNoExist,
+		}, { // GetClubMembersWithClubUUID returns unexpected error
+			UUID:          "admin-111111111111",
+			ClubUUID:      "club-111111111111",
+			NewLeaderUUID: "student-222222222222",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetClubWithClubUUID": {&model.Club{
+					UUID:       "club-111111111111",
+					LeaderUUID: "student-111111111111",
+				}, nil},
+				"GetClubMembersWithClubUUID": {[]*model.ClubMember{}, errors.New("unexpected error")},
+				"Rollback":                   {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // ChangeClubLeader returns duplicate error
+			UUID:          "student-111111111111",
+			ClubUUID:      "club-111111111111",
+			NewLeaderUUID: "student-222222222222",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetClubWithClubUUID": {&model.Club{
+					UUID:       "club-111111111111",
+					LeaderUUID: "student-111111111111",
+				}, nil},
+				"GetClubMembersWithClubUUID": {[]*model.ClubMember{{
+					ClubUUID:    "club-111111111111",
+					StudentUUID: "student-111111111111",
+				}, {
+					ClubUUID:    "club-111111111111",
+					StudentUUID: "student-222222222222",
+				}}, nil},
+				"ChangeClubLeader": {mysqlerr.DuplicateEntry(model.ClubInstance.LeaderUUID.KeyName(), "student-222222222222"), 0},
+				"Rollback":         {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusConflict,
+			ExpectedCode:   code.ClubLeaderDuplicateForChange,
+		}, { // ChangeClubLeader returns unexpected duplicate key
+			UUID:          "student-111111111111",
+			ClubUUID:      "club-111111111111",
+			NewLeaderUUID: "student-222222222222",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetClubWithClubUUID": {&model.Club{
+					UUID:       "club-111111111111",
+					LeaderUUID: "student-111111111111",
+				}, nil},
+				"GetClubMembersWithClubUUID": {[]*model.ClubMember{{
+					ClubUUID:    "club-111111111111",
+					StudentUUID: "student-111111111111",
+				}, {
+					ClubUUID:    "club-111111111111",
+					StudentUUID: "student-222222222222",
+				}}, nil},
+				"ChangeClubLeader": {mysqlerr.DuplicateEntry(model.ClubInstance.UUID.KeyName(), "club-222222222222"), 0},
+				"Rollback":         {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // ChangeClubLeader returns invalid message in duplicate error
+			UUID:          "student-111111111111",
+			ClubUUID:      "club-111111111111",
+			NewLeaderUUID: "student-222222222222",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetClubWithClubUUID": {&model.Club{
+					UUID:       "club-111111111111",
+					LeaderUUID: "student-111111111111",
+				}, nil},
+				"GetClubMembersWithClubUUID": {[]*model.ClubMember{{
+					ClubUUID:    "club-111111111111",
+					StudentUUID: "student-111111111111",
+				}, {
+					ClubUUID:    "club-111111111111",
+					StudentUUID: "student-222222222222",
+				}}, nil},
+				"ChangeClubLeader": {mysql.MySQLError{
+					Number:  mysqlcode.ER_DUP_ENTRY,
+					Message: "invalid message",
+				}},
+				"Rollback": {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // ChangeClubLeader returns unexpected mysql error code
+			UUID:          "student-111111111111",
+			ClubUUID:      "club-111111111111",
+			NewLeaderUUID: "student-222222222222",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetClubWithClubUUID": {&model.Club{
+					UUID:       "club-111111111111",
+					LeaderUUID: "student-111111111111",
+				}, nil},
+				"GetClubMembersWithClubUUID": {[]*model.ClubMember{{
+					ClubUUID:    "club-111111111111",
+					StudentUUID: "student-111111111111",
+				}, {
+					ClubUUID:    "club-111111111111",
+					StudentUUID: "student-222222222222",
+				}}, nil},
+				"ChangeClubLeader": {mysql.MySQLError{
+					Number:  mysqlcode.ER_BAD_NULL_ERROR,
+					Message: "unexpected mysql error code",
+				}},
+				"Rollback": {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // ChangeClubLeader returns unexpected type of error
+			UUID:          "student-111111111111",
+			ClubUUID:      "club-111111111111",
+			NewLeaderUUID: "student-222222222222",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetClubWithClubUUID": {&model.Club{
+					UUID:       "club-111111111111",
+					LeaderUUID: "student-111111111111",
+				}, nil},
+				"GetClubMembersWithClubUUID": {[]*model.ClubMember{{
+					ClubUUID:    "club-111111111111",
+					StudentUUID: "student-111111111111",
+				}, {
+					ClubUUID:    "club-111111111111",
+					StudentUUID: "student-222222222222",
+				}}, nil},
+				"ChangeClubLeader": {errors.New("unexpected error"), 0},
+				"Rollback":         {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // ChangeClubLeader returns 0 rows affected
+			UUID:          "student-111111111111",
+			ClubUUID:      "club-111111111111",
+			NewLeaderUUID: "student-222222222222",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetClubWithClubUUID": {&model.Club{
+					UUID:       "club-111111111111",
+					LeaderUUID: "student-111111111111",
+				}, nil},
+				"GetClubMembersWithClubUUID": {[]*model.ClubMember{{
+					ClubUUID:    "club-111111111111",
+					StudentUUID: "student-111111111111",
+				}, {
+					ClubUUID:    "club-111111111111",
+					StudentUUID: "student-222222222222",
+				}}, nil},
+				"ChangeClubLeader": {nil, 0},
+				"Rollback":         {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		},
+	}
+}
