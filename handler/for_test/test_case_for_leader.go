@@ -360,6 +360,7 @@ func (test *RegisterRecruitmentCase) ChangeEmptyValueToValidValue() {
 	if test.RecruitmentUUID == EmptyString    { test.RecruitmentUUID = validRecruitmentUUID }
 	if test.RecruitmentConcept == EmptyString { test.UUID = validRecruitConcept }
 	if test.EndPeriod == EmptyString          { test.EndPeriod = validEndPeriod }
+	if len(test.RecruitMembers) == EmptyInt   { test.RecruitMembers = validRecruitMembers }
 	if test.XRequestID == EmptyString         { test.XRequestID = validXRequestID }
 	if test.SpanContextString == EmptyString  { test.SpanContextString = validSpanContextString }
 }
@@ -370,8 +371,11 @@ func (test *RegisterRecruitmentCase) ChangeEmptyReplaceValueToEmptyValue() {
 	if test.RecruitmentUUID == EmptyReplaceValueForString    { test.RecruitmentUUID = "" }
 	if test.RecruitmentConcept == EmptyReplaceValueForString { test.UUID = "" }
 	if test.EndPeriod == EmptyReplaceValueForString          { test.EndPeriod = "" }
-	if test.XRequestID == EmptyReplaceValueForString        { test.XRequestID = "" }
-	if test.SpanContextString == EmptyReplaceValueForString { test.SpanContextString = "" }
+	if len(test.RecruitMembers) == emptyReplaceValueForRecruitMembersLen {
+		test.RecruitMembers = []*clubproto.RecruitMember{}
+	}
+	if test.XRequestID == EmptyReplaceValueForString         { test.XRequestID = "" }
+	if test.SpanContextString == EmptyReplaceValueForString  { test.SpanContextString = "" }
 }
 
 func (test *RegisterRecruitmentCase) OnExpectMethodsTo(mock *mock.Mock) {
@@ -400,7 +404,9 @@ func (test *RegisterRecruitmentCase) onMethod(mock *mock.Mock, method Method, re
 		const indexForError = 1
 		for index := range test.RecruitMembers {
 			member := test.getRecruitMemberWithIndex(index)
-			mock.On("CreateRecruitMember", member).Return(returns[indexForRecruitMembers].([]*model.RecruitMember)[index], returns[indexForError])
+			memberForResp := member
+			memberForResp.Model = createGormModelOnCurrentTime()
+			mock.On("CreateRecruitMember", member).Return(memberForResp, returns[indexForError])
 			if returns[indexForError] != nil {
 				break
 			}
