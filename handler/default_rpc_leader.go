@@ -603,4 +603,42 @@ func (d *_default) DeleteClubWithUUID(ctx context.Context, req *clubproto.Delete
 		resp.Message = fmt.Sprintf(internalServerMessageFormat, "GetCurrentRecruitmentWithClubUUID returns unexpected error, err: " + err.Error())
 		return
 	}
+
+	spanForDB = d.tracer.StartSpan("DeleteClub", opentracing.ChildOf(parentSpan))
+	err, rowsAffected := access.DeleteClub(req.ClubUUID)
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Int("RowAffected", int(rowsAffected)), log.Error(err))
+	spanForDB.Finish()
+
+	if err != nil {
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "DeleteClub returns unexpected error, err: " + err.Error())
+		return
+	}
+
+	if rowsAffected == 0 {
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "DeleteClub returns 0 rows affected")
+		return
+	}
+
+	spanForDB = d.tracer.StartSpan("DeleteClubInform", opentracing.ChildOf(parentSpan))
+	err, rowsAffected = access.DeleteClubInform(req.ClubUUID)
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Int("RowAffected", int(rowsAffected)), log.Error(err))
+	spanForDB.Finish()
+
+	if err != nil {
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "DeleteClubInform returns unexpected error, err: " + err.Error())
+		return
+	}
+
+	if rowsAffected == 0 {
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "DeleteClubInform returns 0 rows affected")
+		return
+	}
 }
