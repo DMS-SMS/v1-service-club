@@ -174,6 +174,8 @@ func (test *ChangeClubLeaderCase) onMethod(mock *mock.Mock, method Method, retur
 	switch method {
 	case "GetClubWithClubUUID":
 		mock.On(string(method), test.ClubUUID).Return(returns...)
+	case "GetClubMembersWithClubUUID":
+		mock.On(string(method), test.ClubUUID).Return(returns...)
 	case "ChangeClubLeader":
 		mock.On(string(method), test.ClubUUID, test.NewLeaderUUID).Return(returns...)
 	case "BeginTx":
