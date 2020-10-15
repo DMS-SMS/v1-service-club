@@ -9,6 +9,7 @@ import (
 	code "club/utils/code/golang"
 	topic "club/utils/topic/golang"
 	"context"
+	"errors"
 	"fmt"
 	mysqlcode "github.com/VividCortex/mysqlerr"
 	"github.com/go-sql-driver/mysql"
@@ -334,6 +335,31 @@ func (d *_default) ChangeClubLeader(ctx context.Context, req *clubproto.ChangeCl
 		resp.Status = http.StatusConflict
 		resp.Code = code.AlreadyClubLeader
 		resp.Message = fmt.Sprintf("that student is already club leader")
+		return
+	}
+
+	spanForDB = d.tracer.StartSpan("GetClubMembersWithClubUUID", opentracing.ChildOf(parentSpan))
+	selectedMembers, err := access.GetClubMembersWithClubUUID(req.ClubUUID)
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedMembers", selectedMembers), log.Error(err))
+	spanForDB.Finish()
+
+	if err != nil && err != gorm.ErrRecordNotFound {
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "GetClubMembersWithClubUUID returns unexpected error, err: " + err.Error())
+		return
+	}
+
+	memberUUIDs := make([]string, len(selectedMembers))
+	for index, selectedMember := range selectedMembers {
+		memberUUIDs[index] = string(selectedMember.StudentUUID)
+	}
+
+	if !contains(memberUUIDs, req.NewLeaderUUID) {
+		access.Rollback()
+		resp.Status = http.StatusNotFound
+		resp.Code = code.NotFoundClubMemberNoExist
+		resp.Message = fmt.Sprintf(notFoundMessageFormat, "member to be club leader is not exists")
 		return
 	}
 }
