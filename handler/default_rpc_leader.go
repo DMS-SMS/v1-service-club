@@ -713,4 +713,25 @@ func (d *_default) RegisterRecruitment(ctx context.Context, req *clubproto.Regis
 		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "you're not admin and not club leader")
 		return
 	}
+
+	spanForDB = d.tracer.StartSpan("GetCurrentRecruitmentWithClubUUID", opentracing.ChildOf(parentSpan))
+	selectedRecruit, err := access.GetCurrentRecruitmentWithClubUUID(req.ClubUUID)
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedRecruit", selectedRecruit), log.Error(err))
+	spanForDB.Finish()
+
+	switch err {
+	case gorm.ErrRecordNotFound:
+		break
+	case nil:
+		access.Rollback()
+		resp.Status = http.StatusConflict
+		resp.Code = code.RecruitmentInProgressAlreadyExist
+		resp.Message = fmt.Sprintf(conflictMessageFormat, "recruitment in progress is already exists")
+		return
+	default:
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "GetCurrentRecruitmentWithClubUUID returns unexpected error, err: " + err.Error())
+		return
+	}
 }
