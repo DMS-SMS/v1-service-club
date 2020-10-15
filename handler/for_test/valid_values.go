@@ -26,6 +26,9 @@ const (
 	validField = "SW 개발"
 	validLocation = "2-2반 교실"
 	validFloor = "3"
+
+	validRecruitConcept = "앞으로 함께 DMS를 이끌어갈 1학년 부원들을 모집합니다."
+	validEndPeriod = "2020-12-25"
 )
 
 var (
