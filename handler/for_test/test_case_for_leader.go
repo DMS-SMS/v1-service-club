@@ -431,7 +431,8 @@ func (test *RegisterRecruitmentCase) getClubRecruitment() *model.ClubRecruitment
 		ClubUUID:       model.ClubUUID(test.ClubUUID),
 		RecruitConcept: model.RecruitConcept(test.RecruitmentConcept),
 	}
-	recruitment.StartPeriod = model.StartPeriod(time.Now())
+	now := time.Now()
+	recruitment.StartPeriod = model.StartPeriod(time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local))
 	endTimeSplice := strings.Split(test.EndPeriod, "-")
 	if len(endTimeSplice) == 3 {
 		const indexForYear = 0
