@@ -825,4 +825,50 @@ func (d *_default) RegisterRecruitment(ctx context.Context, req *clubproto.Regis
 		resp.Message = fmt.Sprintf(internalServerMessageFormat, "CreateRecruitment returns unexpected error, err: " + err.Error())
 		return
 	}
+
+	if len(req.RecruitMembers) == 0 {
+		access.Rollback()
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "recruit member list is empty")
+		return
+	}
+
+	createdRecruitMembers := make([]*model.RecruitMember, len(req.RecruitMembers))
+	spanForDB = d.tracer.StartSpan("CreateRecruitMembers", opentracing.ChildOf(parentSpan))
+	for index, recruitMember := range req.RecruitMembers {
+		createdRecruitMember, commandErr := access.CreateRecruitMember(&model.RecruitMember{
+			RecruitmentUUID: model.RecruitmentUUID(string(createdRecruitment.UUID)),
+			Grade:           model.Grade(recruitMember.Grade),
+			Field:           model.Field(recruitMember.Field),
+			Number:          model.Number(recruitMember.Number),
+		})
+		if commandErr != nil {
+			err = commandErr
+			break
+		}
+		createdRecruitMembers[index] = createdRecruitMember
+	}
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("CreatedRecruitMembers", createdRecruitMembers), log.Error(err))
+	spanForDB.Finish()
+
+	switch err.(type) {
+	case nil:
+		break
+	case validator.ValidationErrors:
+		access.Rollback()
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "invalid data for club recruit model")
+		return
+	default:
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "CreateRecruitment returns unexpected error, err: " + err.Error())
+		return
+	}
+
+	access.Commit()
+	resp.Status = http.StatusCreated
+	resp.RecruitmentUUID = string(createdRecruitment.UUID)
+	resp.Message = "succeed to register club recruitment"
+	return
 }
