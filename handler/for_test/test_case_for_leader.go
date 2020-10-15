@@ -407,7 +407,7 @@ func (test *RegisterRecruitmentCase) onMethod(mock *mock.Mock, method Method, re
 		const indexForError = 1
 		for index := range test.RecruitMembers {
 			member := test.getRecruitMemberWithIndex(index)
-			memberForResp := member
+			memberForResp := test.getRecruitMemberWithIndex(index)
 			memberForResp.Model = createGormModelOnCurrentTime()
 			mock.On("CreateRecruitMember", member).Return(memberForResp, returns[indexForError])
 			if returns[indexForError] != nil {
