@@ -641,4 +641,21 @@ func (d *_default) DeleteClubWithUUID(ctx context.Context, req *clubproto.Delete
 		resp.Message = fmt.Sprintf(internalServerMessageFormat, "DeleteClubInform returns 0 rows affected")
 		return
 	}
+
+	spanForDB = d.tracer.StartSpan("DeleteAllClubMembers", opentracing.ChildOf(parentSpan))
+	err, rowsAffected = access.DeleteAllClubMembers(req.ClubUUID)
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Int("RowAffected", int(rowsAffected)), log.Error(err))
+	spanForDB.Finish()
+
+	if err != nil {
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "DeleteAllClubMembers returns unexpected error, err: " + err.Error())
+		return
+	}
+
+	access.Commit()
+	resp.Status = http.StatusOK
+	resp.Message = "succeed to delete club"
+	return
 }
