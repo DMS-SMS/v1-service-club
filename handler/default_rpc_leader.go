@@ -25,6 +25,9 @@ import (
 	"github.com/uber/jaeger-client-go"
 	"gorm.io/gorm"
 	"net/http"
+	"strconv"
+	"strings"
+	"time"
 )
 
 func (d *_default) AddClubMember(ctx context.Context, req *clubproto.AddClubMemberRequest, resp *clubproto.AddClubMemberResponse) (_ error) {
@@ -757,5 +760,69 @@ func (d *_default) RegisterRecruitment(ctx context.Context, req *clubproto.Regis
 		}
 		rUUID = fmt.Sprintf("recruitment-%s", random.StringConsistOfIntWithLength(12))
 		continue
+	}
+
+	endTimeSplice := strings.Split(req.EndPeriod, "-")
+	if len(endTimeSplice) != 3 {
+		access.Rollback()
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "invalid EndPeriod value")
+		return
+	}
+
+	err = nil
+	const indexForYear = 0
+	const indexForMonth = 1
+	const indexForDay = 2
+	year, convertErr := strconv.Atoi(endTimeSplice[indexForYear])
+	if len(endTimeSplice[indexForYear]) != 4 || convertErr != nil { err = errors.New("year invalid") }
+	month, convertErr := strconv.Atoi(endTimeSplice[indexForMonth])
+	if len(endTimeSplice[indexForMonth]) != 2 || convertErr != nil { err = errors.New("month invalid") }
+	day, convertErr := strconv.Atoi(endTimeSplice[indexForDay])
+	if len(endTimeSplice[indexForDay]) != 2 || convertErr != nil { err = errors.New("day invalid") }
+
+	if err != nil {
+		access.Rollback()
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "invalid EndPeriod value")
+		return
+	}
+
+	now := time.Now()
+	startTime := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
+	endTime := time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.Local)
+
+	if endTime.Add(time.Hour).Sub(startTime).Milliseconds() < 0 {
+		access.Rollback()
+		resp.Status = http.StatusConflict
+		resp.Code = code.EndPeriodOlderThanNow
+		resp.Message = fmt.Sprintf(conflictMessageFormat, "end period is older than now")
+		return
+	}
+
+	spanForDB = d.tracer.StartSpan("CreateRecruitment", opentracing.ChildOf(parentSpan))
+	createdRecruitment, err := access.CreateRecruitment(&model.ClubRecruitment{
+		UUID:           model.UUID(rUUID),
+		ClubUUID:       model.ClubUUID(req.ClubUUID),
+		RecruitConcept: model.RecruitConcept(req.RecruitConcept),
+		StartPeriod:    model.StartPeriod(startTime),
+		EndPeriod:      model.EndPeriod(endTime),
+	})
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("CreatedRecruitment", createdRecruitment), log.Error(err))
+	spanForDB.Finish()
+
+	switch err.(type) {
+	case nil:
+		break
+	case validator.ValidationErrors:
+		access.Rollback()
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "invalid data for club recruit model")
+		return
+	default:
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "CreateRecruitment returns unexpected error, err: " + err.Error())
+		return
 	}
 }
