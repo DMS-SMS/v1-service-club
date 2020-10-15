@@ -313,7 +313,7 @@ func (test *DeleteClubWithUUIDCase) onMethod(mock *mock.Mock, method Method, ret
 		mock.On(string(method), test.ClubUUID).Return(returns...)
 	case "DeleteClubInform":
 		mock.On(string(method), test.ClubUUID).Return(returns...)
-	case "DeleteAllClubMember":
+	case "DeleteAllClubMembers":
 		mock.On(string(method), test.ClubUUID).Return(returns...)
 	case "BeginTx":
 		mock.On(string(method)).Return(returns...)
