@@ -286,3 +286,54 @@ type DeleteClubWithUUIDCase struct {
 	ExpectedStatus    uint32
 	ExpectedCode      int32
 }
+
+func (test *DeleteClubWithUUIDCase) ChangeEmptyValueToValidValue() {
+	if test.XRequestID == EmptyString        { test.XRequestID = validXRequestID }
+	if test.SpanContextString == EmptyString { test.SpanContextString = validSpanContextString }
+}
+
+func (test *DeleteClubWithUUIDCase) ChangeEmptyReplaceValueToEmptyValue() {
+	if test.XRequestID == EmptyReplaceValueForString        { test.XRequestID = "" }
+	if test.SpanContextString == EmptyReplaceValueForString { test.SpanContextString = "" }
+}
+
+func (test *DeleteClubWithUUIDCase) OnExpectMethodsTo(mock *mock.Mock) {
+	for method, returns := range test.ExpectedMethods {
+		test.onMethod(mock, method, returns)
+	}
+}
+
+func (test *DeleteClubWithUUIDCase) onMethod(mock *mock.Mock, method Method, returns Returns) {
+	switch method {
+	case "GetClubWithClubUUID":
+		mock.On(string(method), test.ClubUUID).Return(returns...)
+	case "GetCurrentRecruitmentWithClubUUID":
+		mock.On(string(method), test.ClubUUID).Return(returns...)
+	case "DeleteClub":
+		mock.On(string(method), test.ClubUUID).Return(returns...)
+	case "DeleteClubInform":
+		mock.On(string(method), test.ClubUUID).Return(returns...)
+	case "DeleteAllClubMember":
+		mock.On(string(method), test.ClubUUID).Return(returns...)
+	case "BeginTx":
+		mock.On(string(method)).Return(returns...)
+	case "Commit":
+		mock.On(string(method)).Return(returns...)
+	case "Rollback":
+		mock.On(string(method)).Return(returns...)
+	default:
+		log.Fatalf("this method cannot be registered, method name: %s", method)
+	}
+}
+
+func (test *DeleteClubWithUUIDCase) SetRequestContextOf(req *clubproto.DeleteClubWithUUIDRequest) {
+	req.UUID = test.UUID
+	req.ClubUUID = test.ClubUUID
+}
+
+func (test *DeleteClubWithUUIDCase) GetMetadataContext() (ctx context.Context) {
+	ctx = context.Background()
+	ctx = metadata.Set(ctx, "X-Request-Id", test.XRequestID)
+	ctx = metadata.Set(ctx, "Span-Context", test.SpanContextString)
+	return
+}
