@@ -13,6 +13,9 @@ import (
 	"errors"
 	"fmt"
 	mysqlcode "github.com/VividCortex/mysqlerr"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/go-playground/validator/v10"
 	"github.com/go-sql-driver/mysql"
 	microerrors "github.com/micro/go-micro/v2/errors"
 	"github.com/micro/go-micro/v2/metadata"
@@ -469,5 +472,23 @@ func (d *_default) ModifyClubInform(ctx context.Context, req *clubproto.ModifyCl
 		resp.Code = code.ForbiddenNotClubLeader
 		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "you're not admin and not club leader")
 		return
+	}
+
+	if d.awsSession != nil {
+		spanForS3 := d.tracer.StartSpan("PutObject", opentracing.ChildOf(parentSpan))
+		_, err = s3.New(d.awsSession).PutObject(&s3.PutObjectInput{
+			Bucket: aws.String("dms-sms"),
+			Key:    aws.String(fmt.Sprintf("logos/%s", req.ClubUUID)),
+			Body:   bytes.NewReader(req.Logo),
+		})
+		spanForS3.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))
+		spanForS3.Finish()
+
+		if err != nil {
+			access.Rollback()
+			resp.Status = http.StatusInternalServerError
+			resp.Message = fmt.Sprintf(internalServerMessageFormat, "unable to upload profile to s3, err: " + err.Error())
+			return
+		}
 	}
 }
