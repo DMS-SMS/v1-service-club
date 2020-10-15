@@ -1249,22 +1249,6 @@ func Test_Default_DeleteClubWithUUID(t *testing.T) {
 				"Rollback":                          {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
-		}, { // DeleteAllClubMember returns 0 rows affected
-			UUID:     "student-111111111111",
-			ClubUUID: "club-111111111111",
-			ExpectedMethods: map[test.Method]test.Returns{
-				"BeginTx": {},
-				"GetClubWithClubUUID": {&model.Club{
-					UUID:       "club-111111111111",
-					LeaderUUID: "student-111111111111",
-				}, nil},
-				"GetCurrentRecruitmentWithClubUUID": {&model.ClubRecruitment{}, gorm.ErrRecordNotFound},
-				"DeleteClub":                        {nil, 1},
-				"DeleteClubInform":                  {nil, 1},
-				"DeleteAllClubMember":               {nil, 0},
-				"Rollback":                          {&gorm.DB{}},
-			},
-			ExpectedStatus: http.StatusInternalServerError,
 		},
 	}
 
