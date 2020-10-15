@@ -277,3 +277,12 @@ func (test *ModifyClubInformCase) GetMetadataContext() (ctx context.Context) {
 	ctx = metadata.Set(ctx, "Span-Context", test.SpanContextString)
 	return
 }
+
+type DeleteClubWithUUIDCase struct {
+	UUID, ClubUUID    string
+	XRequestID        string
+	SpanContextString string
+	ExpectedMethods   map[Method]Returns
+	ExpectedStatus    uint32
+	ExpectedCode      int32
+}
