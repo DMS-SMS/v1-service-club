@@ -342,16 +342,17 @@ func (test *DeleteClubWithUUIDCase) GetMetadataContext() (ctx context.Context) {
 }
 
 type RegisterRecruitmentCase struct {
-	UUID, ClubUUID     string
-	RecruitmentUUID    string
-	RecruitmentConcept string
-	EndPeriod          string
-	RecruitMembers     []*clubproto.RecruitMember
-	XRequestID         string
-	SpanContextString  string
-	ExpectedMethods    map[Method]Returns
-	ExpectedStatus     uint32
-	ExpectedCode       int32
+	UUID, ClubUUID          string
+	RecruitmentUUID         string
+	RecruitmentConcept      string
+	EndPeriod               string
+	RecruitMembers          []*clubproto.RecruitMember
+	XRequestID              string
+	SpanContextString       string
+	ExpectedMethods         map[Method]Returns
+	ExpectedStatus          uint32
+	ExpectedCode            int32
+	ExpectedRecruitmentUUID string
 }
 
 func (test *RegisterRecruitmentCase) ChangeEmptyValueToValidValue() {
