@@ -362,4 +362,56 @@ func (d *_default) ChangeClubLeader(ctx context.Context, req *clubproto.ChangeCl
 		resp.Message = fmt.Sprintf(notFoundMessageFormat, "member to be club leader is not exists")
 		return
 	}
+
+	spanForDB = d.tracer.StartSpan("ChangeClubLeader", opentracing.ChildOf(parentSpan))
+	err, rowAffected := access.ChangeClubLeader(req.ClubUUID, req.NewLeaderUUID)
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Int("RowAffected", int(rowAffected)), log.Error(err))
+	spanForDB.Finish()
+
+	switch assertedError := err.(type) {
+	case nil:
+		break
+	case *mysql.MySQLError:
+		switch assertedError.Number {
+		case mysqlcode.ER_DUP_ENTRY:
+			key, entry, err := mysqlerr.ParseDuplicateEntryErrorFrom(assertedError)
+			if err != nil {
+				err = errors.New("unable to parse ChangeClubLeader duplicate error, err: " + err.Error())
+				break
+			}
+			switch key {
+			case model.ClubInstance.LeaderUUID.KeyName():
+				access.Rollback()
+				resp.Status = http.StatusConflict
+				resp.Code = code.ClubLeaderDuplicateForChange
+				resp.Message = fmt.Sprintf(conflictMessageFormat, "that leader uuid is already other club's leader, entry: " + entry)
+				return
+			default:
+				err = errors.New("unexpected duplicate entry, key: " + key)
+			}
+		default:
+			err = errors.New("unexpected ChangeClubLeader MySQL error code, err: " + assertedError.Error())
+		}
+	default:
+		err = errors.New("unexpected type of ChangeClubLeader error, err: " + assertedError.Error())
+	}
+
+	if err != nil {
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, err.Error())
+		return
+	}
+
+	if rowAffected == 0 {
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "ChangeClubLeader returns 0 row affected")
+		return
+	}
+
+	access.Commit()
+	resp.Status = http.StatusOK
+	resp.Message = "success change club leader"
+	return
 }
