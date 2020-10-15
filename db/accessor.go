@@ -31,6 +31,7 @@ type Accessor interface {
 	DeleteClub(clubUUID string) (err error, rowsAffected int64)
 	DeleteClubInform(clubUUID string) (err error, rowsAffected int64)
 	DeleteClubMember(clubUUID, studentUUID string) (err error, rowsAffected int64)
+	DeleteAllClubMembers(clubUUID string) (err error, rowsAffected int64)
 	DeleteRecruitment(recruitUUID string) (err error, rowsAffected int64)
 	DeleteAllRecruitMember(recruitUUID string) (err error, rowsAffected int64)
 
