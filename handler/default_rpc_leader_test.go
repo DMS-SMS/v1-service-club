@@ -1343,10 +1343,6 @@ func Test_Default_RegisterRecruitment(t *testing.T) {
 			},
 			ExpectedStatus: http.StatusForbidden,
 			ExpectedCode:   code.ForbiddenNotClubLeader,
-		}, { // no recruit member exist
-			RecruitMembers: test.EmptyReplaceValueForRecruitMembers,
-			ExpectedMethods: map[test.Method]test.Returns{},
-			ExpectedStatus:  http.StatusProxyAuthRequired,
 		}, { // GetClubWithClubUUID returns not found error
 			UUID:          "student-111111111111",
 			ClubUUID:      "club-111111111111",
@@ -1471,6 +1467,20 @@ func Test_Default_RegisterRecruitment(t *testing.T) {
 				"Rollback":                          {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
+		}, { // no recruit member exist
+			RecruitMembers: test.EmptyReplaceValueForRecruitMembers,
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetClubWithClubUUID": {&model.Club{
+					UUID:       "club-111111111111",
+					LeaderUUID: "student-111111111111",
+				}, nil},
+				"GetCurrentRecruitmentWithClubUUID": {&model.ClubRecruitment{}, gorm.ErrRecordNotFound},
+				"GetRecruitmentWithRecruitmentUUID": {&model.ClubRecruitment{}, gorm.ErrRecordNotFound},
+				"CreateRecruitment":                 {&model.ClubRecruitment{}, nil},
+				"Rollback":                          {&gorm.DB{}},
+			},
+			ExpectedStatus:  http.StatusProxyAuthRequired,
 		}, { // CreateRecruitMembers returns validate error
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx": {},
