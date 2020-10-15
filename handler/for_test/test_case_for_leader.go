@@ -9,6 +9,9 @@ import (
 	"github.com/micro/go-micro/v2/metadata"
 	"github.com/stretchr/testify/mock"
 	"log"
+	"strconv"
+	"strings"
+	"time"
 )
 
 type AddClubMemberCase struct {
@@ -349,4 +352,71 @@ type RegisterRecruitmentCase struct {
 	ExpectedMethods    map[Method]Returns
 	ExpectedStatus     uint32
 	ExpectedCode       int32
+}
+
+func (test *RegisterRecruitmentCase) onMethod(mock *mock.Mock, method Method, returns Returns) {
+	switch method {
+	case "GetClubWithClubUUID":
+		mock.On(string(method), test.ClubUUID).Return(returns...)
+	case "GetCurrentRecruitmentWithClubUUID":
+		mock.On(string(method), test.ClubUUID).Return(returns...)
+	case "CreateRecruitment":
+		const indexForRecruitment = 0
+		const indexForError = 1
+		if _, ok := returns[indexForRecruitment].(*model.ClubRecruitment); ok && returns[indexForError] == nil {
+			recruitment := test.getClubRecruitment()
+			recruitment.Model = createGormModelOnCurrentTime()
+			returns[indexForRecruitment] = recruitment
+		}
+		mock.On(string(method), test.getClubRecruitment()).Return(returns...)
+	case "CreateRecruitMembers":
+		const indexForRecruitMembers = 0
+		const indexForError = 1
+		for index := range test.RecruitMembers {
+			member := test.getRecruitMemberWithIndex(index)
+			mock.On("CreateRecruitMember", member).Return(returns[indexForRecruitMembers].([]*model.RecruitMember)[index], returns[indexForError])
+			if returns[indexForError] != nil {
+				break
+			}
+		}
+	case "BeginTx":
+		mock.On(string(method)).Return(returns...)
+	case "Commit":
+		mock.On(string(method)).Return(returns...)
+	case "Rollback":
+		mock.On(string(method)).Return(returns...)
+	default:
+		log.Fatalf("this method cannot be registered, method name: %s", method)
+	}
+}
+
+func (test *RegisterRecruitmentCase) getClubRecruitment() *model.ClubRecruitment {
+	recruitment := &model.ClubRecruitment{
+		UUID:           model.UUID(test.RecruitmentUUID),
+		ClubUUID:       model.ClubUUID(test.ClubUUID),
+		RecruitConcept: model.RecruitConcept(test.RecruitmentConcept),
+	}
+	recruitment.StartPeriod = model.StartPeriod(time.Now())
+	endTimeSplice := strings.Split(test.EndPeriod, "-")
+	if len(endTimeSplice) == 3 {
+		const indexForYear = 0
+		const indexForMonth = 1
+		const indexForDay = 2
+		year, _ := strconv.Atoi(endTimeSplice[indexForYear])
+		month, _ := strconv.Atoi(endTimeSplice[indexForMonth])
+		day, _ := strconv.Atoi(endTimeSplice[indexForDay])
+		recruitment.EndPeriod = model.EndPeriod(time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.Local))
+	} else {
+		recruitment.EndPeriod = model.EndPeriod(time.Time{})
+	}
+	return recruitment
+}
+
+func (test *RegisterRecruitmentCase) getRecruitMemberWithIndex(index int) *model.RecruitMember {
+	return &model.RecruitMember{
+		RecruitmentUUID: model.RecruitmentUUID(test.RecruitmentUUID),
+		Grade:           model.Grade(test.RecruitMembers[index].Grade),
+		Field:           model.Field(test.RecruitMembers[index].Field),
+		Number:          model.Number(test.RecruitMembers[index].Number),
+	}
 }
