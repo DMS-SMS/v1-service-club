@@ -694,6 +694,16 @@ func Test_Default_ChangeClubLeader(t *testing.T) {
 			},
 			ExpectedStatus: http.StatusNotFound,
 			ExpectedCode:   code.NotFoundClubNoExist,
+		}, { // GetClubWithClubUUID returns unexpected error
+			UUID:          "student-111111111111",
+			ClubUUID:      "club-111111111111",
+			NewLeaderUUID: "student-222222222222",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx":             {},
+				"GetClubWithClubUUID": {&model.Club{}, errors.New("unexpected error")},
+				"Rollback":            {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
 		}, { // current leader uuid == new leader uuid
 			UUID:          "student-111111111111",
 			ClubUUID:      "club-111111111111",
@@ -803,10 +813,10 @@ func Test_Default_ChangeClubLeader(t *testing.T) {
 					ClubUUID:    "club-111111111111",
 					StudentUUID: "student-222222222222",
 				}}, nil},
-				"ChangeClubLeader": {mysql.MySQLError{
+				"ChangeClubLeader": {&mysql.MySQLError{
 					Number:  mysqlcode.ER_DUP_ENTRY,
 					Message: "invalid message",
-				}},
+				}, 0},
 				"Rollback": {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
@@ -827,10 +837,10 @@ func Test_Default_ChangeClubLeader(t *testing.T) {
 					ClubUUID:    "club-111111111111",
 					StudentUUID: "student-222222222222",
 				}}, nil},
-				"ChangeClubLeader": {mysql.MySQLError{
+				"ChangeClubLeader": {&mysql.MySQLError{
 					Number:  mysqlcode.ER_BAD_NULL_ERROR,
 					Message: "unexpected mysql error code",
-				}},
+				}, 0},
 				"Rollback": {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
