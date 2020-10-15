@@ -7,6 +7,7 @@ import (
 	clubproto "club/proto/golang/club"
 	consulagent "club/tool/consul/agent"
 	"club/tool/mysqlerr"
+	"club/tool/random"
 	code "club/utils/code/golang"
 	topic "club/utils/topic/golang"
 	"context"
@@ -733,5 +734,28 @@ func (d *_default) RegisterRecruitment(ctx context.Context, req *clubproto.Regis
 		resp.Status = http.StatusInternalServerError
 		resp.Message = fmt.Sprintf(internalServerMessageFormat, "GetCurrentRecruitmentWithClubUUID returns unexpected error, err: " + err.Error())
 		return
+	}
+
+	rUUID, ok := ctx.Value("RecruitmentUUID").(string)
+	if !ok || rUUID == "" {
+		rUUID = fmt.Sprintf("recruitment-%s", random.StringConsistOfIntWithLength(12))
+	}
+
+	for {
+		spanForDB := d.tracer.StartSpan("GetRecruitmentWithRecruitmentUUID", opentracing.ChildOf(parentSpan))
+		selectedClub, err := access.GetRecruitmentWithRecruitmentUUID(rUUID)
+		spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedClub", selectedClub), log.Error(err))
+		spanForDB.Finish()
+		if err == gorm.ErrRecordNotFound {
+			break
+		}
+		if err != nil {
+			access.Rollback()
+			resp.Status = http.StatusInternalServerError
+			resp.Message = fmt.Sprintf(internalServerMessageFormat, "unexpected error in GetRecruitmentWithRecruitmentUUID, err: " + err.Error())
+			return
+		}
+		rUUID = fmt.Sprintf("recruitment-%s", random.StringConsistOfIntWithLength(12))
+		continue
 	}
 }
