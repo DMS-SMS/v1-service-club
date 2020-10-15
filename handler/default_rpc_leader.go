@@ -491,4 +491,40 @@ func (d *_default) ModifyClubInform(ctx context.Context, req *clubproto.ModifyCl
 			return
 		}
 	}
+
+	spanForDB = d.tracer.StartSpan("ModifyClubInform", opentracing.ChildOf(parentSpan))
+	err, rowAffected := access.ModifyClubInform(req.ClubUUID, &model.ClubInform{
+		ClubConcept:  model.ClubConcept(req.ClubConcept),
+		Introduction: model.Introduction(req.Introduction),
+		Link:         model.Link(req.Link),
+	})
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Int("RowAffected", int(rowAffected)), log.Error(err))
+	spanForDB.Finish()
+
+	switch assertedError := err.(type) {
+	case nil:
+		break
+	case validator.ValidationErrors:
+		access.Rollback()
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "invalid data for club inform model, err: " + assertedError.Error())
+		return
+	default:
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "ModifyClubInform returns unexpected error, err: " + assertedError.Error())
+		return
+	}
+
+	if rowAffected == 0 {
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "ModifyClubInform returns 0 row affected")
+		return
+	}
+
+	access.Commit()
+	resp.Status = http.StatusOK
+	resp.Message = "success modify club inform"
+	return
 }
