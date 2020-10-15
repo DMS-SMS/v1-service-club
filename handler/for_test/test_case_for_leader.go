@@ -354,6 +354,32 @@ type RegisterRecruitmentCase struct {
 	ExpectedCode       int32
 }
 
+func (test *RegisterRecruitmentCase) ChangeEmptyValueToValidValue() {
+	if test.UUID == EmptyString               { test.UUID = validStudentUUID }
+	if test.ClubUUID == EmptyString           { test.ClubUUID = validClubUUID }
+	if test.RecruitmentUUID == EmptyString    { test.RecruitmentUUID = validRecruitmentUUID }
+	if test.RecruitmentConcept == EmptyString { test.UUID = validRecruitConcept }
+	if test.EndPeriod == EmptyString          { test.EndPeriod = validEndPeriod }
+	if test.XRequestID == EmptyString         { test.XRequestID = validXRequestID }
+	if test.SpanContextString == EmptyString  { test.SpanContextString = validSpanContextString }
+}
+
+func (test *RegisterRecruitmentCase) ChangeEmptyReplaceValueToEmptyValue() {
+	if test.UUID == EmptyReplaceValueForString               { test.UUID = "" }
+	if test.ClubUUID == EmptyReplaceValueForString           { test.ClubUUID = "" }
+	if test.RecruitmentUUID == EmptyReplaceValueForString    { test.RecruitmentUUID = "" }
+	if test.RecruitmentConcept == EmptyReplaceValueForString { test.UUID = "" }
+	if test.EndPeriod == EmptyReplaceValueForString          { test.EndPeriod = "" }
+	if test.XRequestID == EmptyReplaceValueForString        { test.XRequestID = "" }
+	if test.SpanContextString == EmptyReplaceValueForString { test.SpanContextString = "" }
+}
+
+func (test *RegisterRecruitmentCase) OnExpectMethodsTo(mock *mock.Mock) {
+	for method, returns := range test.ExpectedMethods {
+		test.onMethod(mock, method, returns)
+	}
+}
+
 func (test *RegisterRecruitmentCase) onMethod(mock *mock.Mock, method Method, returns Returns) {
 	switch method {
 	case "GetClubWithClubUUID":
@@ -419,4 +445,20 @@ func (test *RegisterRecruitmentCase) getRecruitMemberWithIndex(index int) *model
 		Field:           model.Field(test.RecruitMembers[index].Field),
 		Number:          model.Number(test.RecruitMembers[index].Number),
 	}
+}
+
+func (test *RegisterRecruitmentCase) SetRequestContextOf(req *clubproto.RegisterRecruitmentRequest) {
+	req.UUID = test.UUID
+	req.ClubUUID = test.ClubUUID
+	req.RecruitConcept = test.RecruitmentConcept
+	req.RecruitMembers = test.RecruitMembers
+	req.EndPeriod = test.EndPeriod
+}
+
+func (test *RegisterRecruitmentCase) GetMetadataContext() (ctx context.Context) {
+	ctx = context.Background()
+	ctx = metadata.Set(ctx, "X-Request-Id", test.XRequestID)
+	ctx = metadata.Set(ctx, "Span-Context", test.SpanContextString)
+	ctx = metadata.Set(ctx, "RecruitmentUUID", test.RecruitmentUUID)
+	return
 }
