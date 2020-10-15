@@ -1071,7 +1071,7 @@ func Test_Default_DeleteClubWithUUID(t *testing.T) {
 				"GetCurrentRecruitmentWithClubUUID": {&model.ClubRecruitment{}, gorm.ErrRecordNotFound},
 				"DeleteClub":                        {nil, 1},
 				"DeleteClubInform":                  {nil, 1},
-				"DeleteAllClubMember":               {nil, 5},
+				"DeleteAllClubMembers":              {nil, 5},
 				"Commit":                            {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusOK,
@@ -1087,7 +1087,7 @@ func Test_Default_DeleteClubWithUUID(t *testing.T) {
 				"GetCurrentRecruitmentWithClubUUID": {&model.ClubRecruitment{}, gorm.ErrRecordNotFound},
 				"DeleteClub":                        {nil, 1},
 				"DeleteClubInform":                  {nil, 1},
-				"DeleteAllClubMember":               {nil, 5},
+				"DeleteAllClubMembers":              {nil, 5},
 				"Commit":                            {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusOK,
@@ -1233,7 +1233,7 @@ func Test_Default_DeleteClubWithUUID(t *testing.T) {
 				"Rollback":                          {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
-		}, { // DeleteAllClubMember returns unexpected error
+		}, { // DeleteAllClubMembers returns unexpected error
 			UUID:     "student-111111111111",
 			ClubUUID: "club-111111111111",
 			ExpectedMethods: map[test.Method]test.Returns{
@@ -1245,7 +1245,7 @@ func Test_Default_DeleteClubWithUUID(t *testing.T) {
 				"GetCurrentRecruitmentWithClubUUID": {&model.ClubRecruitment{}, gorm.ErrRecordNotFound},
 				"DeleteClub":                        {nil, 1},
 				"DeleteClubInform":                  {nil, 1},
-				"DeleteAllClubMember":               {errors.New("unexpected error"), 0},
+				"DeleteAllClubMembers":              {errors.New("unexpected error"), 0},
 				"Rollback":                          {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
