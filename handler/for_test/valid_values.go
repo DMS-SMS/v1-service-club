@@ -20,6 +20,9 @@ const (
 	validRecruitmentUUID = "recruitment-111111111111"
 
 	validClubName = "DMS"
+	validClubConcept = "DMS, SMS, PMS 서비스 개발 및 유지보수 동아리"
+	validIntroduction = "저희 동아리는 학교 내에서 각 분야 최고의 선배님들이 있습니다! 스스로 성장할 수 있는 분위기를 조성해줍니다."
+	validLink = "logos/club-111111111111"
 	validField = "SW 개발"
 	validLocation = "2-2반 교실"
 	validFloor = "3"
