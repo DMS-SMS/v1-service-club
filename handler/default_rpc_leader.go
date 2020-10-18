@@ -945,4 +945,75 @@ func (d *_default) ModifyRecruitment(ctx context.Context, req *clubproto.ModifyR
 	})
 	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Int("RowAffected", int(rowAffected)), log.Error(err))
 	spanForDB.Finish()
+
+	if err != nil {
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "ModifyRecruitment returns unexpected error, err: " + err.Error())
+		return
+	}
+
+	if rowAffected == 0 {
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "ModifyRecruitment returns 0 rows affected")
+		return
+	}
+
+	if len(req.RecruitMembers) == 0 {
+		access.Commit()
+		resp.Status = http.StatusOK
+		resp.Message = "succeed to modify club recruitment"
+		return
+	}
+
+	spanForDB = d.tracer.StartSpan("DeleteAllRecruitMember", opentracing.ChildOf(parentSpan))
+	err, rowAffected = access.DeleteAllRecruitMember(string(selectedRecruit.UUID))
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Int("RowAffected", int(rowAffected)), log.Error(err))
+	spanForDB.Finish()
+
+	if err != nil {
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "DeleteAllRecruitMember returns unexpected error, err: " + err.Error())
+		return
+	}
+
+	createdRecruitMembers := make([]*model.RecruitMember, len(req.RecruitMembers))
+	spanForDB = d.tracer.StartSpan("CreateRecruitMembers", opentracing.ChildOf(parentSpan))
+	for index, recruitMember := range req.RecruitMembers {
+		createdRecruitMember, commandErr := access.CreateRecruitMember(&model.RecruitMember{
+			RecruitmentUUID: model.RecruitmentUUID(string(selectedRecruit.UUID)),
+			Grade:           model.Grade(recruitMember.Grade),
+			Field:           model.Field(recruitMember.Field),
+			Number:          model.Number(recruitMember.Number),
+		})
+		if commandErr != nil {
+			err = commandErr
+			break
+		}
+		createdRecruitMembers[index] = createdRecruitMember
+	}
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("CreatedRecruitMembers", createdRecruitMembers), log.Error(err))
+	spanForDB.Finish()
+
+	switch err.(type) {
+	case nil:
+		break
+	case validator.ValidationErrors:
+		access.Rollback()
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "invalid data for club recruit model")
+		return
+	default:
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "CreateRecruitMembers returns unexpected error, err: " + err.Error())
+		return
+	}
+
+	access.Commit()
+	resp.Status = http.StatusOK
+	resp.Message = "succeed to modify club recruitment"
+	return
 }
