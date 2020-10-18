@@ -11,7 +11,7 @@ import (
 
 type _default struct {
 	Strategy selector.Strategy
-	client   api.Client
+	client   *api.Client
 	next     selector.Next
 	nodes    []*registry.Node
 }
@@ -30,7 +30,7 @@ func newDefault(setters ...FieldSetter) (h *_default) {
 
 type FieldSetter func(*_default)
 
-func Client(c api.Client) FieldSetter {
+func Client(c *api.Client) FieldSetter {
 	return func(d *_default) {
 		d.client = c
 	}
