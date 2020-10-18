@@ -38,6 +38,8 @@ func (d *_default) GetCurrentRecruitmentWithClubUUID(clubUUID string) (recruit *
 	if selectResult.RowsAffected == 0 && err == nil {
 		err = gorm.ErrRecordNotFound
 	}
+
+	return
 }
 
 func (d *_default) GetCurrentRecruitmentWithRecruitmentUUID(recruitmentUUID string) (recruit *model.ClubRecruitment, err error) {
@@ -51,6 +53,7 @@ func (d *_default) GetCurrentRecruitmentWithRecruitmentUUID(recruitmentUUID stri
 	err = selectResult.Error
 	if selectResult.RowsAffected == 0 && err == nil {
 		err = gorm.ErrRecordNotFound
+	}
 
 	return
 }
