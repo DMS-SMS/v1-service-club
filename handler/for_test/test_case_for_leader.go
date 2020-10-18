@@ -512,16 +512,16 @@ func (test *ModifyRecruitmentCase) onMethod(mock *mockpkg.Mock, method Method, r
 	case "ModifyRecruitment":
 		mock.On(string(method), test.RecruitmentUUID, &model.ClubRecruitment{
 			RecruitConcept: model.RecruitConcept(test.RecruitmentConcept),
-		})
+		}).Return(returns...)
 	case "DeleteAllRecruitMember":
-		mock.On(string(method)).Return(returns...)
+		mock.On(string(method), test.RecruitmentUUID).Return(returns...)
 	case "CreateRecruitMembers":
 		const indexForError = 1
 		for index := range test.RecruitMembers{
 			member := test.getRecruitMemberWithIndex(index)
 			memberForResp := test.getRecruitMemberWithIndex(index)
 			memberForResp.Model = createGormModelOnCurrentTime()
-			mock.On("CreateRecruitMember", test.RecruitmentUUID, member).Return(memberForResp, returns[indexForError])
+			mock.On("CreateRecruitMember", member).Return(memberForResp, returns[indexForError])
 			if returns[indexForError] != nil {
 				return
 			}
@@ -548,6 +548,7 @@ func (test *ModifyRecruitmentCase) getRecruitMemberWithIndex(index int) *model.R
 
 func (test *ModifyRecruitmentCase) SetRequestContextOf(req *clubproto.ModifyRecruitmentRequest) {
 	req.UUID = test.UUID
+	req.RecruitmentUUID = test.RecruitmentUUID
 	req.RecruitConcept = test.RecruitmentConcept
 	req.RecruitMembers = test.RecruitMembers
 }
