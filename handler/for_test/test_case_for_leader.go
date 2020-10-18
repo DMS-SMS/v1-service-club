@@ -560,3 +560,13 @@ func (test *ModifyRecruitmentCase) GetMetadataContext() (ctx context.Context) {
 	ctx = metadata.Set(ctx, "RecruitmentUUID", test.RecruitmentUUID)
 	return
 }
+
+type DeleteRecruitmentWithUUIDCase struct {
+	UUID              string
+	RecruitmentUUID   string
+	XRequestID        string
+	SpanContextString string
+	ExpectedMethods   map[Method]Returns
+	ExpectedStatus    uint32
+	ExpectedCode      int32
+}
