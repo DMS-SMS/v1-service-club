@@ -4,9 +4,19 @@ import (
 	"club/adapter"
 	"club/db"
 	"club/db/access"
+	"club/handler"
+	authproto "club/proto/golang/auth"
+	consulagent "club/tool/consul/agent"
+	topic "club/utils/topic/golang"
+	"fmt"
 	"github.com/hashicorp/consul/api"
+	"github.com/micro/go-micro/v2"
+	"github.com/micro/go-micro/v2/client/selector"
 	log "github.com/micro/go-micro/v2/logger"
+	"github.com/micro/go-micro/v2/transport/grpc"
 	jaegercfg "github.com/uber/jaeger-client-go/config"
+	"math/rand"
+	"net"
 	"os"
 )
 
@@ -54,5 +64,44 @@ func main() {
 	defer func() {
 		_ = closer.Close()
 	}()
+
+	// create service
+	version := os.Getenv("VERSION")
+	if version == "" {
+		log.Fatal("please set VERSION in environment variable")
+	}
+	port := getRandomPortNotInUsedWithRange(10100, 10200)
+	service := micro.NewService(
+		micro.Name(topic.ClubServiceName),
+		micro.Version(version),
+		micro.Transport(grpc.NewTransport()),
+		micro.Address(fmt.Sprintf(":%d", port)),
+	)
+
+	// create rpc handler
+	defaultAgent := consulagent.Default(
+		consulagent.Strategy(selector.RoundRobin),
+		consulagent.Client(consul),
+	)
+	authStudentSrv := authproto.NewAuthStudentService(topic.AuthServiceName, service.Client())
+	rpcHandler := handler.Default(
+		handler.AWSSession(nil),
+		handler.AccessManager(defaultAccessManage),
+		handler.Tracer(authSrvTracer),
+		handler.ConsulAgent(defaultAgent),
+		handler.AuthStudent(authStudentSrv),
+	)
 }
 
+func getRandomPortNotInUsedWithRange(min, max int) (port int) {
+	for {
+		port = rand.Intn(max - min) + min
+		conn, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+		if err != nil {
+			continue
+		}
+		_ = conn.Close()
+		break
+	}
+	return
+}
