@@ -15,6 +15,7 @@ type Accessor interface {
 	GetClubWithClubUUID(clubUUID string) (*model.Club, error)
 	GetClubWithLeaderUUID(leaderUUID string) (*model.Club, error)
 	GetCurrentRecruitmentWithClubUUID(clubUUID string) (*model.ClubRecruitment, error)
+	GetCurrentRecruitmentWithRecruitmentUUID(recruitmentUUID string) (*model.ClubRecruitment, error)
 	GetClubInformsSortByUpdateTime(offset, limit int, field, name string) ([]*model.ClubInform, error)
 	GetCurrentRecruitmentsSortByCreateTime(offset, limit int, field, name string) ([]*model.ClubRecruitment, error)
 	GetClubInformWithClubUUID(clubUUID string) (*model.ClubInform, error)
