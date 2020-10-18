@@ -54,6 +54,25 @@ func ConsulServiceRegistrar(s server.Server, consul *api.Client) func() error {
 	}
 }
 
+func ConsulServiceDeregistrar(s server.Server, consul *api.Client) func() error {
+	return func() (err error) {
+		srvID := fmt.Sprintf("%s-%s", s.Options().Name, s.Options().Id)
+		err = consul.Agent().ServiceDeregister(srvID)
+		if err != nil {
+			log.Fatalf("unable to deregister service in consul, err: %v\n", err)
+		}
+
+		checkID := fmt.Sprintf("service:%s", srvID)
+		err = consul.Agent().CheckDeregister(checkID)
+		if err != nil {
+			log.Fatalf("unable to deregister check in consul, err: %v\n", err)
+		}
+
+		log.Infof("succeed to deregistry service and check to consul!! (service id: %s | checker id: %s)", srvID, checkID)
+		return
+	}
+}
+
 func getPortFromServerOption(opts server.Options) (port int, err error) {
 	const portIndex = 3
 	portStr := strings.Split(opts.Address, ":")[portIndex]
