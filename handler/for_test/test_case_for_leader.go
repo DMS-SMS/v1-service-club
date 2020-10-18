@@ -570,3 +570,54 @@ type DeleteRecruitmentWithUUIDCase struct {
 	ExpectedStatus    uint32
 	ExpectedCode      int32
 }
+
+func (test *DeleteRecruitmentWithUUIDCase) ChangeEmptyValueToValidValue() {
+	if test.XRequestID == EmptyString        { test.XRequestID = validXRequestID }
+	if test.SpanContextString == EmptyString { test.SpanContextString = validSpanContextString }
+}
+
+func (test *DeleteRecruitmentWithUUIDCase) ChangeEmptyReplaceValueToEmptyValue() {
+	if test.XRequestID == EmptyReplaceValueForString        { test.XRequestID = "" }
+	if test.SpanContextString == EmptyReplaceValueForString { test.SpanContextString = "" }
+}
+
+func (test *DeleteRecruitmentWithUUIDCase) OnExpectMethodsTo(mock *mockpkg.Mock) {
+	for method, returns := range test.ExpectedMethods {
+		test.onMethod(mock, method, returns)
+	}
+}
+
+func (test *DeleteRecruitmentWithUUIDCase) onMethod(mock *mockpkg.Mock, method Method, returns Returns) {
+	switch method {
+	case "GetCurrentRecruitmentWithRecruitmentUUID":
+		mock.On(string(method), test.RecruitmentUUID).Return(returns...)
+	case "GetClubWithClubUUID":
+		mock.On(string(method), mockpkg.MatchedBy(func(clubUUID string) bool {
+			return regexp.MustCompile("^club-\\d{12}").MatchString(clubUUID)
+		})).Return(returns...)
+	case "DeleteRecruitment":
+		mock.On(string(method), test.RecruitmentUUID).Return(returns...)
+	case "DeleteAllRecruitMember":
+		mock.On(string(method), test.RecruitmentUUID).Return(returns...)
+	case "BeginTx":
+		mock.On(string(method)).Return(returns...)
+	case "Commit":
+		mock.On(string(method)).Return(returns...)
+	case "Rollback":
+		mock.On(string(method)).Return(returns...)
+	default:
+		log.Fatalf("this method cannot be registered, method name: %s", method)
+	}
+}
+
+func (test *DeleteRecruitmentWithUUIDCase) SetRequestContextOf(req *clubproto.DeleteRecruitmentWithUUIDRequest) {
+	req.UUID = test.UUID
+	req.RecruitmentUUID = test.RecruitmentUUID
+}
+
+func (test *DeleteRecruitmentWithUUIDCase) GetMetadataContext() (ctx context.Context) {
+	ctx = context.Background()
+	ctx = metadata.Set(ctx, "X-Request-Id", test.XRequestID)
+	ctx = metadata.Set(ctx, "Span-Context", test.SpanContextString)
+	return
+}
