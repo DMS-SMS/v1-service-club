@@ -1854,7 +1854,7 @@ func Test_Default_DeleteRecruitmentWithUUID(t *testing.T) {
 			},
 			ExpectedStatus: http.StatusOK,
 		}, { // success case (admin uuid)
-			UUID:            "student-111111111111",
+			UUID:            "admin-111111111111",
 			RecruitmentUUID: "recruitment-111111111111",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx": {},
@@ -1950,7 +1950,7 @@ func Test_Default_DeleteRecruitmentWithUUID(t *testing.T) {
 			},
 			ExpectedStatus: http.StatusOK,
 		}, { // GetClubWithClubUUID returns unexpected error
-			UUID:            "student-222222222222",
+			UUID:            "admin-111111111111",
 			RecruitmentUUID: "recruitment-111111111111",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx": {},
@@ -1982,7 +1982,7 @@ func Test_Default_DeleteRecruitmentWithUUID(t *testing.T) {
 			},
 			ExpectedStatus: http.StatusInternalServerError,
 		}, { // DeleteRecruitment returns 0 rows affected
-			UUID:            "student-111111111111",
+			UUID:            "admin-111111111111",
 			RecruitmentUUID: "recruitment-111111111111",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx": {},
