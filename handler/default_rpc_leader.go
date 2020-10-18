@@ -1017,3 +1017,70 @@ func (d *_default) ModifyRecruitment(ctx context.Context, req *clubproto.ModifyR
 	resp.Message = "succeed to modify club recruitment"
 	return
 }
+
+func (d *_default) DeleteRecruitmentWithUUID(ctx context.Context, req *clubproto.DeleteRecruitmentWithUUIDRequest, resp *clubproto.DeleteRecruitmentWithUUIDResponse) (_ error) {
+	ctx, proxyAuthenticated, reason := d.getContextFromMetadata(ctx)
+	if !proxyAuthenticated {
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, reason)
+		return
+	}
+
+	switch true {
+	case adminUUIDRegex.MatchString(req.UUID):
+		break
+	case studentUUIDRegex.MatchString(req.UUID):
+		break
+	default:
+		resp.Status = http.StatusForbidden
+		resp.Code = code.ForbiddenNotStudentOrAdminUUID
+		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "you are not student or admin")
+		return
+	}
+
+	reqID := ctx.Value("X-Request-Id").(string)
+	parentSpan := ctx.Value("Span-Context").(jaeger.SpanContext)
+
+	access := d.accessManage.BeginTx()
+
+	spanForDB := d.tracer.StartSpan("GetCurrentRecruitmentWithRecruitmentUUID", opentracing.ChildOf(parentSpan))
+	selectedRecruit, err := access.GetCurrentRecruitmentWithRecruitmentUUID(req.RecruitmentUUID)
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedRecruit", selectedRecruit), log.Error(err))
+	spanForDB.Finish()
+
+	switch err {
+	case nil:
+		break
+	case gorm.ErrRecordNotFound:
+		access.Rollback()
+		resp.Status = http.StatusNotFound
+		resp.Code = code.NotFoundCurrentRecruitmentNoExist
+		resp.Message = fmt.Sprintf(notFoundMessageFormat, "recruitment which is in progress not exists")
+		return
+	default:
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "GetCurrentRecruitmentWithRecruitmentUUID returns unexpected error, err: " + err.Error())
+		return
+	}
+
+	spanForDB = d.tracer.StartSpan("GetClubWithClubUUID", opentracing.ChildOf(parentSpan))
+	selectedClub, err := access.GetClubWithClubUUID(string(selectedRecruit.ClubUUID))
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedClub", selectedClub), log.Error(err))
+	spanForDB.Finish()
+
+	if err != nil {
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "GetClubWithClubUUID returns unexpected error, err: " + err.Error())
+		return
+	}
+
+	if !adminUUIDRegex.MatchString(req.UUID) && req.UUID != string(selectedClub.LeaderUUID) {
+		access.Rollback()
+		resp.Status = http.StatusForbidden
+		resp.Code = code.ForbiddenNotClubLeader
+		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "you're not admin and not club leader")
+		return
+	}
+}
