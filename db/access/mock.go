@@ -54,6 +54,11 @@ func (m _mock) GetCurrentRecruitmentWithClubUUID(clubUUID string) (*model.ClubRe
 	return args.Get(0).(*model.ClubRecruitment), args.Error(1)
 }
 
+func (m _mock) GetCurrentRecruitmentWithRecruitmentUUID(recruitmentUUID string) (*model.ClubRecruitment, error) {
+	args := m.mock.Called(recruitmentUUID)
+	return args.Get(0).(*model.ClubRecruitment), args.Error(1)
+}
+
 func (m _mock) GetClubInformsSortByUpdateTime(offset, limit int, field, name string) ([]*model.ClubInform, error) {
 	args := m.mock.Called(offset, limit, field, name)
 	return args.Get(0).([]*model.ClubInform), args.Error(1)
@@ -62,11 +67,6 @@ func (m _mock) GetClubInformsSortByUpdateTime(offset, limit int, field, name str
 func (m _mock) GetCurrentRecruitmentsSortByCreateTime(offset, limit int, field, name string) ([]*model.ClubRecruitment, error) {
 	args := m.mock.Called(offset, limit, field, name)
 	return args.Get(0).([]*model.ClubRecruitment), args.Error(1)
-}
-
-func (m _mock) GetClubsWithClubUUIDs(clubUUIDs []string) ([]*model.Club, error) {
-	args := m.mock.Called(clubUUIDs)
-	return args.Get(0).([]*model.Club), args.Error(1)
 }
 
 func (m _mock) GetClubInformWithClubUUID(clubUUID string) (*model.ClubInform, error) {

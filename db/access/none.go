@@ -17,9 +17,9 @@ func (n None) CreateRecruitMember(recruitMember *model.RecruitMember) (_ *model.
 func (n None) GetClubWithClubUUID(clubUUID string) (_ *model.Club, _ error) { return }
 func (n None) GetClubWithLeaderUUID(leaderUUID string) (_ *model.Club, _ error) { return }
 func (n None) GetCurrentRecruitmentWithClubUUID(clubUUID string) (_ *model.ClubRecruitment, _ error) { return }
+func (n None) GetCurrentRecruitmentWithRecruitmentUUID(recruitmentUUID string) (_ *model.ClubRecruitment, _ error) { return }
 func (n None) GetClubInformsSortByUpdateTime(offset, limit int, field, name string) (_ []*model.ClubInform, _ error) { return }
 func (n None) GetCurrentRecruitmentsSortByCreateTime(offset, limit int, field, name string) (_ []*model.ClubRecruitment, _ error) { return }
-func (n None) GetClubsWithClubUUIDs(clubUUIDs []string) (_ []*model.Club, _ error) { return }
 func (n None) GetClubInformWithClubUUID(clubUUID string) (_ *model.ClubInform, _ error) { return }
 func (n None) GetRecruitmentWithRecruitmentUUID(recruitUUID string) (_ *model.ClubRecruitment, _ error) { return }
 func (n None) GetClubMembersWithClubUUID(clubUUID string) (_ []*model.ClubMember, _ error) { return }

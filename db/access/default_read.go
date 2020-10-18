@@ -42,6 +42,22 @@ func (d *_default) GetCurrentRecruitmentWithClubUUID(clubUUID string) (recruit *
 	return
 }
 
+func (d *_default) GetCurrentRecruitmentWithRecruitmentUUID(recruitmentUUID string) (recruit *model.ClubRecruitment, err error) {
+	recruit = new(model.ClubRecruitment)
+	now := time.Now()
+
+	fromSubQuery := d.tx.Table(model.ClubRecruitmentInstance.TableName()).Where("uuid = ?", recruitmentUUID)
+	selectedTx := d.tx.Table("(?) as club_recruitments", fromSubQuery)
+	selectResult := selectedTx.Where("club_recruitments.end_period >= ?", now).Or("club_recruitments.end_period IS NULL").Find(recruit)
+
+	err = selectResult.Error
+	if selectResult.RowsAffected == 0 && err == nil {
+		err = gorm.ErrRecordNotFound
+	}
+
+	return
+}
+
 func (d *_default) GetClubInformsSortByUpdateTime(offset, limit int, field, name string) (clubInforms []*model.ClubInform, err error) {
 	selectedTx := d.tx.Table(model.ClubInformInstance.TableName())
 	if field != "" {
@@ -82,22 +98,6 @@ func (d *_default) GetCurrentRecruitmentsSortByCreateTime(offset, limit int, fie
 		err = gorm.ErrRecordNotFound
 	}
 
-	return
-}
-
-func (d *_default) GetClubsWithClubUUIDs(clubUUIDs []string) (clubs []*model.Club, err error) {
-	clubs = make([]*model.Club, len(clubUUIDs))
-	for index, uuid := range clubUUIDs {
-		club := model.Club{}
-		selectResult := d.tx.Where("uuid = ?", uuid).Find(&club)
-		clubs[index] = &club
-		if selectResult.RowsAffected == 0 {
-			selectResult.Error = gorm.ErrRecordNotFound
-		}
-		if selectResult.Error != nil {
-			err = selectResult.Error
-		}
-	}
 	return
 }
 
