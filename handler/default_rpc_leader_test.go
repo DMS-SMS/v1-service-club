@@ -2020,4 +2020,25 @@ func Test_Default_DeleteRecruitmentWithUUID(t *testing.T) {
 			ExpectedStatus: http.StatusInternalServerError,
 		},
 	}
+
+	for _, testCase := range tests {
+		newMock := &mock.Mock{}
+		handler := newDefaultMockHandler(newMock)
+
+		testCase.ChangeEmptyValueToValidValue()
+		testCase.ChangeEmptyReplaceValueToEmptyValue()
+		testCase.OnExpectMethodsTo(newMock)
+
+		req := new(clubproto.DeleteRecruitmentWithUUIDRequest)
+		testCase.SetRequestContextOf(req)
+		ctx := testCase.GetMetadataContext()
+
+		resp := new(clubproto.DeleteRecruitmentWithUUIDResponse)
+		_ = handler.DeleteRecruitmentWithUUID(ctx, req, resp)
+
+		assert.Equalf(t, int(testCase.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", testCase, resp.Message)
+		assert.Equalf(t, testCase.ExpectedCode, resp.Code, "code assertion error (test case: %v, message: %s)", testCase, resp.Message)
+
+		newMock.AssertExpectations(t)
+	}
 }
