@@ -34,6 +34,7 @@ func (n None) ModifyRecruitment(recruitUUID string, revisionRecruit *model.ClubR
 func (n None) DeleteClub(clubUUID string) (_ error, _ int64) { return }
 func (n None) DeleteClubInform(clubUUID string) (_ error, _ int64) { return }
 func (n None) DeleteClubMember(clubUUID, studentUUID string) (_ error, _ int64) { return }
+func (n None) DeleteAllClubMembers(clubUUID string) (err error, rowsAffected int64) { return }
 func (n None) DeleteRecruitment(recruitUUID string) (_ error, _ int64) { return }
 func (n None) DeleteAllRecruitMember(recruitUUID string) (_ error, _ int64) { return }
 

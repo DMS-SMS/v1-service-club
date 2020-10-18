@@ -129,6 +129,11 @@ func (m _mock) DeleteClubMember(clubUUID, studentUUID string) (error, int64) {
 	return args.Error(0), int64(args.Int(1))
 }
 
+func (m _mock) DeleteAllClubMembers(clubUUID string) (error, int64) {
+	args := m.mock.Called(clubUUID)
+	return args.Error(0), int64(args.Int(1))
+}
+
 func (m _mock) DeleteRecruitment(recruitUUID string) (error, int64) {
 	args := m.mock.Called(recruitUUID)
 	return args.Error(0), int64(args.Int(1))
