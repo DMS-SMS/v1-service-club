@@ -7,7 +7,7 @@ import (
 	topic "club/utils/topic/golang"
 	"context"
 	"github.com/micro/go-micro/v2/metadata"
-	"github.com/stretchr/testify/mock"
+	mockpkg "github.com/stretchr/testify/mock"
 	"log"
 	"strconv"
 	"strings"
@@ -34,13 +34,13 @@ func (test *AddClubMemberCase) ChangeEmptyReplaceValueToEmptyValue() {
 	if test.SpanContextString == EmptyReplaceValueForString { test.SpanContextString = "" }
 }
 
-func (test *AddClubMemberCase) OnExpectMethodsTo(mock *mock.Mock) {
+func (test *AddClubMemberCase) OnExpectMethodsTo(mock *mockpkg.Mock) {
 	for method, returns := range test.ExpectedMethods {
 		test.onMethod(mock, method, returns)
 	}
 }
 
-func (test *AddClubMemberCase) onMethod(mock *mock.Mock, method Method, returns Returns) {
+func (test *AddClubMemberCase) onMethod(mock *mockpkg.Mock, method Method, returns Returns) {
 	switch method {
 	case "GetClubWithClubUUID":
 		mock.On(string(method), test.ClubUUID).Return(returns...)
@@ -111,13 +111,13 @@ func (test *DeleteClubMemberCase) ChangeEmptyReplaceValueToEmptyValue() {
 	if test.SpanContextString == EmptyReplaceValueForString { test.SpanContextString = "" }
 }
 
-func (test *DeleteClubMemberCase) OnExpectMethodsTo(mock *mock.Mock) {
+func (test *DeleteClubMemberCase) OnExpectMethodsTo(mock *mockpkg.Mock) {
 	for method, returns := range test.ExpectedMethods {
 		test.onMethod(mock, method, returns)
 	}
 }
 
-func (test *DeleteClubMemberCase) onMethod(mock *mock.Mock, method Method, returns Returns) {
+func (test *DeleteClubMemberCase) onMethod(mock *mockpkg.Mock, method Method, returns Returns) {
 	switch method {
 	case "GetClubWithClubUUID":
 		mock.On(string(method), test.ClubUUID).Return(returns...)
@@ -167,13 +167,13 @@ func (test *ChangeClubLeaderCase) ChangeEmptyReplaceValueToEmptyValue() {
 	if test.SpanContextString == EmptyReplaceValueForString { test.SpanContextString = "" }
 }
 
-func (test *ChangeClubLeaderCase) OnExpectMethodsTo(mock *mock.Mock) {
+func (test *ChangeClubLeaderCase) OnExpectMethodsTo(mock *mockpkg.Mock) {
 	for method, returns := range test.ExpectedMethods {
 		test.onMethod(mock, method, returns)
 	}
 }
 
-func (test *ChangeClubLeaderCase) onMethod(mock *mock.Mock, method Method, returns Returns) {
+func (test *ChangeClubLeaderCase) onMethod(mock *mockpkg.Mock, method Method, returns Returns) {
 	switch method {
 	case "GetClubWithClubUUID":
 		mock.On(string(method), test.ClubUUID).Return(returns...)
@@ -238,13 +238,13 @@ func (test *ModifyClubInformCase) ChangeEmptyReplaceValueToEmptyValue() {
 	if test.SpanContextString == EmptyReplaceValueForString { test.SpanContextString = "" }
 }
 
-func (test *ModifyClubInformCase) OnExpectMethodsTo(mock *mock.Mock) {
+func (test *ModifyClubInformCase) OnExpectMethodsTo(mock *mockpkg.Mock) {
 	for method, returns := range test.ExpectedMethods {
 		test.onMethod(mock, method, returns)
 	}
 }
 
-func (test *ModifyClubInformCase) onMethod(mock *mock.Mock, method Method, returns Returns) {
+func (test *ModifyClubInformCase) onMethod(mock *mockpkg.Mock, method Method, returns Returns) {
 	switch method {
 	case "GetClubWithClubUUID":
 		mock.On(string(method), test.ClubUUID).Return(returns...)
@@ -300,13 +300,13 @@ func (test *DeleteClubWithUUIDCase) ChangeEmptyReplaceValueToEmptyValue() {
 	if test.SpanContextString == EmptyReplaceValueForString { test.SpanContextString = "" }
 }
 
-func (test *DeleteClubWithUUIDCase) OnExpectMethodsTo(mock *mock.Mock) {
+func (test *DeleteClubWithUUIDCase) OnExpectMethodsTo(mock *mockpkg.Mock) {
 	for method, returns := range test.ExpectedMethods {
 		test.onMethod(mock, method, returns)
 	}
 }
 
-func (test *DeleteClubWithUUIDCase) onMethod(mock *mock.Mock, method Method, returns Returns) {
+func (test *DeleteClubWithUUIDCase) onMethod(mock *mockpkg.Mock, method Method, returns Returns) {
 	switch method {
 	case "GetClubWithClubUUID":
 		mock.On(string(method), test.ClubUUID).Return(returns...)
@@ -379,13 +379,13 @@ func (test *RegisterRecruitmentCase) ChangeEmptyReplaceValueToEmptyValue() {
 	if test.SpanContextString == EmptyReplaceValueForString  { test.SpanContextString = "" }
 }
 
-func (test *RegisterRecruitmentCase) OnExpectMethodsTo(mock *mock.Mock) {
+func (test *RegisterRecruitmentCase) OnExpectMethodsTo(mock *mockpkg.Mock) {
 	for method, returns := range test.ExpectedMethods {
 		test.onMethod(mock, method, returns)
 	}
 }
 
-func (test *RegisterRecruitmentCase) onMethod(mock *mock.Mock, method Method, returns Returns) {
+func (test *RegisterRecruitmentCase) onMethod(mock *mockpkg.Mock, method Method, returns Returns) {
 	switch method {
 	case "GetRecruitmentWithRecruitmentUUID":
 		mock.On(string(method), test.RecruitmentUUID).Return(returns...)
