@@ -85,22 +85,6 @@ func (d *_default) GetCurrentRecruitmentsSortByCreateTime(offset, limit int, fie
 	return
 }
 
-func (d *_default) GetClubsWithClubUUIDs(clubUUIDs []string) (clubs []*model.Club, err error) {
-	clubs = make([]*model.Club, len(clubUUIDs))
-	for index, uuid := range clubUUIDs {
-		club := model.Club{}
-		selectResult := d.tx.Where("uuid = ?", uuid).Find(&club)
-		clubs[index] = &club
-		if selectResult.RowsAffected == 0 {
-			selectResult.Error = gorm.ErrRecordNotFound
-		}
-		if selectResult.Error != nil {
-			err = selectResult.Error
-		}
-	}
-	return
-}
-
 func (d *_default) GetClubInformWithClubUUID(clubUUID string) (inform *model.ClubInform, err error) {
 	inform = new(model.ClubInform)
 	selectResult := d.tx.Where("club_uuid = ?", clubUUID).Find(inform)
