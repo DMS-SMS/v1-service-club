@@ -6,6 +6,8 @@ import (
 	"club/db/access"
 	"club/handler"
 	authproto "club/proto/golang/auth"
+	clubproto "club/proto/golang/club"
+	"club/tool/closure"
 	consulagent "club/tool/consul/agent"
 	topic "club/utils/topic/golang"
 	"fmt"
@@ -91,6 +93,20 @@ func main() {
 		handler.ConsulAgent(defaultAgent),
 		handler.AuthStudent(authStudentSrv),
 	)
+
+	service.Init(
+		micro.AfterStart(closure.ConsulServiceRegistrar(service.Server(), consul)),
+		micro.BeforeStop(closure.ConsulServiceDeregistrar(service.Server(), consul)),
+	)
+
+	_ = clubproto.RegisterClubAdminHandler(service.Server(), rpcHandler)
+	_ = clubproto.RegisterClubStudentHandler(service.Server(), rpcHandler)
+	_ = clubproto.RegisterClubLeaderHandler(service.Server(), rpcHandler)
+
+	// health checker 실행 추가
+	if err := service.Run(); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func getRandomPortNotInUsedWithRange(min, max int) (port int) {
