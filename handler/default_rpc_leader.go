@@ -1083,4 +1083,40 @@ func (d *_default) DeleteRecruitmentWithUUID(ctx context.Context, req *clubproto
 		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "you're not admin and not club leader")
 		return
 	}
+
+	spanForDB = d.tracer.StartSpan("DeleteRecruitment", opentracing.ChildOf(parentSpan))
+	err, rowsAffected := access.DeleteRecruitment(string(selectedRecruit.UUID))
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Int("RowsAffected", int(rowsAffected)), log.Error(err))
+	spanForDB.Finish()
+
+	if err != nil {
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "DeleteRecruitment returns unexpected error, err: " + err.Error())
+		return
+	}
+
+	if rowsAffected == 0 {
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "DeleteRecruitment returns 0 rows affected")
+		return
+	}
+
+	spanForDB = d.tracer.StartSpan("DeleteAllRecruitMember", opentracing.ChildOf(parentSpan))
+	err, rowsAffected = access.DeleteAllRecruitMember(string(selectedRecruit.UUID))
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Int("RowsAffected", int(rowsAffected)), log.Error(err))
+	spanForDB.Finish()
+
+	if err != nil {
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "DeleteAllRecruitMember returns unexpected error, err: " + err.Error())
+		return
+	}
+
+	access.Commit()
+	resp.Status = http.StatusOK
+	resp.Message = "succeed to delete club recruitment"
+	return
 }
