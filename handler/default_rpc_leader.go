@@ -918,4 +918,31 @@ func (d *_default) ModifyRecruitment(ctx context.Context, req *clubproto.ModifyR
 		resp.Message = fmt.Sprintf(internalServerMessageFormat, "GetCurrentRecruitmentWithRecruitmentUUID returns unexpected error, err: " + err.Error())
 		return
 	}
+
+	spanForDB = d.tracer.StartSpan("GetClubWithClubUUID", opentracing.ChildOf(parentSpan))
+	selectedClub, err := access.GetClubWithClubUUID(string(selectedRecruit.ClubUUID))
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedClub", selectedClub), log.Error(err))
+	spanForDB.Finish()
+
+	if err != nil {
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "GetClubWithClubUUID returns unexpected error, err: " + err.Error())
+		return
+	}
+
+	if !adminUUIDRegex.MatchString(req.UUID) && req.UUID != string(selectedClub.LeaderUUID) {
+		access.Rollback()
+		resp.Status = http.StatusForbidden
+		resp.Code = code.ForbiddenNotClubLeader
+		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "you're not admin and not club leader")
+		return
+	}
+
+	spanForDB = d.tracer.StartSpan("ModifyRecruitment", opentracing.ChildOf(parentSpan))
+	err, rowAffected := access.ModifyRecruitment(string(selectedRecruit.UUID), &model.ClubRecruitment{
+		RecruitConcept: model.RecruitConcept(req.RecruitConcept),
+	})
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Int("RowAffected", int(rowAffected)), log.Error(err))
+	spanForDB.Finish()
 }
