@@ -484,3 +484,54 @@ type ModifyRecruitmentCase struct {
 	ExpectedStatus        uint32
 	ExpectedCode          int32
 }
+
+func (test *ModifyRecruitmentCase) OnExpectMethodsTo(mock *mockpkg.Mock) {
+	for method, returns := range test.ExpectedMethods {
+		test.onMethod(mock, method, returns)
+	}
+}
+
+func (test *ModifyRecruitmentCase) onMethod(mock *mockpkg.Mock, method Method, returns Returns) {
+	switch method {
+	case "GetCurrentRecruitmentWithRecruitmentUUID":
+		mock.On(string(method), test.RecruitmentUUID).Return(returns...)
+	case "GetClubWithClubUUID":
+		mock.On(string(method), mockpkg.MatchedBy(func(clubUUID string) bool {
+			return regexp.MustCompile("^club-\\d{12}").MatchString(clubUUID)
+		})).Return(returns...)
+	case "ModifyRecruitment":
+		mock.On(string(method), test.RecruitmentUUID, &model.ClubRecruitment{
+			RecruitConcept: model.RecruitConcept(test.RecruitmentConcept),
+		})
+	case "DeleteAllRecruitMember":
+		mock.On(string(method)).Return(returns...)
+	case "CreateRecruitMembers":
+		const indexForError = 1
+		for index := range test.RecruitMembers{
+			member := test.getRecruitMemberWithIndex(index)
+			memberForResp := test.getRecruitMemberWithIndex(index)
+			memberForResp.Model = createGormModelOnCurrentTime()
+			mock.On("CreateRecruitMember", test.RecruitmentUUID, member).Return(memberForResp, returns[indexForError])
+			if returns[indexForError] != nil {
+				return
+			}
+		}
+	case "BeginTx":
+		mock.On(string(method)).Return(returns...)
+	case "Commit":
+		mock.On(string(method)).Return(returns...)
+	case "Rollback":
+		mock.On(string(method)).Return(returns...)
+	default:
+		log.Fatalf("this method cannot be registered, method name: %s", method)
+	}
+}
+
+func (test *ModifyRecruitmentCase) getRecruitMemberWithIndex(index int) *model.RecruitMember {
+	return &model.RecruitMember{
+		RecruitmentUUID: model.RecruitmentUUID(test.RecruitmentUUID),
+		Grade:           model.Grade(test.RecruitMembers[index].Grade),
+		Field:           model.Field(test.RecruitMembers[index].Field),
+		Number:          model.Number(test.RecruitMembers[index].Number),
+	}
+}
