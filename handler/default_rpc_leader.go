@@ -872,3 +872,50 @@ func (d *_default) RegisterRecruitment(ctx context.Context, req *clubproto.Regis
 	resp.Message = "succeed to register club recruitment"
 	return
 }
+
+func (d *_default) ModifyRecruitment(ctx context.Context, req *clubproto.ModifyRecruitmentRequest, resp *clubproto.ModifyRecruitmentResponse) (_ error) {
+	ctx, proxyAuthenticated, reason := d.getContextFromMetadata(ctx)
+	if !proxyAuthenticated {
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, reason)
+		return
+	}
+
+	switch true {
+	case adminUUIDRegex.MatchString(req.UUID):
+		break
+	case studentUUIDRegex.MatchString(req.UUID):
+		break
+	default:
+		resp.Status = http.StatusForbidden
+		resp.Code = code.ForbiddenNotStudentOrAdminUUID
+		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "you are not student or admin")
+		return
+	}
+
+	reqID := ctx.Value("X-Request-Id").(string)
+	parentSpan := ctx.Value("Span-Context").(jaeger.SpanContext)
+
+	access := d.accessManage.BeginTx()
+
+	spanForDB := d.tracer.StartSpan("GetCurrentRecruitmentWithRecruitmentUUID", opentracing.ChildOf(parentSpan))
+	selectedRecruit, err := access.GetCurrentRecruitmentWithRecruitmentUUID(req.RecruitmentUUID)
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedRecruit", selectedRecruit), log.Error(err))
+	spanForDB.Finish()
+
+	switch err {
+	case nil:
+		break
+	case gorm.ErrRecordNotFound:
+		access.Rollback()
+		resp.Status = http.StatusNotFound
+		resp.Code = code.NotFoundCurrentRecruitmentNoExist
+		resp.Message = fmt.Sprintf(notFoundMessageFormat, "recruitment which is in progress not exists")
+		return
+	default:
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "GetCurrentRecruitmentWithRecruitmentUUID returns unexpected error, err: " + err.Error())
+		return
+	}
+}
