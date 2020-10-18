@@ -1831,3 +1831,193 @@ func Test_Default_ModifyRecruitment(t *testing.T) {
 		newMock.AssertExpectations(t)
 	}
 }
+
+func Test_Default_DeleteRecruitmentWithUUID(t *testing.T) {
+	tests := []test.DeleteRecruitmentWithUUIDCase{
+		{ // success case (student uuid)
+			UUID:            "student-111111111111",
+			RecruitmentUUID: "recruitment-111111111111",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetCurrentRecruitmentWithRecruitmentUUID": {&model.ClubRecruitment{
+					UUID:           "recruitment-111111111111",
+					ClubUUID:       "club-111111111111",
+					RecruitConcept: "첫 번째 상시 채용",
+				}, nil},
+				"GetClubWithClubUUID": {&model.Club{
+					UUID:       "club-111111111111",
+					LeaderUUID: "student-111111111111",
+				}, nil},
+				"DeleteRecruitment":      {nil, 1},
+				"DeleteAllRecruitMember": {nil, 3},
+				"Commit":                 {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusOK,
+		}, { // success case (admin uuid)
+			UUID:            "student-111111111111",
+			RecruitmentUUID: "recruitment-111111111111",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetCurrentRecruitmentWithRecruitmentUUID": {&model.ClubRecruitment{
+					UUID:           "recruitment-111111111111",
+					ClubUUID:       "club-111111111111",
+					RecruitConcept: "첫 번째 상시 채용",
+				}, nil},
+				"GetClubWithClubUUID": {&model.Club{
+					UUID:       "club-111111111111",
+					LeaderUUID: "student-111111111111",
+				}, nil},
+				"DeleteRecruitment":      {nil, 1},
+				"DeleteAllRecruitMember": {nil, 3},
+				"Commit":                 {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusOK,
+		}, { // no exist X-Request-ID -> Proxy Authorization Required
+			XRequestID:      test.EmptyReplaceValueForString,
+			ExpectedMethods: map[test.Method]test.Returns{},
+			ExpectedStatus:  http.StatusProxyAuthRequired,
+		}, { // invalid X-Request-ID -> Proxy Authorization Required
+			XRequestID:      "InvalidXRequestID",
+			ExpectedMethods: map[test.Method]test.Returns{},
+			ExpectedStatus:  http.StatusProxyAuthRequired,
+		}, { // no exist Span-Context -> Proxy Authorization Required
+			SpanContextString: test.EmptyReplaceValueForString,
+			ExpectedMethods:   map[test.Method]test.Returns{},
+			ExpectedStatus:    http.StatusProxyAuthRequired,
+		}, { // invalid Span-Context -> Proxy Authorization Required
+			SpanContextString: "InvalidSpanContext",
+			ExpectedMethods:   map[test.Method]test.Returns{},
+			ExpectedStatus:    http.StatusProxyAuthRequired,
+		}, { // not student or admin uuid
+			UUID:            "parent-111111111111",
+			ExpectedMethods: map[test.Method]test.Returns{},
+			ExpectedStatus:  http.StatusForbidden,
+			ExpectedCode:    code.ForbiddenNotStudentOrAdminUUID,
+		}, { // GetCurrentRecruitmentWithRecruitmentUUID returns not found error
+			UUID:               "student-111111111111",
+			RecruitmentUUID:    "recruitment-111111111111",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetCurrentRecruitmentWithRecruitmentUUID": {&model.ClubRecruitment{}, gorm.ErrRecordNotFound},
+				"Rollback": {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusNotFound,
+			ExpectedCode:   code.NotFoundCurrentRecruitmentNoExist,
+		}, { // GetCurrentRecruitmentWithRecruitmentUUID returns unexpected error
+			UUID:               "student-111111111111",
+			RecruitmentUUID:    "recruitment-111111111111",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetCurrentRecruitmentWithRecruitmentUUID": {&model.ClubRecruitment{}, errors.New("unexpected error")},
+				"Rollback": {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // not leader uuid
+			UUID:               "student-222222222222",
+			RecruitmentUUID:    "recruitment-111111111111",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetCurrentRecruitmentWithRecruitmentUUID": {&model.ClubRecruitment{
+					UUID:           "recruitment-111111111111",
+					ClubUUID:       "club-111111111111",
+					RecruitConcept: "첫 번째 상시 채용",
+				}, nil},
+				"GetClubWithClubUUID": {&model.Club{
+					UUID:       "club-111111111111",
+					LeaderUUID: "student-111111111111",
+				}, nil},
+				"Rollback": {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusForbidden,
+			ExpectedCode:   code.ForbiddenNotClubLeader,
+		}, { // success case (admin uuid)
+			UUID:            "student-111111111111",
+			RecruitmentUUID: "recruitment-111111111111",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetCurrentRecruitmentWithRecruitmentUUID": {&model.ClubRecruitment{
+					UUID:           "recruitment-111111111111",
+					ClubUUID:       "club-111111111111",
+					RecruitConcept: "첫 번째 상시 채용",
+				}, nil},
+				"GetClubWithClubUUID": {&model.Club{
+					UUID:       "club-111111111111",
+					LeaderUUID: "student-111111111111",
+				}, nil},
+				"DeleteRecruitment":      {nil, 1},
+				"DeleteAllRecruitMember": {nil, 3},
+				"Commit":                 {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusOK,
+		}, { // GetClubWithClubUUID returns unexpected error
+			UUID:            "student-222222222222",
+			RecruitmentUUID: "recruitment-111111111111",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetCurrentRecruitmentWithRecruitmentUUID": {&model.ClubRecruitment{
+					UUID:           "recruitment-111111111111",
+					ClubUUID:       "club-111111111111",
+					RecruitConcept: "첫 번째 상시 채용",
+				}, nil},
+				"GetClubWithClubUUID": {&model.Club{}, errors.New("unexpected error")},
+				"Rollback":            {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // DeleteRecruitment returns unexpected error
+			UUID:            "student-111111111111",
+			RecruitmentUUID: "recruitment-111111111111",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetCurrentRecruitmentWithRecruitmentUUID": {&model.ClubRecruitment{
+					UUID:           "recruitment-111111111111",
+					ClubUUID:       "club-111111111111",
+					RecruitConcept: "첫 번째 상시 채용",
+				}, nil},
+				"GetClubWithClubUUID": {&model.Club{
+					UUID:       "club-111111111111",
+					LeaderUUID: "student-111111111111",
+				}, nil},
+				"DeleteRecruitment": {errors.New("unexpected error"), 1},
+				"Rollback":          {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // DeleteRecruitment returns 0 rows affected
+			UUID:            "student-111111111111",
+			RecruitmentUUID: "recruitment-111111111111",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetCurrentRecruitmentWithRecruitmentUUID": {&model.ClubRecruitment{
+					UUID:           "recruitment-111111111111",
+					ClubUUID:       "club-111111111111",
+					RecruitConcept: "첫 번째 상시 채용",
+				}, nil},
+				"GetClubWithClubUUID": {&model.Club{
+					UUID:       "club-111111111111",
+					LeaderUUID: "student-111111111111",
+				}, nil},
+				"DeleteRecruitment": {nil, 0},
+				"Rollback":          {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // DeleteAllRecruitMember returns unexpected error
+			UUID:            "student-111111111111",
+			RecruitmentUUID: "recruitment-111111111111",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetCurrentRecruitmentWithRecruitmentUUID": {&model.ClubRecruitment{
+					UUID:           "recruitment-111111111111",
+					ClubUUID:       "club-111111111111",
+					RecruitConcept: "첫 번째 상시 채용",
+				}, nil},
+				"GetClubWithClubUUID": {&model.Club{
+					UUID:       "club-111111111111",
+					LeaderUUID: "student-111111111111",
+				}, nil},
+				"DeleteRecruitment":      {nil, 1},
+				"DeleteAllRecruitMember": {errors.New("unexpected error"), 0},
+				"Rollback":               {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		},
+	}
+}
