@@ -9,7 +9,6 @@ import (
 )
 
 type _default struct {
-	None
 	accessManage db.AccessorManage
 	tracer       opentracing.Tracer
 	awsSession   *session.Session
