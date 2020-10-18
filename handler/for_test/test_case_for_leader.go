@@ -361,7 +361,7 @@ func (test *RegisterRecruitmentCase) ChangeEmptyValueToValidValue() {
 	if test.ClubUUID == EmptyString           { test.ClubUUID = validClubUUID }
 	if test.RecruitmentUUID == EmptyString    { test.RecruitmentUUID = validRecruitmentUUID }
 	if test.RecruitmentConcept == EmptyString { test.RecruitmentConcept = validRecruitConcept }
-	if test.EndPeriod == EmptyString          { test.EndPeriod = validEndPeriod }
+	if test.EndPeriod == EmptyString          { test.EndPeriod = time.Now().Add(time.Hour*24*7).Format("2006-01-02") }
 	if len(test.RecruitMembers) == EmptyInt   { test.RecruitMembers = validRecruitMembers }
 	if test.XRequestID == EmptyString         { test.XRequestID = validXRequestID }
 	if test.SpanContextString == EmptyString  { test.SpanContextString = validSpanContextString }

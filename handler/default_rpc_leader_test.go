@@ -19,6 +19,7 @@ import (
 	"gorm.io/gorm"
 	"net/http"
 	"testing"
+	"time"
 )
 
 func Test_Default_AddClubMember(t *testing.T) {
@@ -1294,7 +1295,7 @@ func Test_Default_RegisterRecruitment(t *testing.T) {
 			ExpectedStatus:          http.StatusCreated,
 			ExpectedRecruitmentUUID: recruitmentUUIDRegexString,
 		}, { // success case (admin uuid)
-			EndPeriod: "2020-10-15",
+			EndPeriod: time.Now().Format("2006-01-02"),
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx": {},
 				"GetClubWithClubUUID": {&model.Club{
