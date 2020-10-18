@@ -9,6 +9,7 @@ import (
 	"github.com/micro/go-micro/v2/metadata"
 	mockpkg "github.com/stretchr/testify/mock"
 	"log"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -471,4 +472,15 @@ func (test *RegisterRecruitmentCase) GetMetadataContext() (ctx context.Context) 
 	ctx = metadata.Set(ctx, "Span-Context", test.SpanContextString)
 	ctx = metadata.Set(ctx, "RecruitmentUUID", test.RecruitmentUUID)
 	return
+}
+
+type ModifyRecruitmentCase struct {
+	UUID, RecruitmentUUID string
+	RecruitmentConcept    string
+	RecruitMembers        []*clubproto.RecruitMember
+	XRequestID            string
+	SpanContextString     string
+	ExpectedMethods       map[Method]Returns
+	ExpectedStatus        uint32
+	ExpectedCode          int32
 }
