@@ -485,6 +485,16 @@ type ModifyRecruitmentCase struct {
 	ExpectedCode          int32
 }
 
+func (test *ModifyRecruitmentCase) ChangeEmptyValueToValidValue() {
+	if test.XRequestID == EmptyString         { test.XRequestID = validXRequestID }
+	if test.SpanContextString == EmptyString  { test.SpanContextString = validSpanContextString }
+}
+
+func (test *ModifyRecruitmentCase) ChangeEmptyReplaceValueToEmptyValue() {
+	if test.XRequestID == EmptyReplaceValueForString         { test.XRequestID = "" }
+	if test.SpanContextString == EmptyReplaceValueForString  { test.SpanContextString = "" }
+}
+
 func (test *ModifyRecruitmentCase) OnExpectMethodsTo(mock *mockpkg.Mock) {
 	for method, returns := range test.ExpectedMethods {
 		test.onMethod(mock, method, returns)
@@ -534,4 +544,18 @@ func (test *ModifyRecruitmentCase) getRecruitMemberWithIndex(index int) *model.R
 		Field:           model.Field(test.RecruitMembers[index].Field),
 		Number:          model.Number(test.RecruitMembers[index].Number),
 	}
+}
+
+func (test *ModifyRecruitmentCase) SetRequestContextOf(req *clubproto.ModifyRecruitmentRequest) {
+	req.UUID = test.UUID
+	req.RecruitConcept = test.RecruitmentConcept
+	req.RecruitMembers = test.RecruitMembers
+}
+
+func (test *ModifyRecruitmentCase) GetMetadataContext() (ctx context.Context) {
+	ctx = context.Background()
+	ctx = metadata.Set(ctx, "X-Request-Id", test.XRequestID)
+	ctx = metadata.Set(ctx, "Span-Context", test.SpanContextString)
+	ctx = metadata.Set(ctx, "RecruitmentUUID", test.RecruitmentUUID)
+	return
 }
