@@ -285,55 +285,61 @@ func (d *_default) CreateNewClub(ctx context.Context, req *clubproto.CreateNewCl
 		return
 	}
 
-	for _, member := range req.MemberUUIDs {
-		spanForDB = d.tracer.StartSpan("CreateClubMember", opentracing.ChildOf(parentSpan))
-		createdMember, err := access.CreateClubMember(&model.ClubMember{
+	createdMembers := make([]*model.ClubMember, len(req.MemberUUIDs))
+	spanForDB = d.tracer.StartSpan("CreateClubMembers", opentracing.ChildOf(parentSpan))
+	for index, memberUUID := range req.MemberUUIDs {
+		createdMember, createErr := access.CreateClubMember(&model.ClubMember{
 			ClubUUID:    model.ClubUUID(cUUID),
-			StudentUUID: model.StudentUUID(member),
+			StudentUUID: model.StudentUUID(memberUUID),
 		})
-		spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("CreatedMember", createdMember), log.Error(err))
-		spanForDB.Finish()
-
-		switch assertedError := err.(type) {
-		case nil:
+		if createErr != nil {
+			err = createErr
 			break
-		case validator.ValidationErrors:
-			access.Rollback()
-			resp.Status = http.StatusProxyAuthRequired
-			resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "invalid data for club member model, err: "+err.Error())
-			return
-		case *mysql.MySQLError:
-			access.Rollback()
-			switch assertedError.Number {
-			case mysqlcode.ER_DUP_ENTRY:
-				key, entry, err := mysqlerr.ParseDuplicateEntryErrorFrom(assertedError)
-				if err != nil {
-					resp.Status = http.StatusInternalServerError
-					resp.Message = fmt.Sprintf(internalServerMessageFormat, "unable to parse MySQL duplicate error, err: "+err.Error())
-					return
-				}
-				switch key {
-				case model.ClubMemberInstance.StudentUUID.KeyName():
-					resp.Status = http.StatusConflict
-					resp.Code = code.ClubMemberDuplicate
-					resp.Message = fmt.Sprintf(conflictMessageFormat, "that club member is already exist, entry: "+entry)
-					return
-				default:
-					resp.Status = http.StatusInternalServerError
-					resp.Message = fmt.Sprintf(internalServerMessageFormat, "unexpected duplicate entry, key: "+key)
-					return
-				}
+		}
+		createdMembers[index] = createdMember
+	}
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("CreatedMembers", createdMembers), log.Error(err))
+	spanForDB.Finish()
+
+	switch assertedError := err.(type) {
+	case nil:
+		break
+	case validator.ValidationErrors:
+		access.Rollback()
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "invalid data for club member model, err: "+err.Error())
+		return
+	case *mysql.MySQLError:
+		access.Rollback()
+		switch assertedError.Number {
+		case mysqlcode.ER_DUP_ENTRY:
+			key, entry, err := mysqlerr.ParseDuplicateEntryErrorFrom(assertedError)
+			if err != nil {
+				resp.Status = http.StatusInternalServerError
+				resp.Message = fmt.Sprintf(internalServerMessageFormat, "unable to parse MySQL duplicate error, err: "+err.Error())
+				return
+			}
+			switch key {
+			case model.ClubMemberInstance.StudentUUID.KeyName():
+				resp.Status = http.StatusConflict
+				resp.Code = code.ClubMemberDuplicate
+				resp.Message = fmt.Sprintf(conflictMessageFormat, "that club member is already exist, entry: "+entry)
+				return
 			default:
 				resp.Status = http.StatusInternalServerError
-				resp.Message = fmt.Sprintf(internalServerMessageFormat, "unexpected CreateClubMember MySQL error code, err: "+assertedError.Error())
+				resp.Message = fmt.Sprintf(internalServerMessageFormat, "unexpected duplicate entry, key: "+key)
 				return
 			}
 		default:
-			access.Rollback()
 			resp.Status = http.StatusInternalServerError
-			resp.Message = fmt.Sprintf(internalServerMessageFormat, "unexpected type of CreateClubMember errors, err: "+assertedError.Error())
+			resp.Message = fmt.Sprintf(internalServerMessageFormat, "unexpected CreateClubMember MySQL error code, err: "+assertedError.Error())
 			return
 		}
+	default:
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "unexpected type of CreateClubMember errors, err: "+assertedError.Error())
+		return
 	}
 
 	access.Commit()
