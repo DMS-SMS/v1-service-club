@@ -8,6 +8,7 @@ replace google.golang.org/grpc => google.golang.org/grpc v1.26.0
 
 require (
 	github.com/HdrHistogram/hdrhistogram-go v0.9.0 // indirect
+	github.com/InVisionApp/go-health/v2 v2.1.2
 	github.com/VividCortex/mysqlerr v0.0.0-20200629151747-c28746d985dd
 	github.com/aws/aws-sdk-go v1.23.0
 	github.com/codahale/hdrhistogram v0.9.0 // indirect
