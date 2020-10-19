@@ -120,9 +120,10 @@ func Test_Accessor_GetCurrentRecruitmentWithClubUUID(t *testing.T) {
 		}
 	}
 
+	yesterday := time.Now().AddDate(0, 0, -1)
 	now := time.Now()
-	startTime := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
-	endTime := startTime.Add(time.Hour * 24 * 7)
+	startTime := time.Date(yesterday.Year(), yesterday.Month(), yesterday.Day(), 0, 0, 0, 0, time.Local)
+	nowTime := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
 
 	for _, recruitment := range []*model.ClubRecruitment{
 		{ // 종료된 채용
@@ -136,7 +137,7 @@ func Test_Accessor_GetCurrentRecruitmentWithClubUUID(t *testing.T) {
 			ClubUUID:       "club-111111111111",
 			RecruitConcept: "두 번째 공채",
 			StartPeriod:    model.StartPeriod(startTime),
-			EndPeriod:      model.EndPeriod(endTime),
+			EndPeriod:      model.EndPeriod(nowTime),
 		}, { // 종료된 채용
 			UUID:           "recruitment-333333333333",
 			ClubUUID:       "club-222222222222",
@@ -166,7 +167,7 @@ func Test_Accessor_GetCurrentRecruitmentWithClubUUID(t *testing.T) {
 				ClubUUID:       "club-111111111111",
 				RecruitConcept: "두 번째 공채",
 				StartPeriod:    model.StartPeriod(startTime),
-				EndPeriod:      model.EndPeriod(endTime),
+				EndPeriod:      model.EndPeriod(nowTime),
 			},
 			ExpectError: nil,
 		}, {
