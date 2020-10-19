@@ -13,9 +13,12 @@ import (
 	"fmt"
 	"github.com/hashicorp/consul/api"
 	"github.com/micro/go-micro/v2"
+	"github.com/micro/go-micro/v2/client"
+	grpccli "github.com/micro/go-micro/v2/client/grpc"
 	"github.com/micro/go-micro/v2/client/selector"
 	log "github.com/micro/go-micro/v2/logger"
 	"github.com/micro/go-micro/v2/transport/grpc"
+	"github.com/uber/jaeger-client-go"
 	jaegercfg "github.com/uber/jaeger-client-go/config"
 	"math/rand"
 	"net"
@@ -54,11 +57,9 @@ func main() {
 		log.Fatal("please set JAEGER_ADDRESS in environment variable")
 	}
 	authSrvTracer, closer, err := jaegercfg.Configuration{
-		ServiceName: "DMS.SMS.v1.service.club",
-		Reporter: &jaegercfg.ReporterConfig{
-			LogSpans:           true,
-			LocalAgentHostPort: jaegerAddr,
-		},
+		ServiceName: topic.ClubServiceName,
+		Reporter: &jaegercfg.ReporterConfig{LogSpans: true, LocalAgentHostPort: jaegerAddr},
+		Sampler: &jaegercfg.SamplerConfig{Type: jaeger.SamplerTypeConst, Param: 1},
 	}.NewTracer()
 	if err != nil {
 		log.Fatalf("error while creating new tracer for service, err: %v", err)
@@ -85,7 +86,8 @@ func main() {
 		consulagent.Strategy(selector.RoundRobin),
 		consulagent.Client(consul),
 	)
-	authStudentSrv := authproto.NewAuthStudentService(topic.AuthServiceName, service.Client())
+	cliOpts := []client.Option{client.Transport(grpc.NewTransport())}
+	authStudentSrv := authproto.NewAuthStudentService(topic.AuthServiceName, grpccli.NewClient(cliOpts...))
 	rpcHandler := handler.Default(
 		handler.AWSSession(nil),
 		handler.AccessManager(defaultAccessManage),
