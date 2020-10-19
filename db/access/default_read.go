@@ -28,11 +28,10 @@ func (d *_default) GetClubWithLeaderUUID(leaderUUID string) (club *model.Club, e
 
 func (d *_default) GetCurrentRecruitmentWithClubUUID(clubUUID string) (recruit *model.ClubRecruitment, err error) {
 	recruit = new(model.ClubRecruitment)
-	now := time.Now()
 
 	fromSubQuery := d.tx.Table(model.ClubRecruitmentInstance.TableName()).Where("club_uuid = ?", clubUUID)
 	selectedTx := d.tx.Table("(?) as club_recruitments", fromSubQuery)
-	selectResult := selectedTx.Where("club_recruitments.end_period >= ?", now).Or("club_recruitments.end_period IS NULL").Find(recruit)
+	selectResult := selectedTx.Where("club_recruitments.end_period >= ?", time.Now().AddDate(0, 0, -1)).Or("club_recruitments.end_period IS NULL").Find(recruit)
 
 	err = selectResult.Error
 	if selectResult.RowsAffected == 0 && err == nil {
@@ -44,11 +43,10 @@ func (d *_default) GetCurrentRecruitmentWithClubUUID(clubUUID string) (recruit *
 
 func (d *_default) GetCurrentRecruitmentWithRecruitmentUUID(recruitmentUUID string) (recruit *model.ClubRecruitment, err error) {
 	recruit = new(model.ClubRecruitment)
-	now := time.Now()
 
 	fromSubQuery := d.tx.Table(model.ClubRecruitmentInstance.TableName()).Where("uuid = ?", recruitmentUUID)
 	selectedTx := d.tx.Table("(?) as club_recruitments", fromSubQuery)
-	selectResult := selectedTx.Where("club_recruitments.end_period >= ?", now).Or("club_recruitments.end_period IS NULL").Find(recruit)
+	selectResult := selectedTx.Where("club_recruitments.end_period >= ?", time.Now().AddDate(0, 0, -1)).Or("club_recruitments.end_period IS NULL").Find(recruit)
 
 	err = selectResult.Error
 	if selectResult.RowsAffected == 0 && err == nil {
@@ -91,7 +89,7 @@ func (d *_default) GetCurrentRecruitmentsSortByCreateTime(offset, limit int, fie
 
 	recruits = make([]*model.ClubRecruitment, limit)
 	selectedTX := d.tx.Table("(?) as club_recruitments", fromSubQuery)
-	selectedTX = selectedTX.Where("club_recruitments.end_period >= ?", time.Now()).Or("club_recruitments.end_period IS NULL")
+	selectedTX = selectedTX.Where("club_recruitments.end_period >= ?", time.Now().AddDate(0, 0, -1)).Or("club_recruitments.end_period IS NULL")
 	err = selectedTX.Order("club_recruitments.created_at desc").Limit(limit).Offset(offset).Find(&recruits).Error
 
 	if len(recruits) == 0 && err == nil {
@@ -164,7 +162,7 @@ func (d *_default) GetAllCurrentRecruitments() ([]*model.ClubRecruitment, error)
 
 	var recruitments []*model.ClubRecruitment
 	selectedTx := d.tx.Table("(?) AS club_recruitments", fromSubQuery)
-	err := selectedTx.Where("club_recruitments.end_period >= ?", time.Now()).Or("club_recruitments.end_period IS NULL").Find(&recruitments).Error
+	err := selectedTx.Where("club_recruitments.end_period >= ?", time.Now().AddDate(0, 0, -1)).Or("club_recruitments.end_period IS NULL").Find(&recruitments).Error
 
 	if len(recruitments) == 0 && err == nil {
 		err = gorm.ErrRecordNotFound
