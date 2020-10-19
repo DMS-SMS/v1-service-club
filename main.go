@@ -11,18 +11,21 @@ import (
 	consulagent "club/tool/consul/agent"
 	topic "club/utils/topic/golang"
 	"fmt"
+	"github.com/InVisionApp/go-health/v2"
+	"github.com/InVisionApp/go-health/v2/checkers"
 	"github.com/hashicorp/consul/api"
 	"github.com/micro/go-micro/v2"
 	"github.com/micro/go-micro/v2/client"
 	grpccli "github.com/micro/go-micro/v2/client/grpc"
 	"github.com/micro/go-micro/v2/client/selector"
-	log "github.com/micro/go-micro/v2/logger"
 	"github.com/micro/go-micro/v2/transport/grpc"
 	"github.com/uber/jaeger-client-go"
 	jaegercfg "github.com/uber/jaeger-client-go/config"
+	"log"
 	"math/rand"
 	"net"
 	"os"
+	"time"
 )
 
 func main() {
@@ -105,9 +108,34 @@ func main() {
 	_ = clubproto.RegisterClubStudentHandler(service.Server(), rpcHandler)
 	_ = clubproto.RegisterClubLeaderHandler(service.Server(), rpcHandler)
 
-	// health checker 실행 추가
+	// DB Health checker 실행
+	sqlDB, err := dbc.DB()
+	if err != nil {
+		log.Fatalf("unable to get sql DB from gorm DB, err: %v", err)
+	}
+	h := health.New()
+	dbChecker, err := checkers.NewSQL(&checkers.SQLConfig{
+		Pinger: sqlDB,
+	})
+	if err != nil {
+		log.Fatalf("unable to create sql health checker, err: %v", err)
+	}
+	dbHealthCfg := &health.Config{
+		Name:       "DB-Checker",
+		Checker:    dbChecker,
+		Interval:   time.Second * 5,
+		OnComplete: closure.TTLCheckHandlerAboutDB(service.Server(), consul),
+	}
+	if err = h.AddChecks([]*health.Config{dbHealthCfg}); err != nil {
+		log.Fatalf("unable to register health checks, err: %v", err)
+	}
+	if err = h.Start(); err != nil {
+		log.Fatalf("unable to start health checks, err: %v", err)
+	}
+
+	// 서비스 실행
 	if err := service.Run(); err != nil {
-		log.Fatal(err)
+		log.Fatalf("error occurs while running service, err: %v", err)
 	}
 }
 
