@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/go-playground/validator/v10"
 	"github.com/go-sql-driver/mysql"
+	"github.com/micro/go-micro/v2/client"
 	microerrors "github.com/micro/go-micro/v2/errors"
 	"github.com/micro/go-micro/v2/metadata"
 	"github.com/opentracing/opentracing-go"
@@ -24,6 +25,7 @@ import (
 	"github.com/uber/jaeger-client-go"
 	"gorm.io/gorm"
 	"net/http"
+	"time"
 )
 
 func (d *_default) CreateNewClub(ctx context.Context, req *clubproto.CreateNewClubRequest, resp *clubproto.CreateNewClubResponse) (_ error) {
@@ -76,7 +78,8 @@ func (d *_default) CreateNewClub(ctx context.Context, req *clubproto.CreateNewCl
 		UUID:         req.UUID,
 		StudentUUIDs: req.MemberUUIDs,
 	}
-	respOfReq, err := d.authStudent.GetStudentInformsWithUUIDs(md, authReq)
+	callOpts := []client.CallOption{client.WithDialTimeout(time.Second * 2), client.WithRequestTimeout(time.Second * 3), client.WithAddress(selectedNode.Address)}
+	respOfReq, err := d.authStudent.GetStudentInformsWithUUIDs(md, authReq, callOpts...)
 	spanForReq.SetTag("X-Request-Id", reqID).LogFields(log.Object("request", authReq), log.Object("response", respOfReq), log.Error(err))
 	spanForReq.Finish()
 
