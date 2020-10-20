@@ -1,22 +1,21 @@
 
-GOPATH:=$(shell go env GOPATH)
-MODIFY=Mproto/imports/api.proto=github.com/micro/go-micro/v2/api/proto
-
-.PHONY: proto
-proto:
-    
-	protoc --proto_path=. --micro_out=${MODIFY}:. --go_out=${MODIFY}:. proto/club/club.proto
-    
-
 .PHONY: build
 build: proto
+	GOOS=linux GOARCH=amd64 go build -o club-service *.go
 
-	go build -o club-service *.go
+.PHONY: image
+image:
+	docker build . -t dms-sms-service-club:${VERSION}
 
-.PHONY: test
-test:
-	go test -v ./... -cover
+.PHONY: upload
+upload:
+	docker tag dms-sms-service-club:${VERSION} jinhong0719/dms-sms-service-club:${VERSION}.RELEASE
+	docker push jinhong0719/dms-sms-service-club:${VERSION}.RELEASE
 
-.PHONY: docker
-docker:
-	docker build . -t club-service:latest
+.PHONY: pull
+pull:
+	docker pull jinhong0719/dms-sms-service-club:${VERSION}.RELEASE
+
+.PHONY: run
+run:
+	docker-compose -f ./docker-compose.yml up -d
