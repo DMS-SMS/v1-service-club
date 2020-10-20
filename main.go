@@ -72,14 +72,10 @@ func main() {
 	}()
 
 	// create service
-	version := os.Getenv("VERSION")
-	if version == "" {
-		log.Fatal("please set VERSION in environment variable")
-	}
 	port := getRandomPortNotInUsedWithRange(10100, 10200)
 	service := micro.NewService(
 		micro.Name(topic.ClubServiceName),
-		micro.Version(version),
+		micro.Version("1.0.0"),
 		micro.Transport(grpc.NewTransport()),
 		micro.Address(fmt.Sprintf(":%d", port)),
 	)
