@@ -19,6 +19,7 @@ import (
 	grpccli "github.com/micro/go-micro/v2/client/grpc"
 	"github.com/micro/go-micro/v2/client/selector"
 	"github.com/micro/go-micro/v2/transport/grpc"
+	"github.com/opentracing/opentracing-go"
 	"github.com/uber/jaeger-client-go"
 	jaegercfg "github.com/uber/jaeger-client-go/config"
 	"log"
@@ -29,6 +30,16 @@ import (
 )
 
 func main() {
+	// create service
+	port := getRandomPortNotInUsedWithRange(10100, 10200)
+	service := micro.NewService(
+		micro.Name(topic.ClubServiceName),
+		micro.Version("1.0.0"),
+		micro.Transport(grpc.NewTransport()),
+		micro.Address(fmt.Sprintf(":%d", port)),
+	)
+	srvID := fmt.Sprintf("%s-%s", service.Server().Options().Name, service.Server().Options().Id)
+
 	// create consul connection
 	consulAddr := os.Getenv("CONSUL_ADDRESS")
 	if consulAddr == "" {
@@ -61,8 +72,9 @@ func main() {
 	}
 	authSrvTracer, closer, err := jaegercfg.Configuration{
 		ServiceName: topic.ClubServiceName,
-		Reporter: &jaegercfg.ReporterConfig{LogSpans: true, LocalAgentHostPort: jaegerAddr},
-		Sampler: &jaegercfg.SamplerConfig{Type: jaeger.SamplerTypeConst, Param: 1},
+		Tags:        []opentracing.Tag{{"sid", srvID}},
+		Reporter:    &jaegercfg.ReporterConfig{LogSpans: true, LocalAgentHostPort: jaegerAddr},
+		Sampler:     &jaegercfg.SamplerConfig{Type: jaeger.SamplerTypeConst, Param: 1},
 	}.NewTracer()
 	if err != nil {
 		log.Fatalf("error while creating new tracer for service, err: %v", err)
@@ -70,15 +82,6 @@ func main() {
 	defer func() {
 		_ = closer.Close()
 	}()
-
-	// create service
-	port := getRandomPortNotInUsedWithRange(10100, 10200)
-	service := micro.NewService(
-		micro.Name(topic.ClubServiceName),
-		micro.Version("1.0.0"),
-		micro.Transport(grpc.NewTransport()),
-		micro.Address(fmt.Sprintf(":%d", port)),
-	)
 
 	// create rpc handler
 	defaultAgent := consulagent.Default(
