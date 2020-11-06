@@ -29,7 +29,7 @@ func (d *_default) GetClubWithLeaderUUID(leaderUUID string) (club *model.Club, e
 func (d *_default) GetCurrentRecruitmentWithClubUUID(clubUUID string) (recruit *model.ClubRecruitment, err error) {
 	recruit = new(model.ClubRecruitment)
 
-	fromSubQuery := d.tx.Table(model.ClubRecruitmentInstance.TableName()).Where("club_uuid = ?", clubUUID)
+	fromSubQuery := d.tx.Table(model.ClubRecruitmentInstance.TableName()).Where("club_uuid = ?", clubUUID).Where("deleted_at IS NULL")
 	selectedTx := d.tx.Table("(?) as club_recruitments", fromSubQuery)
 	selectResult := selectedTx.Where("club_recruitments.end_period >= ?", time.Now().AddDate(0, 0, -1)).Or("club_recruitments.end_period IS NULL").Find(recruit)
 
@@ -44,7 +44,7 @@ func (d *_default) GetCurrentRecruitmentWithClubUUID(clubUUID string) (recruit *
 func (d *_default) GetCurrentRecruitmentWithRecruitmentUUID(recruitmentUUID string) (recruit *model.ClubRecruitment, err error) {
 	recruit = new(model.ClubRecruitment)
 
-	fromSubQuery := d.tx.Table(model.ClubRecruitmentInstance.TableName()).Where("uuid = ?", recruitmentUUID)
+	fromSubQuery := d.tx.Table(model.ClubRecruitmentInstance.TableName()).Where("uuid = ?", recruitmentUUID).Where("deleted_at IS NULL")
 	selectedTx := d.tx.Table("(?) as club_recruitments", fromSubQuery)
 	selectResult := selectedTx.Where("club_recruitments.end_period >= ?", time.Now().AddDate(0, 0, -1)).Or("club_recruitments.end_period IS NULL").Find(recruit)
 
@@ -76,7 +76,7 @@ func (d *_default) GetClubInformsSortByUpdateTime(offset, limit int, field, name
 }
 
 func (d *_default) GetCurrentRecruitmentsSortByCreateTime(offset, limit int, field, name string) (recruits []*model.ClubRecruitment, err error) {
-	fromSubQuery := d.tx.Table(model.ClubRecruitmentInstance.TableName()).Select("club_recruitments.*")
+	fromSubQuery := d.tx.Table(model.ClubRecruitmentInstance.TableName()).Select("club_recruitments.*").Where("club_recruitments.deleted_at IS NULL")
 	fromSubQuery = fromSubQuery.Joins("JOIN club_informs ON club_informs.club_uuid = club_recruitments.club_uuid")
 	fromSubQuery = fromSubQuery.Where("club_informs.deleted_at IS NULL")
 
@@ -157,7 +157,7 @@ func (d *_default) GetAllClubInforms() ([]*model.ClubInform, error) {
 }
 
 func (d *_default) GetAllCurrentRecruitments() ([]*model.ClubRecruitment, error) {
-	fromSubQuery := d.tx.Table(model.ClubRecruitmentInstance.TableName()).Select("club_recruitments.*")
+	fromSubQuery := d.tx.Table(model.ClubRecruitmentInstance.TableName()).Select("club_recruitments.*").Where("club_recruitments.deleted_at IS NULL")
 	fromSubQuery = fromSubQuery.Joins("JOIN clubs ON clubs.uuid = club_recruitments.club_uuid").Where("clubs.deleted_at IS NULL")
 
 	var recruitments []*model.ClubRecruitment
