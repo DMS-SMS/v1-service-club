@@ -26,6 +26,7 @@ import (
 	"github.com/uber/jaeger-client-go"
 	"gorm.io/gorm"
 	"net/http"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -764,37 +765,40 @@ func (d *_default) RegisterRecruitment(ctx context.Context, req *clubproto.Regis
 		continue
 	}
 
-	endTimeSplice := strings.Split(req.EndPeriod, "-")
-	if len(endTimeSplice) != 3 {
-		access.Rollback()
-		resp.Status = http.StatusProxyAuthRequired
-		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "invalid EndPeriod value")
-		return
-	}
-
-	err = nil
-	const indexForYear = 0
-	const indexForMonth = 1
-	const indexForDay = 2
-	year, convertErr := strconv.Atoi(endTimeSplice[indexForYear])
-	if len(endTimeSplice[indexForYear]) != 4 || convertErr != nil { err = errors.New("year invalid") }
-	month, convertErr := strconv.Atoi(endTimeSplice[indexForMonth])
-	if len(endTimeSplice[indexForMonth]) != 2 || convertErr != nil { err = errors.New("month invalid") }
-	day, convertErr := strconv.Atoi(endTimeSplice[indexForDay])
-	if len(endTimeSplice[indexForDay]) != 2 || convertErr != nil { err = errors.New("day invalid") }
-
-	if err != nil {
-		access.Rollback()
-		resp.Status = http.StatusProxyAuthRequired
-		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "invalid EndPeriod value")
-		return
-	}
-
 	now := time.Now()
 	startTime := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
-	endTime := time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.Local)
+	endTime := time.Time{}
+	if req.EndPeriod != "" {
+		endTimeSplice := strings.Split(req.EndPeriod, "-")
+		if len(endTimeSplice) != 3 {
+			access.Rollback()
+			resp.Status = http.StatusProxyAuthRequired
+			resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "invalid EndPeriod value")
+			return
+		}
 
-	if endTime.Add(time.Hour).Sub(startTime).Milliseconds() < 0 {
+		err = nil
+		const indexForYear = 0
+		const indexForMonth = 1
+		const indexForDay = 2
+		year, convertErr := strconv.Atoi(endTimeSplice[indexForYear])
+		if len(endTimeSplice[indexForYear]) != 4 || convertErr != nil { err = errors.New("year invalid") }
+		month, convertErr := strconv.Atoi(endTimeSplice[indexForMonth])
+		if len(endTimeSplice[indexForMonth]) != 2 || convertErr != nil { err = errors.New("month invalid") }
+		day, convertErr := strconv.Atoi(endTimeSplice[indexForDay])
+		if len(endTimeSplice[indexForDay]) != 2 || convertErr != nil { err = errors.New("day invalid") }
+
+		if err != nil {
+			access.Rollback()
+			resp.Status = http.StatusProxyAuthRequired
+			resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "invalid EndPeriod value")
+			return
+		}
+
+		endTime = time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.Local)
+	}
+
+	if !reflect.DeepEqual(endTime, time.Time{}) && endTime.Add(time.Hour).Sub(startTime).Milliseconds() < 0 {
 		access.Rollback()
 		resp.Status = http.StatusConflict
 		resp.Code = code.EndPeriodOlderThanNow
