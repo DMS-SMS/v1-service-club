@@ -13,6 +13,9 @@ import (
 	"fmt"
 	"github.com/InVisionApp/go-health/v2"
 	"github.com/InVisionApp/go-health/v2/checkers"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/hashicorp/consul/api"
 	"github.com/micro/go-micro/v2"
 	"github.com/micro/go-micro/v2/client"
@@ -83,6 +86,27 @@ func main() {
 		_ = closer.Close()
 	}()
 
+	// create AWS session
+	awsId := os.Getenv("SMS_AWS_ID")
+	if awsId == "" {
+		log.Fatal("please set SMS_AWS_ID in environment variable")
+	}
+	awsKey := os.Getenv("SMS_AWS_KEY")
+	if awsKey == "" {
+		log.Fatal("please set SMS_AWS_KEY in environment variable")
+	}
+	s3Region := os.Getenv("SMS_AWS_REGION")
+	if s3Region == "" {
+		log.Fatal("please set SMS_AWS_REGION in environment variable")
+	}
+	awsSession, err := session.NewSession(&aws.Config{
+		Region:      aws.String(s3Region),
+		Credentials: credentials.NewStaticCredentials(awsId, awsKey, ""),
+	})
+	if err != nil {
+		log.Fatalf("error while creating new aws session, err: %v", err)
+	}
+
 	// create rpc handler
 	defaultAgent := consulagent.Default(
 		consulagent.Strategy(selector.RoundRobin),
@@ -91,11 +115,11 @@ func main() {
 	cliOpts := []client.Option{client.Transport(grpc.NewTransport())}
 	authStudentSrv := authproto.NewAuthStudentService(topic.AuthServiceName, grpccli.NewClient(cliOpts...))
 	rpcHandler := handler.Default(
-		handler.AWSSession(nil),
 		handler.AccessManager(defaultAccessManage),
 		handler.Tracer(authSrvTracer),
 		handler.ConsulAgent(defaultAgent),
 		handler.AuthStudent(authStudentSrv),
+		handler.AWSSession(awsSession),
 	)
 
 	service.Init(
