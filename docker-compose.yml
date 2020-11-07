@@ -1,12 +1,12 @@
 version: '3.5'
 services:
-  service-auth:
+  service-club:
     image: jinhong0719/dms-sms-service-club:${VERSION}.RELEASE
     container_name: service-club
     networks:
       - dms_sms_local
     ports:
-      - 10100-10200:10100-10200
+      - 10101-10200:10101-10200
     environment:
       - DB_PASSWORD=${DB_PASSWORD}
       - CONSUL_ADDRESS=${CONSUL_ADDRESS}

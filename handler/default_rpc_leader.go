@@ -481,24 +481,6 @@ func (d *_default) ModifyClubInform(ctx context.Context, req *clubproto.ModifyCl
 		return
 	}
 
-	if d.awsSession != nil {
-		spanForS3 := d.tracer.StartSpan("PutObject", opentracing.ChildOf(parentSpan))
-		_, err = s3.New(d.awsSession).PutObject(&s3.PutObjectInput{
-			Bucket: aws.String("dms-sms"),
-			Key:    aws.String(fmt.Sprintf("logos/%s", req.ClubUUID)),
-			Body:   bytes.NewReader(req.Logo),
-		})
-		spanForS3.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))
-		spanForS3.Finish()
-
-		if err != nil {
-			access.Rollback()
-			resp.Status = http.StatusInternalServerError
-			resp.Message = fmt.Sprintf(internalServerMessageFormat, "unable to upload profile to s3, err: " + err.Error())
-			return
-		}
-	}
-
 	spanForDB = d.tracer.StartSpan("ModifyClubInform", opentracing.ChildOf(parentSpan))
 	err, rowAffected := access.ModifyClubInform(req.ClubUUID, &model.ClubInform{
 		ClubConcept:  model.ClubConcept(req.ClubConcept),
@@ -528,6 +510,25 @@ func (d *_default) ModifyClubInform(ctx context.Context, req *clubproto.ModifyCl
 		resp.Status = http.StatusInternalServerError
 		resp.Message = fmt.Sprintf(internalServerMessageFormat, "ModifyClubInform returns 0 row affected")
 		return
+	}
+
+	if d.awsSession != nil && (string(req.Logo) != "") {
+		spanForS3 := d.tracer.StartSpan("PutObject", opentracing.ChildOf(parentSpan))
+		_, err = s3.New(d.awsSession).PutObject(&s3.PutObjectInput{
+			Bucket: aws.String(s3Bucket),
+			Key:    aws.String(fmt.Sprintf("logos/%s", req.ClubUUID)),
+			Body:   bytes.NewReader(req.Logo),
+			ACL:    aws.String("public-read"),
+		})
+		spanForS3.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))
+		spanForS3.Finish()
+
+		if err != nil {
+			access.Rollback()
+			resp.Status = http.StatusInternalServerError
+			resp.Message = fmt.Sprintf(internalServerMessageFormat, "unable to upload profile to s3, err: " + err.Error())
+			return
+		}
 	}
 
 	access.Commit()
