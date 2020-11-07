@@ -208,24 +208,7 @@ func (d *_default) CreateNewClub(ctx context.Context, req *clubproto.CreateNewCl
 		return
 	}
 
-	if d.awsSession != nil {
-		spanForS3 := d.tracer.StartSpan("PutObject", opentracing.ChildOf(parentSpan))
-		_, err = s3.New(d.awsSession).PutObject(&s3.PutObjectInput{
-			Bucket: aws.String(s3Bucket),
-			Key:    aws.String(fmt.Sprintf("logos/%s", string(createdClub.UUID))),
-			Body:   bytes.NewReader(req.Logo),
-		})
-		spanForS3.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))
-		spanForS3.Finish()
-
-		if err != nil {
-			access.Rollback()
-			resp.Status = http.StatusInternalServerError
-			resp.Message = fmt.Sprintf(internalServerMessageFormat, "unable to upload profile to s3, err: " + err.Error())
-			return
-		}
-	}
-
+	logoURI := fmt.Sprintf("logos/%s", string(createdClub.UUID))
 	spanForDB = d.tracer.StartSpan("CreateClubInform", opentracing.ChildOf(parentSpan))
 	createdInform, err := access.CreateClubInform(&model.ClubInform{
 		ClubUUID: model.ClubUUID(cUUID),
@@ -233,7 +216,7 @@ func (d *_default) CreateNewClub(ctx context.Context, req *clubproto.CreateNewCl
 		Field:    model.Field(req.Field),
 		Location: model.Location(req.Location),
 		Floor:    model.Floor(req.Floor),
-		LogoURI:  model.LogoURI(fmt.Sprintf("logos/%s", string(createdClub.UUID))),
+		LogoURI:  model.LogoURI(logoURI),
 	})
 	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("CreatedInform", createdInform), log.Error(err))
 	spanForDB.Finish()
@@ -340,6 +323,24 @@ func (d *_default) CreateNewClub(ctx context.Context, req *clubproto.CreateNewCl
 		resp.Status = http.StatusInternalServerError
 		resp.Message = fmt.Sprintf(internalServerMessageFormat, "unexpected type of CreateClubMember errors, err: "+assertedError.Error())
 		return
+	}
+
+	if d.awsSession != nil {
+		spanForS3 := d.tracer.StartSpan("PutObject", opentracing.ChildOf(parentSpan))
+		_, err = s3.New(d.awsSession).PutObject(&s3.PutObjectInput{
+			Bucket: aws.String(s3Bucket),
+			Key:    aws.String(logoURI),
+			Body:   bytes.NewReader(req.Logo),
+		})
+		spanForS3.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))
+		spanForS3.Finish()
+
+		if err != nil {
+			access.Rollback()
+			resp.Status = http.StatusInternalServerError
+			resp.Message = fmt.Sprintf(internalServerMessageFormat, "unable to upload profile to s3, err: " + err.Error())
+			return
+		}
 	}
 
 	access.Commit()
