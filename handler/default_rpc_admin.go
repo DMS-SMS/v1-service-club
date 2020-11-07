@@ -211,7 +211,7 @@ func (d *_default) CreateNewClub(ctx context.Context, req *clubproto.CreateNewCl
 	if d.awsSession != nil {
 		spanForS3 := d.tracer.StartSpan("PutObject", opentracing.ChildOf(parentSpan))
 		_, err = s3.New(d.awsSession).PutObject(&s3.PutObjectInput{
-			Bucket: aws.String("dms-sms"),
+			Bucket: aws.String(s3Bucket),
 			Key:    aws.String(fmt.Sprintf("logos/%s", string(createdClub.UUID))),
 			Body:   bytes.NewReader(req.Logo),
 		})

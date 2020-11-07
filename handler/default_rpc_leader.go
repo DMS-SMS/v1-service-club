@@ -484,7 +484,7 @@ func (d *_default) ModifyClubInform(ctx context.Context, req *clubproto.ModifyCl
 	if d.awsSession != nil {
 		spanForS3 := d.tracer.StartSpan("PutObject", opentracing.ChildOf(parentSpan))
 		_, err = s3.New(d.awsSession).PutObject(&s3.PutObjectInput{
-			Bucket: aws.String("dms-sms"),
+			Bucket: aws.String(s3Bucket),
 			Key:    aws.String(fmt.Sprintf("logos/%s", req.ClubUUID)),
 			Body:   bytes.NewReader(req.Logo),
 		})
