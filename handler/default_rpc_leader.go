@@ -512,7 +512,7 @@ func (d *_default) ModifyClubInform(ctx context.Context, req *clubproto.ModifyCl
 		return
 	}
 
-	if d.awsSession != nil {
+	if d.awsSession != nil && (string(req.Logo) != "") {
 		spanForS3 := d.tracer.StartSpan("PutObject", opentracing.ChildOf(parentSpan))
 		_, err = s3.New(d.awsSession).PutObject(&s3.PutObjectInput{
 			Bucket: aws.String(s3Bucket),
