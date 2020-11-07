@@ -518,6 +518,7 @@ func (d *_default) ModifyClubInform(ctx context.Context, req *clubproto.ModifyCl
 			Bucket: aws.String(s3Bucket),
 			Key:    aws.String(fmt.Sprintf("logos/%s", req.ClubUUID)),
 			Body:   bytes.NewReader(req.Logo),
+			ACL:    aws.String("public-read"),
 		})
 		spanForS3.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))
 		spanForS3.Finish()

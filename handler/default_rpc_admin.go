@@ -331,6 +331,7 @@ func (d *_default) CreateNewClub(ctx context.Context, req *clubproto.CreateNewCl
 			Bucket: aws.String(s3Bucket),
 			Key:    aws.String(logoURI),
 			Body:   bytes.NewReader(req.Logo),
+			ACL:    aws.String("public-read"),
 		})
 		spanForS3.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))
 		spanForS3.Finish()
