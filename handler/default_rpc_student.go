@@ -855,7 +855,8 @@ func (d *_default) GetClubUUIDWithLeaderUUID(ctx context.Context, req *clubproto
 		break
 	case gorm.ErrRecordNotFound:
 		access.Rollback()
-		resp.Status = http.StatusNotFound
+		resp.Status = http.StatusConflict
+		resp.Code = code.ThereIsNoClubWithThatLeaderUUID
 		resp.Message = fmt.Sprintf(conflictMessageFormat, "there is no club with that leader uuid")
 		return
 	default:
