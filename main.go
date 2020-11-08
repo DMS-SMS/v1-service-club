@@ -37,7 +37,7 @@ func main() {
 	port := getRandomPortNotInUsedWithRange(10100, 10200)
 	service := micro.NewService(
 		micro.Name(topic.ClubServiceName),
-		micro.Version("1.0.2"),
+		micro.Version("1.0.3"),
 		micro.Transport(grpc.NewTransport()),
 		micro.Address(fmt.Sprintf(":%d", port)),
 	)
