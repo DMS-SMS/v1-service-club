@@ -21,6 +21,7 @@ const (
 var (
 	adminUUIDRegex = regexp.MustCompile("^admin-\\d{12}")
 	studentUUIDRegex = regexp.MustCompile("^student-\\d{12}")
+	teacherUUIDRegex = regexp.MustCompile("^teacher-\\d{12}")
 	clubUUIDRegex = regexp.MustCompile("^club-\\d{12}")
 )
 
