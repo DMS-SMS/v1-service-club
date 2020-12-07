@@ -871,3 +871,53 @@ func (d *_default) GetClubUUIDWithLeaderUUID(ctx context.Context, req *clubproto
 	resp.Message = fmt.Sprintf("success to get club uuid with that leader uuid")
 	return
 }
+
+func (d *_default) GetClubUUIDsWithFloor(ctx context.Context, req *clubproto.GetClubUUIDsWithFloorRequest, resp *clubproto.GetClubUUIDsWithFloorResponse) (_ error) {
+	ctx, proxyAuthenticated, reason := d.getContextFromMetadata(ctx)
+	if !proxyAuthenticated {
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, reason)
+		return
+	}
+
+	switch true {
+	case adminUUIDRegex.MatchString(req.UUID):
+		break
+	case studentUUIDRegex.MatchString(req.UUID):
+		break
+	case teacherUUIDRegex.MatchString(req.UUID):
+		break
+	default:
+		resp.Status = http.StatusForbidden
+		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "you are not student or teacher or admin")
+		return
+	}
+
+	reqID := ctx.Value("X-Request-Id").(string)
+	parentSpan := ctx.Value("Span-Context").(jaeger.SpanContext)
+
+	access := d.accessManage.BeginTx()
+
+	spanForDB := d.tracer.StartSpan("GetClubInformsWithFloor", opentracing.ChildOf(parentSpan))
+	selectedInforms, err := access.GetClubInformsWithFloor(req.Floor)
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("selectedInforms", selectedInforms), log.Error(err))
+	spanForDB.Finish()
+
+	if err != nil && err != gorm.ErrRecordNotFound {
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerMessageFormat, "GetClubInformsWithFloor returns unexpected error, err: " + err.Error())
+		return
+	}
+
+	clubUUIDsForResp := make([]string, len(selectedInforms))
+	for index, inform := range selectedInforms {
+		clubUUIDsForResp[index] = string(inform.ClubUUID)
+	}
+
+	access.Commit()
+	resp.Status = http.StatusOK
+	resp.ClubUUIDs = clubUUIDsForResp
+	resp.Message = fmt.Sprintf("succeed to get club uuid list with floor")
+	return
+}
