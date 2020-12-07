@@ -170,3 +170,17 @@ func (d *_default) GetAllCurrentRecruitments() ([]*model.ClubRecruitment, error)
 
 	return recruitments, err
 }
+
+func (d *_default) GetClubInformsWithFloor(floor string) ([]*model.ClubInform, error) {
+	joinedTx := d.tx.Table(model.ClubInformInstance.TableName()).Joins("JOIN clubs ON clubs.uuid = club_informs.club_uuid")
+	joinedTx = joinedTx.Where("clubs.deleted_at IS NULL")
+
+	var informs []*model.ClubInform
+	err := joinedTx.Find(&informs).Where("floor = ?", floor).Error
+
+	if len(informs) == 0 && err == nil {
+		err = gorm.ErrRecordNotFound
+	}
+
+	return informs, err
+}
