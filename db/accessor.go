@@ -24,6 +24,7 @@ type Accessor interface {
 	GetRecruitMembersWithRecruitmentUUID(recruitUUID string) ([]*model.RecruitMember, error)
 	GetAllClubInforms() ([]*model.ClubInform, error)
 	GetAllCurrentRecruitments() ([]*model.ClubRecruitment, error)
+	GetClubInformsWithFloor(floor string) ([]*model.ClubInform, error)
 
 	ChangeClubLeader(clubUUID, newLeaderUUID string) (err error, rowsAffected int64)
 	ModifyClubInform(clubUUID string, revisionInform *model.ClubInform) (err error, rowsAffected int64)
