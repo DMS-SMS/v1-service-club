@@ -26,6 +26,7 @@ func (n None) GetClubMembersWithClubUUID(clubUUID string) (_ []*model.ClubMember
 func (n None) GetRecruitMembersWithRecruitmentUUID(recruitUUID string) (_ []*model.RecruitMember, _ error) { return }
 func (n None) GetAllClubInforms() (_ []*model.ClubInform, _ error) { return }
 func (n None) GetAllCurrentRecruitments() (_ []*model.ClubRecruitment, _ error) { return }
+func (n None) GetClubInformsWithFloor(floor string) (_ []*model.ClubInform, _ error) { return }
 
 func (n None) ChangeClubLeader(clubUUID, newLeaderUUID string) (_ error, _ int64) { return }
 func (n None) ModifyClubInform(clubUUID string, revisionInform *model.ClubInform) (_ error, _ int64) { return }

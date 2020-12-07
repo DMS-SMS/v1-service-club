@@ -99,6 +99,11 @@ func (m _mock) GetAllCurrentRecruitments() ([]*model.ClubRecruitment, error) {
 	return args.Get(0).([]*model.ClubRecruitment), args.Error(1)
 }
 
+func (m _mock) GetClubInformsWithFloor(floor string) ([]*model.ClubInform, error) {
+	args := m.mock.Called()
+	return args.Get(0).([]*model.ClubInform), args.Error(1)
+}
+
 func (m _mock) ChangeClubLeader(clubUUID, newLeaderUUID string) (error, int64) {
 	args := m.mock.Called(clubUUID, newLeaderUUID)
 	return args.Error(0), int64(args.Int(1))
