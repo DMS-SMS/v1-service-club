@@ -335,9 +335,11 @@ func (d *_default) GetClubInformsWithUUIDs(ctx context.Context, req *clubproto.G
 		break
 	case studentUUIDRegex.MatchString(req.UUID):
 		break
+	case teacherUUIDRegex.MatchString(req.UUID):
+		break
 	default:
 		resp.Status = http.StatusForbidden
-		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "you are not student or admin")
+		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "you are not student or teacher or admin")
 		return
 	}
 
