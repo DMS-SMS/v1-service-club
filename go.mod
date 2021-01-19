@@ -18,6 +18,7 @@ require (
 	github.com/google/uuid v1.1.1
 	github.com/hashicorp/consul/api v1.7.0
 	github.com/jinzhu/gorm v1.9.16
+	github.com/mervick/aes-everywhere/go/aes256 v0.0.0-20201120204945-cd607c782ed1
 	github.com/micro/go-micro/v2 v2.9.1
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/pkg/errors v0.9.1
