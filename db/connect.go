@@ -1,4 +1,4 @@
-package adapter
+package db
 
 import (
 	"encoding/json"
@@ -13,7 +13,7 @@ import (
 	"strings"
 )
 
-type DBConfig struct {
+type ConnectionCfg struct {
 	Dialect string `json:"dialect" validate:"required"`
 	Host    string `json:"host" validate:"required"`
 	Port 	int	   `json:"port" validate:"required"`
@@ -21,7 +21,7 @@ type DBConfig struct {
 	DB		string `json:"db" validate:"required"`
 }
 
-func ConnectDBWithConsul(cli *api.Client, key string) (db *gorm.DB, conf DBConfig, err error) {
+func ConnectWithConsul(cli *api.Client, key string) (db *gorm.DB, conf ConnectionCfg, err error) {
 	kv, _, err := cli.KV().Get(key, nil)
 	if err != nil {
 		err = errors.New(fmt.Sprintf("unable to get %s KV from consul, err: %v", key, err.Error()))
@@ -48,7 +48,7 @@ func ConnectDBWithConsul(cli *api.Client, key string) (db *gorm.DB, conf DBConfi
 	return
 }
 
-func connectToMysql(conf DBConfig) (db *gorm.DB, err error) {
+func connectToMysql(conf ConnectionCfg) (db *gorm.DB, err error) {
 	pwd := os.Getenv("DB_PASSWORD")
 	if pwd == "" {
 		err = errors.New("please set DB_PASSWORD environment variable")
