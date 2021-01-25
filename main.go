@@ -125,9 +125,9 @@ func main() {
 	)
 
 	// create subscriber & register listener (add in v.1.0.5)
-	consulChangeQueue := os.Getenv("CHANGE_CONSUL_SQS_NAME")
+	consulChangeQueue := os.Getenv("CHANGE_CONSUL_SQS_CLUB")
 	if consulChangeQueue == "" {
-		log.Fatal("please set CHANGE_CONSUL_SQS_NAME in environment variable")
+		log.Fatal("please set CHANGE_CONSUL_SQS_CLUB in environment variable")
 	}
 	subscriber.SetAwsSession(awsSession)
 	defaultSubscriber := subscriber.Default()
