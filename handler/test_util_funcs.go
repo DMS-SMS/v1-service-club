@@ -1,10 +1,10 @@
 package handler
 
 import (
+	consulagent "club/consul/agent"
 	"club/db"
 	"club/db/access"
 	authproto "club/proto/golang/auth"
-	consulagent "club/tool/consul/agent"
 	"fmt"
 	"github.com/stretchr/testify/mock"
 	jaegercfg "github.com/uber/jaeger-client-go/config"

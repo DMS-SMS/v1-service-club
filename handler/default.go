@@ -1,9 +1,9 @@
 package handler
 
 import (
+	"club/consul"
 	"club/db"
 	authproto "club/proto/golang/auth"
-	"club/tool/consul"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/opentracing/opentracing-go"
 )

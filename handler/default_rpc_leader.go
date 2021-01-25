@@ -2,10 +2,10 @@ package handler
 
 import (
 	"bytes"
+	consulagent "club/consul/agent"
 	"club/model"
 	authproto "club/proto/golang/auth"
 	clubproto "club/proto/golang/club"
-	consulagent "club/tool/consul/agent"
 	"club/tool/mysqlerr"
 	"club/tool/random"
 	code "club/utils/code/golang"

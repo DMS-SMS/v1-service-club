@@ -1,7 +1,6 @@
 package test
 
 import (
-	"club/adapter"
 	"club/db"
 	"club/db/access"
 	"github.com/hashicorp/consul/api"
@@ -14,7 +13,7 @@ func init() {
 		log.Fatal(err)
 	}
 
-	dbc, _, err := adapter.ConnectDBWithConsul(cli, "db/club/local_test")
+	dbc, _, err := db.ConnectDBWithConsul(cli, "db/club/local_test")
 	if err != nil {
 		log.Fatal(err)
 	}
