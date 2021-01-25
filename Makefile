@@ -1,7 +1,7 @@
 
 .PHONY: build
 build: proto
-	GOOS=linux GOARCH=amd64 go build -o club-service *.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o club-service *.go
 
 .PHONY: image
 image:
@@ -23,3 +23,7 @@ run:
 .PHONY: deploy
 deploy:
 	envsubst < ./service-club-deployment.yaml | kubectl apply -f -
+
+.PHONY: stack
+stack:
+	env VERSION=${VERSION} docker stack deploy -c docker-compose.yml DSM_SMS

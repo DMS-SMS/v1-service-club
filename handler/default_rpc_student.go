@@ -335,9 +335,11 @@ func (d *_default) GetClubInformsWithUUIDs(ctx context.Context, req *clubproto.G
 		break
 	case studentUUIDRegex.MatchString(req.UUID):
 		break
+	case teacherUUIDRegex.MatchString(req.UUID):
+		break
 	default:
 		resp.Status = http.StatusForbidden
-		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "you are not student or admin")
+		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "you are not student or teacher or admin")
 		return
 	}
 
@@ -855,7 +857,8 @@ func (d *_default) GetClubUUIDWithLeaderUUID(ctx context.Context, req *clubproto
 		break
 	case gorm.ErrRecordNotFound:
 		access.Rollback()
-		resp.Status = http.StatusNotFound
+		resp.Status = http.StatusConflict
+		resp.Code = code.ThereIsNoClubWithThatLeaderUUID
 		resp.Message = fmt.Sprintf(conflictMessageFormat, "there is no club with that leader uuid")
 		return
 	default:

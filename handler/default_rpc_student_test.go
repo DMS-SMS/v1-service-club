@@ -1934,7 +1934,8 @@ func Test_Default_GetClubUUIDWithLeaderUUID(t *testing.T) {
 				"GetClubWithLeaderUUID": {&model.Club{}, gorm.ErrRecordNotFound},
 				"Rollback":              {&gorm.DB{}},
 			},
-			ExpectedStatus: http.StatusNotFound,
+			ExpectedStatus: http.StatusConflict,
+			ExpectedCode:   code.ThereIsNoClubWithThatLeaderUUID,
 		}, { // GetClubWithLeaderUUID returns unexpected error
 			UUID:       "student-111111111111",
 			LeaderUUID: "student-111111111111",
