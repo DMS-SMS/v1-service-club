@@ -1,4 +1,4 @@
-// add package in v.1.1.6
+// add package in v.1.0.5
 // clone from tool/consul/agent in club
 
 package agent

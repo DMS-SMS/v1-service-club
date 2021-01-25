@@ -1,4 +1,4 @@
-// Add file in v.1.1.6
+// Add file in v.1.0.5
 // default_method_closure.go is file for declaring method to return closure of default struct
 
 package agent

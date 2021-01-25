@@ -1,4 +1,4 @@
-// Add file in v.1.0.6
+// Add file in v.v.1.0.5
 // default_method.go is file to declare method of default struct
 
 package agent

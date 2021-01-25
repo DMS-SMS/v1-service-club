@@ -1,6 +1,5 @@
-// add package in v.1.1.6
-// clone from tool/consul in club
-// move directory from tool/consul to consul in v.1.1.6
+// add package in v.1.0.5
+// move directory from tool/consul to consul in v.1.0.5
 
 package consul
 
