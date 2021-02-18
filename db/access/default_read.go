@@ -176,7 +176,7 @@ func (d *_default) GetClubInformsWithFloor(floor string) ([]*model.ClubInform, e
 	joinedTx = joinedTx.Where("clubs.deleted_at IS NULL")
 
 	var informs []*model.ClubInform
-	err := joinedTx.Find(&informs).Where("floor = ?", floor).Error
+	err := joinedTx.Where("floor = ?", floor).Find(&informs).Error
 
 	if len(informs) == 0 && err == nil {
 		err = gorm.ErrRecordNotFound
