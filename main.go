@@ -18,7 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/hashicorp/consul/api"
 	"github.com/micro/go-micro/v2"
 	"github.com/micro/go-micro/v2/client"
@@ -131,15 +130,15 @@ func main() {
 	}
 	subscriber.SetAwsSession(awsSession)
 	defaultSubscriber := subscriber.Default()
-	defaultSubscriber.RegisterBeforeStart(
-		subscriber.SqsQueuePurger(consulChangeQueue),
-	)
-	defaultSubscriber.RegisterListeners(
-		subscriber.SqsMsgListener(consulChangeQueue, defaultHandler.ChangeConsulNodes, &sqs.ReceiveMessageInput{
-			MaxNumberOfMessages: aws.Int64(10),
-			WaitTimeSeconds:     aws.Int64(2),
-		}),
-	)
+	//defaultSubscriber.RegisterBeforeStart(
+	//	subscriber.SqsQueuePurger(consulChangeQueue),
+	//)
+	//defaultSubscriber.RegisterListeners(
+	//	subscriber.SqsMsgListener(consulChangeQueue, defaultHandler.ChangeConsulNodes, &sqs.ReceiveMessageInput{
+	//		MaxNumberOfMessages: aws.Int64(10),
+	//		WaitTimeSeconds:     aws.Int64(2),
+	//	}),
+	//)
 
 	service.Init(
 		micro.BeforeStart(consulAgent.ChangeAllServiceNodes),
@@ -152,6 +151,7 @@ func main() {
 	_ = clubproto.RegisterClubAdminHandler(service.Server(), defaultHandler)
 	_ = clubproto.RegisterClubStudentHandler(service.Server(), defaultHandler)
 	_ = clubproto.RegisterClubLeaderHandler(service.Server(), defaultHandler)
+	_ = clubproto.RegisterClubEventHandler(service.Server(), defaultHandler)
 
 	// DB Health checker 실행
 	sqlDB, err := dbc.DB()
